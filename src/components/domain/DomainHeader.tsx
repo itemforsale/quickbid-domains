@@ -15,18 +15,18 @@ export const DomainHeader = ({
   isEnded,
   listedBy,
 }: DomainHeaderProps) => {
-  // Format domain name to ensure proper display
   const formatDomainName = (name: string) => {
-    // Remove any whitespace and ensure lowercase
     const formattedName = name.trim().toLowerCase();
-    // Ensure .com suffix is present and properly formatted
     return formattedName.endsWith('.com') ? formattedName : `${formattedName}.com`;
   };
 
   return (
     <div className="flex flex-col gap-2 flex-1">
       <div className="flex items-start justify-between gap-4">
-        <h3 className="text-lg font-semibold text-left break-all text-gray-900">
+        <h3 className={cn(
+          "text-lg font-semibold text-left break-all",
+          isEnded ? "text-gray-500" : "text-gray-900"
+        )}>
           {formatDomainName(domain)}
         </h3>
         <div className="flex gap-2 flex-shrink-0">

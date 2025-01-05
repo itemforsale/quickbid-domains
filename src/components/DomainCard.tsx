@@ -106,14 +106,11 @@ export const DomainCard = ({
 
   return (
     <Card className={cn(
-      "group relative overflow-hidden transition-all duration-300 hover:shadow-xl animate-fade-in",
-      isEnded && "opacity-50",
+      "relative overflow-hidden transition-all duration-300 hover:shadow-xl animate-fade-in",
       featured 
         ? 'bg-gradient-to-br from-yellow-50 to-white border-yellow-200 shadow-yellow-100' 
         : 'bg-gradient-to-br from-gray-50 to-white border-gray-200'
     )}>
-      <div className="absolute inset-0 bg-white/40 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-      
       <div className="relative p-6">
         <div className="flex flex-col gap-4">
           <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
