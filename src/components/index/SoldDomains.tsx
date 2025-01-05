@@ -10,19 +10,19 @@ export const SoldDomains = ({ domains }: SoldDomainsProps) => {
 
   return (
     <div>
-      <h2 className="text-2xl font-semibold mb-6">Recently Sold</h2>
+      <h2 className="text-2xl font-semibold mb-6 text-foreground">Recently Sold</h2>
       <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-4">
         {domains.map((domain) => (
-          <Card key={domain.id} className="p-4 backdrop-blur-sm bg-white/50 border border-gray-200">
+          <Card key={domain.id} className="p-4 backdrop-blur-sm bg-background/50 border-border">
             <div className="space-y-2">
               <div className="flex justify-between items-start">
-                <h3 className="font-medium">{domain.name}</h3>
-                <span className="text-green-600 font-medium">${domain.finalPrice}</span>
+                <h3 className="font-medium text-foreground">{domain.name}</h3>
+                <span className="text-primary font-medium">${domain.finalPrice}</span>
               </div>
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-muted-foreground">
                 Sold to @{domain.currentBidder}
               </p>
-              <p className="text-xs text-gray-400">
+              <p className="text-xs text-muted-foreground">
                 {domain.purchaseDate?.toLocaleDateString()}
               </p>
             </div>
