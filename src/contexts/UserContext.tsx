@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, ReactNode } from "react";
+import React, { createContext, useContext, useState, ReactNode, useEffect } from "react";
 import { toast } from "sonner";
 
 interface User {
@@ -18,9 +18,19 @@ interface UserContextType {
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
+const USERS_STORAGE_KEY = 'quickbid_users';
+
 export function UserProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [users, setUsers] = useState<User[]>([]);
+  const [users, setUsers] = useState<User[]>(() => {
+    const savedUsers = localStorage.getItem(USERS_STORAGE_KEY);
+    return savedUsers ? JSON.parse(savedUsers) : [];
+  });
+
+  // Persist users to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(users));
+  }, [users]);
 
   const register = (userData: User) => {
     if (users.some(u => u.username === userData.username)) {
@@ -29,6 +39,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
     }
     setUsers([...users, userData]);
     setUser(userData);
+    toast.success("Successfully registered!");
   };
 
   const login = (credentials: { username: string; password: string }) => {
