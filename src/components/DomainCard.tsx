@@ -76,6 +76,10 @@ export const DomainCard = ({
       toast.error("Please login to place a bid");
       return;
     }
+    if (user.username === listedBy) {
+      toast.error("You cannot bid on your own domain listing");
+      return;
+    }
     if (bidAmount <= currentBid) {
       toast.error("Bid must be higher than current bid");
       return;
@@ -95,6 +99,10 @@ export const DomainCard = ({
     }
     if (!user) {
       toast.error("Please login to purchase the domain");
+      return;
+    }
+    if (user.username === listedBy) {
+      toast.error("You cannot buy your own domain listing");
       return;
     }
     if (onBuyNow) {
