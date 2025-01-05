@@ -22,8 +22,8 @@ export const ListDomainDialog = ({ onDomainSubmit }: ListDomainDialogProps) => {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button variant="default">
-          List Your Domain
+        <Button variant="outline" size="sm">
+          List Domain
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">

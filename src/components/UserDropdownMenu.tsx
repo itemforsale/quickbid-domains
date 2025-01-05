@@ -44,7 +44,8 @@ export const UserDropdownMenu = ({
   console.log('Won domains:', wonDomains);
 
   return (
-    <div className="fixed top-4 right-20 z-50 flex items-center gap-2">
+    <div className="fixed top-4 right-4 z-50 flex items-center gap-2">
+      <ListDomainDialog onDomainSubmit={onDomainSubmit} />
       <NotificationBell username={username} domains={domains} />
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
@@ -137,7 +138,6 @@ export const UserDropdownMenu = ({
             })}
           </DropdownMenuGroup>
           <DropdownMenuSeparator />
-          <ListDomainDialog onDomainSubmit={onDomainSubmit} />
           <DropdownMenuItem onClick={onLogout}>
             <LogOut className="mr-2 h-4 w-4" />
             <span>Log out</span>
