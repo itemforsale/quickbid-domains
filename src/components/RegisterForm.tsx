@@ -51,7 +51,7 @@ export const RegisterForm = ({ onSuccess }: RegisterFormProps) => {
       <div>
         <Input
           type="text"
-          placeholder="Username"
+          placeholder="X.com Username"
           value={formData.username}
           onChange={(e) => setFormData({ ...formData, username: e.target.value })}
           className="w-full"
