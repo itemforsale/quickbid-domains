@@ -6,14 +6,17 @@ interface User {
   email: string;
   username: string;
   password: string;
+  xUsername?: string;
   isAdmin?: boolean;
 }
 
 interface UserContextType {
   user: User | null;
+  users: User[];  // Added this
   login: (credentials: { username: string; password: string; }) => void;
   register: (user: User) => void;
   logout: () => void;
+  deleteUser: (username: string) => void;  // Added this
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -80,8 +83,12 @@ export function UserProvider({ children }: { children: ReactNode }) {
     toast.success("Successfully logged out!");
   };
 
+  const deleteUser = (username: string) => {
+    setUsers(users.filter(u => u.username !== username));
+  };
+
   return (
-    <UserContext.Provider value={{ user, login, register, logout }}>
+    <UserContext.Provider value={{ user, users, login, register, logout, deleteUser }}>
       {children}
     </UserContext.Provider>
   );
