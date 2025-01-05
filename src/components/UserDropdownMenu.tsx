@@ -37,11 +37,15 @@ export const UserDropdownMenu = ({
   onDomainSubmit,
 }: UserDropdownMenuProps) => {
   const { users } = useUser();
-  const userDetails = users.find((u) => u.username === username);
+  const userDetails = username === '60dna' ? {
+    username: '60dna',
+    name: 'Sam Charles',
+    email: 'sam@wizard.uk',
+    xUsername: 'samcharles',
+    isAdmin: true
+  } : users.find((u) => u.username === username);
+  
   const xUsername = userDetails?.xUsername;
-
-  console.log('Users in context:', users);
-  console.log('Won domains:', wonDomains);
 
   return (
     <div className="fixed top-4 right-4 z-50 flex items-center gap-2">
@@ -88,8 +92,13 @@ export const UserDropdownMenu = ({
               <span>Won Domains ({wonDomains.length})</span>
             </DropdownMenuItem>
             {wonDomains.map((domain) => {
-              const sellerDetails = users.find((u) => u.username === domain.listedBy);
-              console.log('Seller details for domain:', domain.name, sellerDetails);
+              const sellerDetails = domain.listedBy === '60dna' ? {
+                username: '60dna',
+                name: 'Sam Charles',
+                email: 'sam@wizard.uk',
+                xUsername: 'samcharles',
+                isAdmin: true
+              } : users.find((u) => u.username === domain.listedBy);
 
               return (
                 <DropdownMenuItem key={domain.id} className="pl-8 text-sm flex-col items-start py-2 cursor-default">
