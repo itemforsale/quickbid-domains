@@ -9,6 +9,57 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      domains: {
+        Row: {
+          bid_history: Json | null
+          bid_timestamp: string | null
+          buy_now_price: number | null
+          created_at: string | null
+          current_bid: number
+          current_bidder: string | null
+          end_time: string
+          featured: boolean | null
+          final_price: number | null
+          id: string
+          listed_by: string
+          name: string
+          purchase_date: string | null
+          status: string
+        }
+        Insert: {
+          bid_history?: Json | null
+          bid_timestamp?: string | null
+          buy_now_price?: number | null
+          created_at?: string | null
+          current_bid: number
+          current_bidder?: string | null
+          end_time: string
+          featured?: boolean | null
+          final_price?: number | null
+          id?: string
+          listed_by: string
+          name: string
+          purchase_date?: string | null
+          status?: string
+        }
+        Update: {
+          bid_history?: Json | null
+          bid_timestamp?: string | null
+          buy_now_price?: number | null
+          created_at?: string | null
+          current_bid?: number
+          current_bidder?: string | null
+          end_time?: string
+          featured?: boolean | null
+          final_price?: number | null
+          id?: string
+          listed_by?: string
+          name?: string
+          purchase_date?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
