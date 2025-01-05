@@ -14,18 +14,25 @@ export const LoginForm = ({ onSuccess }: LoginFormProps) => {
     username: "",
     password: "",
   });
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.username || !formData.password) {
       toast.error("Please fill in all fields");
       return;
     }
-    login({
-      username: formData.username,
-      password: formData.password,
-    });
-    onSuccess?.();
+
+    setIsLoading(true);
+    try {
+      await login({
+        username: formData.username,
+        password: formData.password,
+      });
+      onSuccess?.();
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -38,6 +45,7 @@ export const LoginForm = ({ onSuccess }: LoginFormProps) => {
           value={formData.username}
           onChange={(e) => setFormData({ ...formData, username: e.target.value })}
           className="w-full"
+          disabled={isLoading}
         />
       </div>
       <div>
@@ -47,10 +55,11 @@ export const LoginForm = ({ onSuccess }: LoginFormProps) => {
           value={formData.password}
           onChange={(e) => setFormData({ ...formData, password: e.target.value })}
           className="w-full"
+          disabled={isLoading}
         />
       </div>
-      <Button type="submit" className="w-full">
-        Login
+      <Button type="submit" className="w-full" disabled={isLoading}>
+        {isLoading ? "Logging in..." : "Login"}
       </Button>
     </form>
   );
