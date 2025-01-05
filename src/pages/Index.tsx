@@ -1,13 +1,12 @@
 import { useState, useEffect } from "react";
 import { DomainCard } from "@/components/DomainCard";
 import { SearchBar } from "@/components/SearchBar";
-import { LoginForm } from "@/components/LoginForm";
-import { RegisterForm } from "@/components/RegisterForm";
 import { DomainSubmissionForm } from "@/components/DomainSubmissionForm";
 import { UserProfile } from "@/components/UserProfile";
 import { AdminPanel } from "@/components/AdminPanel";
 import { PendingDomains } from "@/components/PendingDomains";
 import { NotificationBell } from "@/components/NotificationBell";
+import { AuthDialogs } from "@/components/AuthDialogs";
 import { useUser } from "@/contexts/UserContext";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -35,7 +34,6 @@ const Index = () => {
     return [];
   });
   const [searchQuery, setSearchQuery] = useState("");
-  const [showLogin, setShowLogin] = useState(true);
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(domains));
@@ -168,23 +166,7 @@ const Index = () => {
               <UserProfile username={user.username} wonDomains={userWonDomains} />
             </div>
           ) : (
-            <div className="mb-8">
-              <div className="flex justify-center gap-4 mb-4">
-                <Button
-                  variant={showLogin ? "default" : "outline"}
-                  onClick={() => setShowLogin(true)}
-                >
-                  Login
-                </Button>
-                <Button
-                  variant={!showLogin ? "default" : "outline"}
-                  onClick={() => setShowLogin(false)}
-                >
-                  Register
-                </Button>
-              </div>
-              {showLogin ? <LoginForm /> : <RegisterForm />}
-            </div>
+            <AuthDialogs />
           )}
           
           <div className="mt-8">

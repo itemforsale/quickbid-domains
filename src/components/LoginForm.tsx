@@ -4,7 +4,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 
-export const LoginForm = () => {
+interface LoginFormProps {
+  onSuccess?: () => void;
+}
+
+export const LoginForm = ({ onSuccess }: LoginFormProps) => {
   const { login } = useUser();
   const [formData, setFormData] = useState({
     name: "",
@@ -26,10 +30,11 @@ export const LoginForm = () => {
       password: formData.password,
     });
     toast.success("Successfully logged in!");
+    onSuccess?.();
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 max-w-md mx-auto p-6 bg-white/80 rounded-lg shadow-lg backdrop-blur-sm">
+    <form onSubmit={handleSubmit} className="space-y-4">
       <h2 className="text-2xl font-bold text-center text-gray-900 mb-6">Login to Bid</h2>
       <div>
         <Input
