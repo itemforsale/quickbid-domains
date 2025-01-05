@@ -6,20 +6,23 @@ let reconnectAttempts = 0;
 const MAX_RECONNECT_ATTEMPTS = 5;
 const RECONNECT_DELAY = 5000;
 
-// Fallback data storage for private windows
+// Shared storage for all browser instances
 let inMemoryDomains: Domain[] = [];
+const STORAGE_KEY = 'quickbid_domains';
 
+// Create a more reliable broadcast channel
 const createBroadcastChannel = () => {
   try {
     return new BroadcastChannel('domainUpdates');
   } catch (error) {
-    console.warn('BroadcastChannel not supported');
+    console.warn('BroadcastChannel not supported, falling back to storage events');
     return null;
   }
 };
 
 let broadcastChannel = createBroadcastChannel();
 
+// Enhanced error handling for WebSocket
 const handleWebSocketError = (error: Event) => {
   console.error('WebSocket error:', error);
   if (reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
@@ -33,37 +36,61 @@ const handleWebSocketError = (error: Event) => {
   }
 };
 
+// Improved initial data request
 const requestInitialData = () => {
-  // Request data from other windows
   if (broadcastChannel) {
     broadcastChannel.postMessage({ type: 'request_initial_data' });
   }
-  // Request data from server
+  
+  // Always try to get data from localStorage first
+  try {
+    const storedData = localStorage.getItem(STORAGE_KEY);
+    if (storedData) {
+      const parsedData = JSON.parse(storedData);
+      inMemoryDomains = parsedData;
+    }
+  } catch (error) {
+    console.warn('Unable to read from localStorage');
+  }
+
+  // Then request from server
   if (ws && ws.readyState === WebSocket.OPEN) {
     ws.send(JSON.stringify({ type: 'get_initial_data' }));
   }
 };
 
+// Enhanced update broadcasting
 const broadcastUpdate = (domains: Domain[]) => {
   // Update in-memory storage
   inMemoryDomains = domains;
 
-  // Try to update localStorage if available
+  // Try to update localStorage
   try {
-    localStorage.setItem('quickbid_domains', JSON.stringify(domains));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(domains));
   } catch (error) {
     console.warn('Unable to save to localStorage');
   }
 
-  // Try to broadcast to other windows if available
+  // Broadcast to other windows
   if (broadcastChannel) {
     try {
       broadcastChannel.postMessage({ type: 'domains-update', domains });
     } catch (error) {
       console.warn('Unable to broadcast update');
-      // Try to recreate broadcast channel if it failed
       broadcastChannel = createBroadcastChannel();
     }
+  }
+
+  // Dispatch storage event for cross-tab communication
+  try {
+    const event = new StorageEvent('storage', {
+      key: STORAGE_KEY,
+      newValue: JSON.stringify(domains),
+      url: window.location.href
+    });
+    window.dispatchEvent(event);
+  } catch (error) {
+    console.warn('Unable to dispatch storage event');
   }
 };
 
@@ -102,13 +129,13 @@ export const setupWebSocket = (onUpdate: (domains: Domain[]) => void) => {
         handleWebSocketError(new Event('connection_closed'));
       };
 
-      // Set up BroadcastChannel message handling if available
+      // Set up BroadcastChannel message handling
       if (broadcastChannel) {
         broadcastChannel.onmessage = (event) => {
           if (event.data.type === 'domains-update') {
             onUpdate(event.data.domains);
+            inMemoryDomains = event.data.domains;
           } else if (event.data.type === 'request_initial_data') {
-            // Share data with other windows if we have it
             if (inMemoryDomains.length > 0) {
               broadcastChannel?.postMessage({
                 type: 'domains-update',
@@ -119,20 +146,20 @@ export const setupWebSocket = (onUpdate: (domains: Domain[]) => void) => {
         };
       }
 
-      // Listen for storage events to sync across tabs
+      // Enhanced storage event listener
       window.addEventListener('storage', (event) => {
-        if (event.key === 'quickbid_domains' && event.newValue) {
+        if (event.key === STORAGE_KEY && event.newValue) {
           try {
             const domains = JSON.parse(event.newValue);
             onUpdate(domains);
             inMemoryDomains = domains;
           } catch (error) {
-            console.error('Error parsing domains from localStorage:', error);
+            console.error('Error parsing domains from storage event:', error);
           }
         }
       });
 
-      // Request initial data when the page loads
+      // Request initial data on page load
       window.addEventListener('load', requestInitialData);
     } catch (error) {
       console.error('Error setting up WebSocket:', error);
@@ -160,7 +187,7 @@ export const getDomains = async (): Promise<Domain[]> => {
 
   // Then try localStorage
   try {
-    const savedDomains = localStorage.getItem('quickbid_domains');
+    const savedDomains = localStorage.getItem(STORAGE_KEY);
     if (savedDomains) {
       const parsedDomains = JSON.parse(savedDomains).map((domain: any) => ({
         ...domain,
