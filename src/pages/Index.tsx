@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { DomainCard } from "@/components/DomainCard";
 import { SearchBar } from "@/components/SearchBar";
 import { LoginForm } from "@/components/LoginForm";
@@ -31,11 +31,35 @@ interface Domain {
   purchaseDate?: Date;
 }
 
+const STORAGE_KEY = 'quickbid_domains';
+
 const Index = () => {
   const { user, logout } = useUser();
-  const [domains, setDomains] = useState<Domain[]>([]);
+  const [domains, setDomains] = useState<Domain[]>(() => {
+    const savedDomains = localStorage.getItem(STORAGE_KEY);
+    if (savedDomains) {
+      const parsedDomains = JSON.parse(savedDomains);
+      // Convert string dates back to Date objects
+      return parsedDomains.map((domain: any) => ({
+        ...domain,
+        endTime: new Date(domain.endTime),
+        bidTimestamp: domain.bidTimestamp ? new Date(domain.bidTimestamp) : undefined,
+        purchaseDate: domain.purchaseDate ? new Date(domain.purchaseDate) : undefined,
+        bidHistory: domain.bidHistory.map((bid: any) => ({
+          ...bid,
+          timestamp: new Date(bid.timestamp)
+        }))
+      }));
+    }
+    return [];
+  });
   const [searchQuery, setSearchQuery] = useState("");
   const [showLogin, setShowLogin] = useState(true);
+
+  // Save domains to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(domains));
+  }, [domains]);
 
   const handleBid = (domainId: number, amount: number) => {
     if (!user) return;
