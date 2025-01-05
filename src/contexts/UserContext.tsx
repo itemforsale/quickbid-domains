@@ -5,6 +5,7 @@ interface User {
   email: string;
   username: string;
   password: string;
+  isAdmin?: boolean;
 }
 
 interface UserContextType {
@@ -19,6 +20,10 @@ export function UserProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
 
   const login = (userData: User) => {
+    // For demo purposes, make user with username 'admin' an admin
+    if (userData.username === 'admin') {
+      userData.isAdmin = true;
+    }
     setUser(userData);
   };
 

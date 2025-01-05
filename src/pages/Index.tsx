@@ -5,6 +5,8 @@ import { LoginForm } from "@/components/LoginForm";
 import { RegisterForm } from "@/components/RegisterForm";
 import { DomainSubmissionForm } from "@/components/DomainSubmissionForm";
 import { UserProfile } from "@/components/UserProfile";
+import { AdminPanel } from "@/components/AdminPanel";
+import { PendingDomains } from "@/components/PendingDomains";
 import { useUser } from "@/contexts/UserContext";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -24,40 +26,20 @@ interface Domain {
   endTime: Date;
   bidHistory: Bid[];
   buyNowPrice?: number;
-  status: 'active' | 'sold';
+  status: 'pending' | 'active' | 'sold';
   finalPrice?: number;
   purchaseDate?: Date;
 }
 
-const generateInitialDomains = (): Domain[] => {
-  const domains = [
-    "premium.com",
-    "startup.io",
-    "brand.co",
-    "tech.app",
-    "market.io",
-    "crypto.net",
-  ];
-
-  return domains.map((domain, index) => ({
-    id: index + 1,
-    name: domain,
-    currentBid: Math.floor(Math.random() * 1000) + 100,
-    endTime: new Date(Date.now() + (Math.random() * 30 + 30) * 60000),
-    bidHistory: [],
-    status: 'active',
-  }));
-};
-
 const Index = () => {
   const { user, logout } = useUser();
-  const [domains, setDomains] = useState<Domain[]>(generateInitialDomains());
+  const [domains, setDomains] = useState<Domain[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [showLogin, setShowLogin] = useState(true);
 
   const handleBid = (domainId: number, amount: number) => {
     if (!user) return;
-    
+
     setDomains((prevDomains) =>
       prevDomains.map((domain) => {
         if (domain.id === domainId) {
@@ -76,7 +58,6 @@ const Index = () => {
             ],
           };
 
-          // Check if bid meets buy now price
           if (domain.buyNowPrice && amount >= domain.buyNowPrice) {
             return {
               ...updatedDomain,
@@ -118,18 +99,34 @@ const Index = () => {
       id: domains.length + 1,
       name: domainName,
       currentBid: startingPrice,
-      endTime: new Date(Date.now() + 60 * 60000), // 1 hour from now
+      endTime: new Date(Date.now() + 60 * 60000),
       bidHistory: [],
-      status: 'active',
+      status: 'pending',
       buyNowPrice: buyNowPrice || undefined,
     };
 
     setDomains((prevDomains) => [...prevDomains, newDomain]);
   };
 
+  const handleApproveDomain = (domainId: number) => {
+    setDomains((prevDomains) =>
+      prevDomains.map((domain) =>
+        domain.id === domainId ? { ...domain, status: 'active' } : domain
+      )
+    );
+  };
+
+  const handleRejectDomain = (domainId: number) => {
+    setDomains((prevDomains) =>
+      prevDomains.filter((domain) => domain.id !== domainId)
+    );
+  };
+
+  const pendingDomains = domains.filter(d => d.status === 'pending');
   const activeDomains = domains.filter(d => d.status === 'active');
   const soldDomains = domains.filter(d => d.status === 'sold');
-  const userWonDomains = soldDomains.filter(d => d.currentBidder === user?.username)
+  const userWonDomains = soldDomains
+    .filter(d => d.currentBidder === user?.username)
     .map(d => ({
       id: d.id,
       name: d.name,
@@ -189,6 +186,16 @@ const Index = () => {
             <SearchBar onSearch={setSearchQuery} />
           </div>
         </div>
+
+        {user?.isAdmin && (
+          <AdminPanel
+            pendingDomains={pendingDomains}
+            onApproveDomain={handleApproveDomain}
+            onRejectDomain={handleRejectDomain}
+          />
+        )}
+
+        <PendingDomains domains={pendingDomains} />
 
         <div className="space-y-12">
           <div>
