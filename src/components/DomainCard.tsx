@@ -116,11 +116,11 @@ export const DomainCard = ({
       
       <div className="relative p-6">
         <div className="flex flex-col gap-4">
-          <div className="flex justify-between items-start">
+          <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
             <DomainHeader
               domain={domain}
               isNew={isNew}
-              featured={featured || false}
+              featured={featured}
               isEnded={isEnded}
               listedBy={listedBy}
             />

@@ -1,4 +1,4 @@
-import { Star, Sparkles } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
 interface DomainHeaderProps {
   domain: string;
@@ -8,36 +8,38 @@ interface DomainHeaderProps {
   listedBy: string;
 }
 
-export const DomainHeader = ({ domain, isNew, featured, isEnded, listedBy }: DomainHeaderProps) => {
+export const DomainHeader = ({
+  domain,
+  isNew,
+  featured,
+  isEnded,
+  listedBy,
+}: DomainHeaderProps) => {
   return (
-    <div>
-      <div className="flex gap-2">
-        <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-          isEnded 
-            ? 'bg-gray-100 text-gray-600'
-            : 'bg-primary/10 text-primary animate-pulse'
-        }`}>
-          {isEnded ? 'Ended' : 'Active'}
-        </span>
-        {featured && (
-          <span className="px-2 py-1 text-xs font-medium bg-yellow-100 text-yellow-700 rounded-full flex items-center gap-1">
-            <Star className="w-3 h-3 fill-yellow-500" />
-            Featured
-          </span>
-        )}
-        {isNew && (
-          <span className="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-700 rounded-full flex items-center gap-1">
-            <Sparkles className="w-3 h-3" />
-            NEW
-          </span>
-        )}
+    <div className="flex flex-col gap-2 flex-1">
+      <div className="flex items-start justify-between gap-4">
+        <h3 className="text-lg font-semibold text-left break-all">
+          {domain}
+        </h3>
+        <div className="flex gap-2 flex-shrink-0">
+          {isNew && (
+            <Badge variant="secondary" className="bg-blue-100 text-blue-800">
+              New
+            </Badge>
+          )}
+          {featured && (
+            <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
+              Featured
+            </Badge>
+          )}
+          {isEnded && (
+            <Badge variant="secondary" className="bg-gray-100 text-gray-800">
+              Ended
+            </Badge>
+          )}
+        </div>
       </div>
-      <h3 className="mt-2 text-2xl font-bold text-gray-900 group-hover:text-primary transition-colors">
-        {domain}
-      </h3>
-      <p className="text-sm text-gray-500 mt-1">
-        Auction by <span className="font-medium text-gray-700">{listedBy}</span>
-      </p>
+      <p className="text-sm text-gray-500 text-left">Listed by {listedBy}</p>
     </div>
   );
 };

@@ -1,7 +1,6 @@
-import { useState } from "react";
-import { useInterval } from "react-use";
-import { Timer } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { useState, useEffect } from "react";
+import { Badge } from "@/components/ui/badge";
+import { differenceInMinutes, differenceInSeconds } from "date-fns";
 
 interface AuctionTimerProps {
   endTime: Date;
@@ -10,59 +9,45 @@ interface AuctionTimerProps {
 
 export const AuctionTimer = ({ endTime, onEnd }: AuctionTimerProps) => {
   const [timeLeft, setTimeLeft] = useState("");
-  const [isEndingSoon, setIsEndingSoon] = useState(false);
-  const [flash, setFlash] = useState(false);
+  const [isEnding, setIsEnding] = useState(false);
 
-  // Flash animation interval
-  useInterval(() => {
-    if (isEndingSoon) {
-      setFlash(prev => !prev);
-    }
-  }, 500);
+  useEffect(() => {
+    const updateTimer = () => {
+      const now = new Date();
+      const minutesLeft = differenceInMinutes(endTime, now);
+      const secondsLeft = differenceInMinutes(endTime, now) <= 0 
+        ? differenceInSeconds(endTime, now) 
+        : (differenceInSeconds(endTime, now) % 60);
 
-  const calculateTimeLeft = () => {
-    const difference = endTime.getTime() - new Date().getTime();
-    
-    if (difference <= 0) {
-      onEnd();
-      setIsEndingSoon(false);
-      return "Auction ended";
-    }
+      if (minutesLeft <= 0 && secondsLeft <= 0) {
+        setTimeLeft("Ended");
+        onEnd();
+        return;
+      }
 
-    const minutes = Math.floor((difference / 1000 / 60) % 60);
-    const seconds = Math.floor((difference / 1000) % 60);
+      setIsEnding(minutesLeft <= 10);
+      setTimeLeft(`${minutesLeft}m ${secondsLeft}s`);
+    };
 
-    // Check if less than 10 minutes remaining
-    setIsEndingSoon(minutes < 10);
-
-    return `${minutes}:${seconds < 10 ? "0" : ""}${seconds}`;
-  };
-
-  useInterval(() => {
-    setTimeLeft(calculateTimeLeft());
-  }, 1000);
+    updateTimer();
+    const interval = setInterval(updateTimer, 1000);
+    return () => clearInterval(interval);
+  }, [endTime, onEnd]);
 
   return (
-    <div className="text-right">
-      <p className="text-sm text-gray-500 flex items-center gap-1 justify-end">
-        <Timer className="w-4 h-4" />
-        {timeLeft === "Auction ended" ? 'Ended' : 'Time Left'}
-      </p>
-      <div className="flex items-center gap-2">
-        <p className={cn(
-          "text-lg font-mono font-bold transition-colors",
-          isEndingSoon ? "text-red-600" : "text-gray-900 group-hover:text-primary"
-        )}>
-          {timeLeft}
-        </p>
-        {isEndingSoon && timeLeft !== "Auction ended" && (
-          <span className={cn(
-            "text-xs font-semibold px-2 py-1 rounded-full",
-            flash ? "bg-red-100 text-red-600" : "bg-transparent"
-          )}>
-            Ending Soon!
+    <div className="flex-shrink-0 text-right">
+      <div className="flex flex-col items-end gap-1">
+        <p className="text-sm text-gray-500">Time Left</p>
+        <div className={`flex items-center gap-2 ${isEnding ? 'animate-pulse' : ''}`}>
+          {isEnding && (
+            <Badge variant="destructive" className="animate-pulse">
+              Ending Soon!
+            </Badge>
+          )}
+          <span className={`font-mono font-medium ${isEnding ? 'text-red-600' : 'text-gray-900'}`}>
+            {timeLeft}
           </span>
-        )}
+        </div>
       </div>
     </div>
   );
