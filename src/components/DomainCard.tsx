@@ -1,14 +1,14 @@
 import { useState, useEffect } from "react";
-import { useInterval } from "react-use";
 import { toast } from "sonner";
-import { Hammer, Timer } from "lucide-react";
 import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { useUser } from "@/contexts/UserContext";
 import { BidHistory } from "./BidHistory";
 import { BidInput } from "./BidInput";
 import { CurrentBid } from "./CurrentBid";
 import { DomainHeader } from "./domain/DomainHeader";
+import { AuctionTimer } from "./domain/AuctionTimer";
+import { BidCount } from "./domain/BidCount";
+import { BuyNowSection } from "./domain/BuyNowSection";
 import { cn } from "@/lib/utils";
 
 interface Bid {
@@ -50,12 +50,9 @@ export const DomainCard = ({
   listedBy = 'Anonymous',
 }: DomainCardProps) => {
   const { user } = useUser();
-  const [timeLeft, setTimeLeft] = useState("");
   const [isEnded, setIsEnded] = useState(false);
   const [bidAmount, setBidAmount] = useState(currentBid + 10);
   const [isNew, setIsNew] = useState(false);
-  const [isEndingSoon, setIsEndingSoon] = useState(false);
-  const [flash, setFlash] = useState(false);
 
   useEffect(() => {
     if (createdAt && createdAt instanceof Date) {
@@ -69,35 +66,6 @@ export const DomainCard = ({
       }
     }
   }, [createdAt]);
-
-  // Flash animation interval
-  useInterval(() => {
-    if (isEndingSoon) {
-      setFlash(prev => !prev);
-    }
-  }, 500);
-
-  const calculateTimeLeft = () => {
-    const difference = endTime.getTime() - new Date().getTime();
-    
-    if (difference <= 0) {
-      setIsEnded(true);
-      setIsEndingSoon(false);
-      return "Auction ended";
-    }
-
-    const minutes = Math.floor((difference / 1000 / 60) % 60);
-    const seconds = Math.floor((difference / 1000) % 60);
-
-    // Check if less than 10 minutes remaining
-    setIsEndingSoon(minutes < 10);
-
-    return `${minutes}:${seconds < 10 ? "0" : ""}${seconds}`;
-  };
-
-  useInterval(() => {
-    setTimeLeft(calculateTimeLeft());
-  }, 1000);
 
   const handleBid = () => {
     if (isEnded) {
@@ -142,8 +110,7 @@ export const DomainCard = ({
       isEnded && "opacity-50",
       featured 
         ? 'bg-gradient-to-br from-yellow-50 to-white border-yellow-200 shadow-yellow-100' 
-        : 'bg-gradient-to-br from-gray-50 to-white border-gray-200',
-      isEndingSoon && flash && "border-red-500 bg-red-50"
+        : 'bg-gradient-to-br from-gray-50 to-white border-gray-200'
     )}>
       <div className="absolute inset-0 bg-white/40 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
       
@@ -157,34 +124,13 @@ export const DomainCard = ({
               isEnded={isEnded}
               listedBy={listedBy}
             />
-            <div className="text-right">
-              <p className="text-sm text-gray-500 flex items-center gap-1 justify-end">
-                <Timer className="w-4 h-4" />
-                {isEnded ? 'Ended' : 'Time Left'}
-              </p>
-              <div className="flex items-center gap-2">
-                <p className={cn(
-                  "text-lg font-mono font-bold transition-colors",
-                  isEndingSoon ? "text-red-600" : "text-gray-900 group-hover:text-primary"
-                )}>
-                  {timeLeft}
-                </p>
-                {isEndingSoon && !isEnded && (
-                  <span className={cn(
-                    "text-xs font-semibold px-2 py-1 rounded-full",
-                    flash ? "bg-red-100 text-red-600" : "bg-transparent"
-                  )}>
-                    Ending Soon!
-                  </span>
-                )}
-              </div>
-            </div>
+            <AuctionTimer 
+              endTime={endTime}
+              onEnd={() => setIsEnded(true)}
+            />
           </div>
           
-          <div className="flex items-center gap-2 mt-1 text-gray-600">
-            <Hammer className="w-4 h-4" />
-            <span className="text-sm font-medium">{bidHistory.length} bids</span>
-          </div>
+          <BidCount count={bidHistory.length} />
 
           <div className="flex flex-col gap-3">
             <CurrentBid
@@ -195,19 +141,10 @@ export const DomainCard = ({
             />
             
             {!isEnded && buyNowPrice && (
-              <div className="flex justify-between items-center p-3 bg-green-50 rounded-lg border border-green-100 group-hover:bg-green-100/50 transition-colors">
-                <span className="text-sm font-medium text-green-700">Buy Now Price:</span>
-                <div className="flex gap-2 items-center">
-                  <span className="font-bold text-green-700">${buyNowPrice}</span>
-                  <Button
-                    onClick={handleBuyNow}
-                    variant="outline"
-                    className="bg-green-100 hover:bg-green-200 text-green-700 border-green-200"
-                  >
-                    Buy Now
-                  </Button>
-                </div>
-              </div>
+              <BuyNowSection
+                price={buyNowPrice}
+                onBuyNow={handleBuyNow}
+              />
             )}
             
             {!isEnded && (
