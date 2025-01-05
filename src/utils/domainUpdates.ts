@@ -34,6 +34,11 @@ const handleWebSocketError = (error: Event) => {
 };
 
 const requestInitialData = () => {
+  // Request data from other windows
+  if (broadcastChannel) {
+    broadcastChannel.postMessage({ type: 'request_initial_data' });
+  }
+  // Request data from server
   if (ws && ws.readyState === WebSocket.OPEN) {
     ws.send(JSON.stringify({ type: 'get_initial_data' }));
   }
@@ -56,6 +61,8 @@ const broadcastUpdate = (domains: Domain[]) => {
       broadcastChannel.postMessage({ type: 'domains-update', domains });
     } catch (error) {
       console.warn('Unable to broadcast update');
+      // Try to recreate broadcast channel if it failed
+      broadcastChannel = createBroadcastChannel();
     }
   }
 };
@@ -100,9 +107,30 @@ export const setupWebSocket = (onUpdate: (domains: Domain[]) => void) => {
         broadcastChannel.onmessage = (event) => {
           if (event.data.type === 'domains-update') {
             onUpdate(event.data.domains);
+          } else if (event.data.type === 'request_initial_data') {
+            // Share data with other windows if we have it
+            if (inMemoryDomains.length > 0) {
+              broadcastChannel?.postMessage({
+                type: 'domains-update',
+                domains: inMemoryDomains
+              });
+            }
           }
         };
       }
+
+      // Listen for storage events to sync across tabs
+      window.addEventListener('storage', (event) => {
+        if (event.key === 'quickbid_domains' && event.newValue) {
+          try {
+            const domains = JSON.parse(event.newValue);
+            onUpdate(domains);
+            inMemoryDomains = domains;
+          } catch (error) {
+            console.error('Error parsing domains from localStorage:', error);
+          }
+        }
+      });
 
       // Request initial data when the page loads
       window.addEventListener('load', requestInitialData);
