@@ -106,6 +106,10 @@ const Index = () => {
     setDomains((prevDomains) => [...prevDomains, newDomain]);
   };
 
+  const handleDeleteListing = (domainId: number) => {
+    setDomains((prevDomains) => prevDomains.filter((domain) => domain.id !== domainId));
+  };
+
   const pendingDomains = domains.filter(d => d.status === 'pending');
   const activeDomains = domains.filter(d => d.status === 'active');
   const soldDomains = domains.filter(d => d.status === 'sold');
@@ -138,6 +142,7 @@ const Index = () => {
         {user?.isAdmin && (
           <AdminPanel
             pendingDomains={pendingDomains}
+            activeDomains={activeDomains}
             onApproveDomain={(id) => setDomains(prevDomains =>
               prevDomains.map(domain =>
                 domain.id === id ? { ...domain, status: 'active' } : domain
@@ -146,6 +151,7 @@ const Index = () => {
             onRejectDomain={(id) => setDomains(prevDomains =>
               prevDomains.filter(domain => domain.id !== id)
             )}
+            onDeleteListing={handleDeleteListing}
           />
         )}
 
