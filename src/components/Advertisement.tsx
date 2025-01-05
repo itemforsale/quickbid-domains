@@ -33,18 +33,18 @@ export const Advertisement = () => {
         className="block hover:opacity-90 transition-opacity"
       >
         {adContent.type === 'banner' && adContent.imageUrl ? (
-          <div className="relative aspect-[21/9] w-full">
+          <div className="relative w-full h-[200px] sm:h-[250px] md:h-[300px]">
             <img
               src={adContent.imageUrl}
               alt={adContent.title}
-              className="w-full h-full object-cover rounded-lg shadow-md"
+              className="w-full h-full object-contain rounded-lg shadow-md"
             />
           </div>
         ) : (
-          <div className="bg-gradient-to-r from-purple-100 to-pink-100 dark:from-purple-900 dark:to-pink-900 p-4 rounded-lg shadow-md">
-            <h3 className="text-lg font-semibold mb-2">{adContent.title}</h3>
+          <div className="bg-gradient-to-r from-purple-100 to-pink-100 dark:from-purple-900 dark:to-pink-900 p-6 rounded-lg shadow-md">
+            <h3 className="text-xl font-semibold mb-3">{adContent.title}</h3>
             {adContent.description && (
-              <p className="text-sm text-gray-600 dark:text-gray-300">{adContent.description}</p>
+              <p className="text-base text-gray-600 dark:text-gray-300">{adContent.description}</p>
             )}
           </div>
         )}
