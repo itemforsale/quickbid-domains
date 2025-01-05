@@ -54,9 +54,12 @@ export const DomainSubmissionForm = ({ onSubmit }: DomainSubmissionFormProps) =>
       return;
     }
 
-    const domainRegex = /^[a-zA-Z0-9][a-zA-Z0-9-]{1,61}[a-zA-Z0-9]\.[a-zA-Z]{2,}$/;
-    if (!domainRegex.test(domainName)) {
-      toast.error("Please enter a valid domain name");
+    // Updated domain validation to support web3 domains
+    const traditionalDomainRegex = /^[a-zA-Z0-9][a-zA-Z0-9-]{1,61}[a-zA-Z0-9]\.[a-zA-Z]{2,}$/;
+    const web3DomainRegex = /^[a-zA-Z0-9][a-zA-Z0-9-]{1,61}[a-zA-Z0-9]\.(eth|crypto|nft|blockchain|dao|x|888|wallet|bitcoin|coin|zil|luxe)$/;
+
+    if (!traditionalDomainRegex.test(domainName) && !web3DomainRegex.test(domainName)) {
+      toast.error("Please enter a valid domain name (traditional or web3)");
       return;
     }
 
@@ -72,7 +75,7 @@ export const DomainSubmissionForm = ({ onSubmit }: DomainSubmissionFormProps) =>
       <form onSubmit={handleSubmit} className="space-y-4">
         <FormHeader 
           title="List Your Domain" 
-          subtitle="Start your auction in minutes" 
+          subtitle="List traditional (.com, .net, etc.) or web3 domains (.eth, .crypto, etc.)" 
         />
         <div className="space-y-3">
           <DomainInput 
