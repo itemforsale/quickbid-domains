@@ -1,11 +1,15 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { DomainCard } from "@/components/DomainCard";
 import { SearchBar } from "@/components/SearchBar";
+import { LoginForm } from "@/components/LoginForm";
+import { useUser } from "@/contexts/UserContext";
+import { Button } from "@/components/ui/button";
 
 interface Domain {
   id: number;
   name: string;
   currentBid: number;
+  currentBidder?: string;
   endTime: Date;
 }
 
@@ -28,14 +32,17 @@ const generateInitialDomains = (): Domain[] => {
 };
 
 const Index = () => {
+  const { user, logout } = useUser();
   const [domains, setDomains] = useState<Domain[]>(generateInitialDomains());
   const [searchQuery, setSearchQuery] = useState("");
 
   const handleBid = (domainId: number, amount: number) => {
+    if (!user) return;
+    
     setDomains((prevDomains) =>
       prevDomains.map((domain) =>
         domain.id === domainId
-          ? { ...domain, currentBid: amount }
+          ? { ...domain, currentBid: amount, currentBidder: user.username }
           : domain
       )
     );
@@ -55,7 +62,23 @@ const Index = () => {
           <p className="text-lg text-gray-600 mb-8">
             Exclusive domains available for the next 60 minutes
           </p>
-          <SearchBar onSearch={setSearchQuery} />
+          
+          {user ? (
+            <div className="mb-8 flex items-center justify-center gap-4">
+              <p className="text-gray-700">
+                Welcome, <span className="font-semibold">{user.username}</span>!
+              </p>
+              <Button variant="outline" onClick={logout}>
+                Logout
+              </Button>
+            </div>
+          ) : (
+            <LoginForm />
+          )}
+          
+          <div className="mt-8">
+            <SearchBar onSearch={setSearchQuery} />
+          </div>
         </div>
 
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 animate-slide-up">
@@ -66,6 +89,7 @@ const Index = () => {
               initialPrice={100}
               endTime={domain.endTime}
               currentBid={domain.currentBid}
+              currentBidder={domain.currentBidder}
               onBid={(amount) => handleBid(domain.id, amount)}
             />
           ))}

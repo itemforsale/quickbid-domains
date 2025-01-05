@@ -3,6 +3,7 @@ import { useInterval } from "react-use";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { useUser } from "@/contexts/UserContext";
 
 interface DomainCardProps {
   domain: string;
@@ -10,6 +11,7 @@ interface DomainCardProps {
   endTime: Date;
   onBid: (amount: number) => void;
   currentBid: number;
+  currentBidder?: string;
 }
 
 export const DomainCard = ({
@@ -18,7 +20,9 @@ export const DomainCard = ({
   endTime,
   onBid,
   currentBid,
+  currentBidder,
 }: DomainCardProps) => {
+  const { user } = useUser();
   const [timeLeft, setTimeLeft] = useState("");
   const [bidAmount, setBidAmount] = useState(currentBid + 10);
 
@@ -39,6 +43,10 @@ export const DomainCard = ({
   }, 1000);
 
   const handleBid = () => {
+    if (!user) {
+      toast.error("Please login to place a bid");
+      return;
+    }
     if (bidAmount <= currentBid) {
       toast.error("Bid must be higher than current bid");
       return;
@@ -64,11 +72,20 @@ export const DomainCard = ({
           </div>
         </div>
         
-        <div className="flex justify-between items-center">
-          <div>
-            <p className="text-sm text-gray-500">Current Bid</p>
-            <p className="text-lg font-bold text-gray-900">${currentBid}</p>
+        <div className="flex flex-col gap-2">
+          <div className="flex justify-between items-center">
+            <div>
+              <p className="text-sm text-gray-500">Current Bid</p>
+              <p className="text-lg font-bold text-gray-900">${currentBid}</p>
+            </div>
+            {currentBidder && (
+              <div className="text-right">
+                <p className="text-sm text-gray-500">Highest Bidder</p>
+                <p className="text-sm font-medium text-gray-900">{currentBidder}</p>
+              </div>
+            )}
           </div>
+          
           <div className="flex gap-2">
             <input
               type="number"
