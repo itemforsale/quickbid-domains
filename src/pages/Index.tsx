@@ -110,6 +110,16 @@ const Index = () => {
     setDomains((prevDomains) => prevDomains.filter((domain) => domain.id !== domainId));
   };
 
+  const handleFeatureDomain = (domainId: number) => {
+    setDomains((prevDomains) =>
+      prevDomains.map((domain) =>
+        domain.id === domainId
+          ? { ...domain, featured: !domain.featured }
+          : domain
+      )
+    );
+  };
+
   const pendingDomains = domains.filter(d => d.status === 'pending');
   const activeDomains = domains.filter(d => d.status === 'active');
   const soldDomains = domains.filter(d => d.status === 'sold');
@@ -152,6 +162,7 @@ const Index = () => {
               prevDomains.filter(domain => domain.id !== id)
             )}
             onDeleteListing={handleDeleteListing}
+            onFeatureDomain={handleFeatureDomain}
           />
         )}
 
