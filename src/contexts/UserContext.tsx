@@ -38,7 +38,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
   }, [users]);
 
   const register = (userData: User) => {
-    if (users.some(u => u.username === userData.username)) {
+    if (users.some(u => u.username.toLowerCase() === userData.username.toLowerCase())) {
       toast.error("Username already exists");
       return;
     }
@@ -48,7 +48,9 @@ export function UserProvider({ children }: { children: ReactNode }) {
   };
 
   const login = (credentials: { username: string; password: string }) => {
-    if (credentials.username === ADMIN_USERNAME && credentials.password === ADMIN_PASSWORD) {
+    const inputUsername = credentials.username.toLowerCase();
+    
+    if (inputUsername === ADMIN_USERNAME.toLowerCase() && credentials.password === ADMIN_PASSWORD) {
       const adminUser: User = {
         username: ADMIN_USERNAME,
         name: 'Sam Charles',
@@ -62,7 +64,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    const foundUser = users.find(u => u.username === credentials.username);
+    const foundUser = users.find(u => u.username.toLowerCase() === inputUsername);
     
     if (!foundUser) {
       toast.error("User not found");
@@ -84,12 +86,12 @@ export function UserProvider({ children }: { children: ReactNode }) {
   };
 
   const deleteUser = (username: string) => {
-    setUsers(users.filter(u => u.username !== username));
+    setUsers(users.filter(u => u.username.toLowerCase() !== username.toLowerCase()));
   };
 
   const updateUser = (updatedUser: User) => {
     setUsers(users.map(u => 
-      u.username === updatedUser.username ? { ...u, ...updatedUser } : u
+      u.username.toLowerCase() === updatedUser.username.toLowerCase() ? { ...u, ...updatedUser } : u
     ));
   };
 
