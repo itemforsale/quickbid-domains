@@ -90,12 +90,12 @@ export const DomainCard = ({
                 <p className="text-sm text-gray-500">Highest Bidder</p>
                 <p className="text-sm font-medium text-gray-900">
                   {formatBidder(currentBidder)}
-                  {bidTimestamp && (
-                    <span className="text-xs text-gray-500 block">
-                      {formatDistanceToNow(bidTimestamp, { addSuffix: true })}
-                    </span>
-                  )}
                 </p>
+                {bidTimestamp && (
+                  <p className="text-xs text-gray-500">
+                    {formatDistanceToNow(new Date(bidTimestamp), { addSuffix: true })}
+                  </p>
+                )}
               </div>
             )}
           </div>

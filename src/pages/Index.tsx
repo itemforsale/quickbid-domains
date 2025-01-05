@@ -114,6 +114,7 @@ const Index = () => {
               endTime={domain.endTime}
               currentBid={domain.currentBid}
               currentBidder={domain.currentBidder}
+              bidTimestamp={domain.bidTimestamp}
               onBid={(amount) => handleBid(domain.id, amount)}
             />
           ))}
