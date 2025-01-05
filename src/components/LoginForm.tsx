@@ -26,38 +26,31 @@ export const LoginForm = ({ onSuccess }: LoginFormProps) => {
 
     setIsLoading(true);
     try {
+      let email = '';
+      
       // Special case for admin user
       if (formData.username === '60dna') {
-        const { data, error } = await supabase.auth.signInWithPassword({
-          email: 'admin@example.com',
-          password: formData.password,
-        });
-        
-        if (error) throw error;
-        onSuccess?.();
-        return;
+        email = 'admin@example.com';
+      } else {
+        // For regular users, find their email by username
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('email')
+          .eq('username', formData.username)
+          .single();
+
+        if (profileError || !profile?.email) {
+          toast.error("User not found");
+          setIsLoading(false);
+          return;
+        }
+
+        email = profile.email;
       }
 
-      // For regular users, find their email by username
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('email')
-        .eq('username', formData.username)
-        .single();
-
-      if (profileError) {
-        console.error('Profile lookup error:', profileError);
-        toast.error("User not found");
-        return;
-      }
-
-      if (!profile?.email) {
-        toast.error("User not found");
-        return;
-      }
-
+      // Sign in with email and password
       const { data, error } = await supabase.auth.signInWithPassword({
-        email: profile.email,
+        email,
         password: formData.password,
       });
 
