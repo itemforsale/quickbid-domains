@@ -14,6 +14,26 @@ export const DomainSubmissionForm = ({ onSubmit }: DomainSubmissionFormProps) =>
   const [startingPrice, setStartingPrice] = useState("");
   const [buyNowPrice, setBuyNowPrice] = useState("");
 
+  const formatPrice = (value: string) => {
+    // Remove any non-digit characters
+    const digits = value.replace(/\D/g, '');
+    
+    // Convert to number and format with commas
+    const number = parseInt(digits);
+    if (isNaN(number)) return '';
+    return number.toLocaleString('en-US');
+  };
+
+  const handleStartingPriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formatted = formatPrice(e.target.value);
+    setStartingPrice(formatted);
+  };
+
+  const handleBuyNowPriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formatted = formatPrice(e.target.value);
+    setBuyNowPrice(formatted);
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -22,8 +42,8 @@ export const DomainSubmissionForm = ({ onSubmit }: DomainSubmissionFormProps) =>
       return;
     }
 
-    const startingPriceNum = parseFloat(startingPrice);
-    const buyNowPriceNum = buyNowPrice ? parseFloat(buyNowPrice) : null;
+    const startingPriceNum = parseFloat(startingPrice.replace(/,/g, ''));
+    const buyNowPriceNum = buyNowPrice ? parseFloat(buyNowPrice.replace(/,/g, '')) : null;
 
     if (isNaN(startingPriceNum) || startingPriceNum <= 0) {
       toast.error("Please enter a valid starting price");
@@ -71,24 +91,20 @@ export const DomainSubmissionForm = ({ onSubmit }: DomainSubmissionFormProps) =>
           <div className="relative">
             <DollarSign className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
             <Input
-              type="number"
+              type="text"
               value={startingPrice}
-              onChange={(e) => setStartingPrice(e.target.value)}
+              onChange={handleStartingPriceChange}
               placeholder="Starting price"
-              min="0"
-              step="0.01"
               className="pl-10"
             />
           </div>
           <div className="relative">
             <Rocket className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
             <Input
-              type="number"
+              type="text"
               value={buyNowPrice}
-              onChange={(e) => setBuyNowPrice(e.target.value)}
+              onChange={handleBuyNowPriceChange}
               placeholder="Buy now price (optional)"
-              min="0"
-              step="0.01"
               className="pl-10"
             />
           </div>
