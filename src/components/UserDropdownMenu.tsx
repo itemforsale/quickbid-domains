@@ -40,6 +40,9 @@ export const UserDropdownMenu = ({
   const userDetails = users.find((u) => u.username === username);
   const xUsername = userDetails?.xUsername;
 
+  console.log('Users in context:', users);
+  console.log('Won domains:', wonDomains);
+
   return (
     <div className="fixed top-4 right-20 z-50 flex items-center gap-2">
       <NotificationBell username={username} domains={domains} />
@@ -85,7 +88,7 @@ export const UserDropdownMenu = ({
             </DropdownMenuItem>
             {wonDomains.map((domain) => {
               const sellerDetails = users.find((u) => u.username === domain.listedBy);
-              const sellerXUsername = sellerDetails?.xUsername;
+              console.log('Seller details for domain:', domain.name, sellerDetails);
 
               return (
                 <DropdownMenuItem key={domain.id} className="pl-8 text-sm flex-col items-start py-2 cursor-default">
@@ -96,32 +99,38 @@ export const UserDropdownMenu = ({
                   <div className="text-xs text-muted-foreground mt-1 space-y-1">
                     <div>
                       Listed by:{" "}
-                      {sellerXUsername ? (
-                        <a
-                          href={`https://x.com/${sellerXUsername}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-800"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          @{sellerXUsername} <ExternalLink size={12} />
-                        </a>
+                      {sellerDetails ? (
+                        <>
+                          {sellerDetails.xUsername ? (
+                            <a
+                              href={`https://x.com/${sellerDetails.xUsername}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-800"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              @{sellerDetails.xUsername} <ExternalLink size={12} />
+                            </a>
+                          ) : (
+                            <span>@{domain.listedBy}</span>
+                          )}
+                          {sellerDetails.email && (
+                            <div className="flex items-center gap-1 mt-1">
+                              <Mail size={12} />
+                              <a
+                                href={`mailto:${sellerDetails.email}`}
+                                className="text-blue-600 hover:text-blue-800"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                {sellerDetails.email}
+                              </a>
+                            </div>
+                          )}
+                        </>
                       ) : (
                         <span>@{domain.listedBy}</span>
                       )}
                     </div>
-                    {sellerDetails?.email && (
-                      <div className="flex items-center gap-1">
-                        <Mail size={12} />
-                        <a
-                          href={`mailto:${sellerDetails.email}`}
-                          className="text-blue-600 hover:text-blue-800"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          {sellerDetails.email}
-                        </a>
-                      </div>
-                    )}
                   </div>
                 </DropdownMenuItem>
               );
