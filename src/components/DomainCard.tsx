@@ -89,7 +89,7 @@ export const DomainCard = ({
               <div className="text-right">
                 <p className="text-sm text-gray-500">Highest Bidder</p>
                 <p className="text-sm font-medium text-gray-900">
-                  {formatBidder(currentBidder)}
+                  {formatBidder(currentBidder)} (${currentBid})
                 </p>
                 {bidTimestamp && (
                   <p className="text-xs text-gray-500">
