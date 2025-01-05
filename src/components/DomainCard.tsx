@@ -30,6 +30,7 @@ interface DomainCardProps {
   onBuyNow?: () => void;
   featured?: boolean;
   createdAt?: Date;
+  listedBy?: string;
 }
 
 export const DomainCard = ({
