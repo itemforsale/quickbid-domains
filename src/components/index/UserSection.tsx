@@ -13,6 +13,7 @@ interface UserSectionProps {
     name: string;
     finalPrice: number;
     purchaseDate: Date;
+    listedBy: string;
   }[];
   onLogout: () => void;
   onDomainSubmit: (domain: string, startingPrice: number, buyNowPrice: number | null) => void;

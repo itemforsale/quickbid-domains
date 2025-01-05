@@ -7,7 +7,7 @@ interface Domain {
   name: string;
   finalPrice: number;
   purchaseDate: Date;
-  listedBy: string;  // Added this field
+  listedBy: string;
 }
 
 interface UserProfileProps {
