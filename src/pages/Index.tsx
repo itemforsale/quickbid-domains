@@ -10,6 +10,7 @@ import { AdminPanel } from "@/components/AdminPanel";
 import { PendingDomains } from "@/components/PendingDomains";
 import { Advertisement } from "@/components/Advertisement";
 import { AboutBioBox } from "@/components/AboutBioBox";
+import { handleDomainBid, handleDomainBuyNow, createNewDomain } from "@/utils/domainUtils";
 
 const STORAGE_KEY = 'quickbid_domains';
 
@@ -28,7 +29,8 @@ const Index = () => {
         bidHistory: domain.bidHistory.map((bid: any) => ({
           ...bid,
           timestamp: new Date(bid.timestamp)
-        }))
+        })),
+        listedBy: domain.listedBy || 'Anonymous', // Ensure listedBy has a fallback
       }));
     }
     return [];
@@ -42,79 +44,26 @@ const Index = () => {
 
   const handleBid = (domainId: number, amount: number) => {
     if (!user) return;
-
-    setDomains((prevDomains) =>
-      prevDomains.map((domain) => {
-        if (domain.id === domainId) {
-          const updatedDomain = {
-            ...domain,
-            currentBid: amount,
-            currentBidder: user.username,
-            bidTimestamp: new Date(),
-            bidHistory: [
-              ...domain.bidHistory,
-              {
-                bidder: user.username,
-                amount: amount,
-                timestamp: new Date(),
-              },
-            ],
-          };
-
-          if (domain.buyNowPrice && amount >= domain.buyNowPrice) {
-            return {
-              ...updatedDomain,
-              status: 'sold',
-              finalPrice: amount,
-              purchaseDate: new Date(),
-              listedBy: domain.listedBy, // Ensure listedBy is preserved
-            };
-          }
-
-          return updatedDomain;
-        }
-        return domain;
-      })
-    );
+    setDomains(prevDomains => handleDomainBid(prevDomains, domainId, amount, user.username));
   };
 
   const handleBuyNow = (domainId: number) => {
     if (!user) return;
-
-    setDomains((prevDomains) =>
-      prevDomains.map((domain) => {
-        if (domain.id === domainId && domain.buyNowPrice) {
-          return {
-            ...domain,
-            status: 'sold',
-            currentBid: domain.buyNowPrice,
-            currentBidder: user.username,
-            finalPrice: domain.buyNowPrice,
-            purchaseDate: new Date(),
-            listedBy: domain.listedBy, // Ensure listedBy is preserved
-          };
-        }
-        return domain;
-      })
-    );
+    setDomains(prevDomains => handleDomainBuyNow(prevDomains, domainId, user.username));
   };
 
-  const handleDomainSubmission = (domainName: string, startingPrice: number, buyNowPrice: number | null) => {
+  const handleDomainSubmission = (name: string, startingPrice: number, buyNowPrice: number | null) => {
     if (!user) return;
     
-    const newDomain: Domain = {
-      id: domains.length + 1,
-      name: domainName,
-      currentBid: startingPrice,
-      endTime: new Date(Date.now() + 60 * 60000),
-      bidHistory: [],
-      status: 'pending',
-      buyNowPrice: buyNowPrice || undefined,
-      createdAt: new Date(),
-      listedBy: user.username,
-    };
+    const newDomain = createNewDomain(
+      domains.length + 1,
+      name,
+      startingPrice,
+      buyNowPrice,
+      user.username
+    );
 
-    setDomains((prevDomains) => [...prevDomains, newDomain]);
+    setDomains(prevDomains => [...prevDomains, newDomain]);
   };
 
   const handleDeleteListing = (domainId: number) => {
@@ -135,20 +84,18 @@ const Index = () => {
 
   const pendingDomains = domains.filter(d => d.status === 'pending');
   
-  const activeDomains = domains.filter(d => {
-    return d.status === 'active' && d.endTime > now;
-  });
+  const activeDomains = domains.filter(d => 
+    d.status === 'active' && d.endTime > now
+  );
 
-  const endedDomains = domains.filter(d => {
-    return d.status === 'active' && d.endTime <= now && d.bidHistory.length === 0;
-  });
+  const endedDomains = domains.filter(d => 
+    d.status === 'active' && d.endTime <= now && d.bidHistory.length === 0
+  );
 
-  const soldDomains = domains.filter(d => {
-    return (
-      d.status === 'sold' || 
-      (d.status === 'active' && d.endTime <= now && d.bidHistory.length > 0)
-    );
-  });
+  const soldDomains = domains.filter(d => 
+    d.status === 'sold' || 
+    (d.status === 'active' && d.endTime <= now && d.bidHistory.length > 0)
+  );
 
   const userWonDomains = soldDomains
     .filter(d => d.currentBidder === user?.username)
@@ -157,10 +104,10 @@ const Index = () => {
       name: d.name,
       finalPrice: d.finalPrice!,
       purchaseDate: d.purchaseDate!,
-      listedBy: d.listedBy,
+      listedBy: d.listedBy || 'Anonymous', // Ensure listedBy has a fallback
     }));
 
-  const filteredActiveDomains = activeDomains.filter((domain) =>
+  const filteredActiveDomains = activeDomains.filter(domain =>
     domain.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
