@@ -8,8 +8,11 @@ interface HeaderProps {
 export const Header = ({ onSearch }: HeaderProps) => {
   const [count, setCount] = useState(60);
   const [isCountingDown, setIsCountingDown] = useState(true);
+  const [isAnimationComplete, setIsAnimationComplete] = useState(false);
 
   useEffect(() => {
+    if (isAnimationComplete) return;
+
     const timer = setTimeout(() => {
       if (isCountingDown) {
         if (count > 0) {
@@ -21,13 +24,13 @@ export const Header = ({ onSearch }: HeaderProps) => {
         if (count < 60) {
           setCount(count + 1);
         } else {
-          setIsCountingDown(true);
+          setIsAnimationComplete(true);
         }
       }
-    }, 200); // Slowed down the interval to 200ms (previously 50ms)
+    }, 200);
 
     return () => clearTimeout(timer);
-  }, [count, isCountingDown]);
+  }, [count, isCountingDown, isAnimationComplete]);
 
   return (
     <div className="text-center mb-12 animate-fade-in">
