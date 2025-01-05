@@ -43,12 +43,12 @@ export const Header = ({ onSearch }: HeaderProps) => {
   };
 
   return (
-    <div className="text-center mb-12 animate-fade-in relative">
-      <div className="absolute left-0 top-0">
+    <div className="text-center mb-12 animate-fade-in">
+      <div className="fixed left-4 top-4 z-50">
         <Button
           variant="outline"
           size="sm"
-          className="gap-2"
+          className="gap-2 bg-black hover:bg-black/90 text-white border-none"
           onClick={() => window.open('https://x.com/samcharles', '_blank')}
         >
           <X className="h-4 w-4" />
