@@ -38,12 +38,20 @@ export function UserProvider({ children }: { children: ReactNode }) {
   }, [users]);
 
   const register = (userData: User) => {
-    if (users.some(u => u.username.toLowerCase() === userData.username.toLowerCase())) {
+    const normalizedUsername = userData.username.toLowerCase();
+    if (users.some(u => u.username.toLowerCase() === normalizedUsername)) {
       toast.error("Username already exists");
       return;
     }
-    setUsers([...users, userData]);
-    setUser(userData);
+
+    const newUser = {
+      ...userData,
+      username: userData.username,
+      xUsername: userData.xUsername || userData.username // Default to username if xUsername not provided
+    };
+
+    setUsers([...users, newUser]);
+    setUser(newUser);
     toast.success("Successfully registered!");
   };
 
@@ -90,9 +98,15 @@ export function UserProvider({ children }: { children: ReactNode }) {
   };
 
   const updateUser = (updatedUser: User) => {
+    const normalizedUsername = updatedUser.username.toLowerCase();
     setUsers(users.map(u => 
-      u.username.toLowerCase() === updatedUser.username.toLowerCase() ? { ...u, ...updatedUser } : u
+      u.username.toLowerCase() === normalizedUsername ? { ...u, ...updatedUser } : u
     ));
+    
+    // Update current user if it's the same user
+    if (user && user.username.toLowerCase() === normalizedUsername) {
+      setUser(updatedUser);
+    }
   };
 
   return (

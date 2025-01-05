@@ -36,16 +36,18 @@ export const UserDropdownMenu = ({
   onLogout,
   onDomainSubmit,
 }: UserDropdownMenuProps) => {
-  const { users } = useUser();
-  const userDetails = username === '60dna' ? {
-    username: '60dna',
-    name: 'Sam Charles',
-    email: 'sam@wizard.uk',
-    xUsername: 'samcharles',
-    isAdmin: true
-  } : users.find((u) => u.username === username);
+  const { users, user } = useUser();
+  const userDetails = username === '60dna' 
+    ? {
+        username: '60dna',
+        name: 'Sam Charles',
+        email: 'sam@wizard.uk',
+        xUsername: 'samcharles',
+        isAdmin: true
+      } 
+    : users.find((u) => u.username.toLowerCase() === username.toLowerCase());
   
-  const xUsername = userDetails?.xUsername;
+  const xUsername = userDetails?.xUsername || userDetails?.username;
 
   return (
     <div className="fixed top-4 right-4 z-50 flex items-center gap-2">
@@ -92,13 +94,17 @@ export const UserDropdownMenu = ({
               <span>Won Domains ({wonDomains.length})</span>
             </DropdownMenuItem>
             {wonDomains.map((domain) => {
-              const sellerDetails = domain.listedBy === '60dna' ? {
-                username: '60dna',
-                name: 'Sam Charles',
-                email: 'sam@wizard.uk',
-                xUsername: 'samcharles',
-                isAdmin: true
-              } : users.find((u) => u.username === domain.listedBy);
+              const sellerDetails = domain.listedBy === '60dna' 
+                ? {
+                    username: '60dna',
+                    name: 'Sam Charles',
+                    email: 'sam@wizard.uk',
+                    xUsername: 'samcharles',
+                    isAdmin: true
+                  } 
+                : users.find((u) => u.username.toLowerCase() === domain.listedBy.toLowerCase());
+
+              const sellerXUsername = sellerDetails?.xUsername || sellerDetails?.username;
 
               return (
                 <DropdownMenuItem key={domain.id} className="pl-8 text-sm flex-col items-start py-2 cursor-default">
@@ -111,15 +117,15 @@ export const UserDropdownMenu = ({
                       Listed by:{" "}
                       {sellerDetails ? (
                         <>
-                          {sellerDetails.xUsername ? (
+                          {sellerXUsername ? (
                             <a
-                              href={`https://x.com/${sellerDetails.xUsername}`}
+                              href={`https://x.com/${sellerXUsername}`}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-800"
                               onClick={(e) => e.stopPropagation()}
                             >
-                              @{sellerDetails.xUsername} <ExternalLink size={12} />
+                              @{sellerXUsername} <ExternalLink size={12} />
                             </a>
                           ) : (
                             <span>@{domain.listedBy}</span>
