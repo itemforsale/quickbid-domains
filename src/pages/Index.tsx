@@ -15,7 +15,20 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 const STORAGE_KEY = 'quickbid_domains';
 const REFRESH_INTERVAL = 10000; // Refresh every 10 seconds
-const GITHUB_RAW_URL = 'https://raw.githubusercontent.com/itemforsale/quickbid-domains/main/domains.json';
+
+// Default domains data if API fails
+const DEFAULT_DOMAINS = [
+  {
+    id: 1,
+    name: "example.com",
+    currentBid: 100,
+    endTime: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours from now
+    status: "active",
+    bidHistory: [],
+    createdAt: new Date(),
+    listedBy: "System"
+  }
+];
 
 const Index = () => {
   const { user, logout } = useUser();
@@ -27,26 +40,7 @@ const Index = () => {
     queryKey: ['domains'],
     queryFn: async () => {
       try {
-        const response = await fetch(GITHUB_RAW_URL);
-        if (!response.ok) {
-          throw new Error('Network response was not ok');
-        }
-        const data = await response.json();
-        return data.map((domain: any) => ({
-          ...domain,
-          endTime: new Date(domain.endTime),
-          createdAt: domain.createdAt ? new Date(domain.createdAt) : new Date(),
-          bidTimestamp: domain.bidTimestamp ? new Date(domain.bidTimestamp) : undefined,
-          purchaseDate: domain.purchaseDate ? new Date(domain.purchaseDate) : undefined,
-          bidHistory: (domain.bidHistory || []).map((bid: any) => ({
-            ...bid,
-            timestamp: new Date(bid.timestamp)
-          })),
-          listedBy: domain.listedBy || 'Anonymous',
-        }));
-      } catch (error) {
-        console.error('Error fetching domains:', error);
-        // Fallback to localStorage if GitHub fetch fails
+        // First try to get data from localStorage
         const savedDomains = localStorage.getItem(STORAGE_KEY);
         if (savedDomains) {
           const parsedDomains = JSON.parse(savedDomains);
@@ -63,7 +57,12 @@ const Index = () => {
             listedBy: domain.listedBy || 'Anonymous',
           }));
         }
-        return [];
+        
+        // If no data in localStorage, return default domains
+        return DEFAULT_DOMAINS;
+      } catch (error) {
+        console.error('Error loading domains:', error);
+        return DEFAULT_DOMAINS;
       }
     },
     refetchInterval: REFRESH_INTERVAL,
