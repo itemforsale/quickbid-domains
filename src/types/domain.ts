@@ -8,7 +8,7 @@ export interface Domain {
     amount: number;
     timestamp: Date;
   }[];
-  status: 'pending' | 'active' | 'sold';
+  status: 'pending' | 'active' | 'sold' | 'featured';
   currentBidder?: string;
   bidTimestamp?: Date;
   buyNowPrice?: number;
@@ -17,4 +17,5 @@ export interface Domain {
   featured?: boolean;
   createdAt: Date;
   listedBy: string;
+  isFixedPrice?: boolean;
 }

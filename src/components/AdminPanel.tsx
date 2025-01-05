@@ -7,14 +7,18 @@ import { DomainCard } from "./admin/DomainCard";
 import { AdvertisementSettings } from "./admin/AdvertisementSettings";
 import { Switch } from "./ui/switch";
 import { Label } from "./ui/label";
+import { Button } from "./ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "./ui/dialog";
+import { Input } from "./ui/input";
 
 interface Domain {
   id: number;
   name: string;
   currentBid: number;
   buyNowPrice?: number;
-  status: 'pending' | 'active' | 'sold';
+  status: 'pending' | 'active' | 'sold' | 'featured';
   featured?: boolean;
+  isFixedPrice?: boolean;
 }
 
 interface User {
@@ -47,6 +51,11 @@ export const AdminPanel = ({
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [hideSearch, setHideSearch] = useState(() => {
     return localStorage.getItem('hideSearch') === 'true';
+  });
+  const [isFeatureDialogOpen, setIsFeatureDialogOpen] = useState(false);
+  const [newFeatureDomain, setNewFeatureDomain] = useState({
+    name: '',
+    buyNowPrice: ''
   });
 
   const handleApprove = (domainId: number) => {
@@ -107,9 +116,75 @@ export const AdminPanel = ({
     toast.success(`Search bar ${checked ? 'hidden' : 'visible'} on main site`);
   };
 
+  const handleAddFeatureDomain = () => {
+    if (!newFeatureDomain.name || !newFeatureDomain.buyNowPrice) {
+      toast.error("Please fill in all fields");
+      return;
+    }
+
+    const price = parseFloat(newFeatureDomain.buyNowPrice);
+    if (isNaN(price) || price <= 0) {
+      toast.error("Please enter a valid price");
+      return;
+    }
+
+    const newDomain = {
+      id: Date.now(),
+      name: newFeatureDomain.name,
+      currentBid: price,
+      buyNowPrice: price,
+      status: 'featured' as const,
+      featured: true,
+      isFixedPrice: true
+    };
+
+    onFeatureDomain(newDomain.id);
+    setIsFeatureDialogOpen(false);
+    setNewFeatureDomain({ name: '', buyNowPrice: '' });
+    toast.success("Featured domain added successfully!");
+  };
+
   return (
     <div className="space-y-8">
       <AdvertisementSettings />
+
+      <div className="space-y-4">
+        <div className="flex justify-between items-center">
+          <h2 className="text-2xl font-semibold">Featured Domains</h2>
+          <Dialog open={isFeatureDialogOpen} onOpenChange={setIsFeatureDialogOpen}>
+            <DialogTrigger asChild>
+              <Button>Add Featured Domain</Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Add Featured Domain</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="domain-name">Domain Name</Label>
+                  <Input
+                    id="domain-name"
+                    value={newFeatureDomain.name}
+                    onChange={(e) => setNewFeatureDomain(prev => ({ ...prev, name: e.target.value }))}
+                    placeholder="example.com"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="buy-now-price">Buy Now Price ($)</Label>
+                  <Input
+                    id="buy-now-price"
+                    value={newFeatureDomain.buyNowPrice}
+                    onChange={(e) => setNewFeatureDomain(prev => ({ ...prev, buyNowPrice: e.target.value }))}
+                    placeholder="1000"
+                    type="number"
+                  />
+                </div>
+                <Button onClick={handleAddFeatureDomain}>Add Domain</Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+        </div>
+      </div>
 
       <div className="space-y-4">
         <h2 className="text-2xl font-semibold mb-4">Site Settings</h2>
