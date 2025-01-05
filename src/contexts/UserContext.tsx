@@ -27,7 +27,11 @@ const ADMIN_USERNAME = '60dna';
 const ADMIN_PASSWORD = 'xMWR6IXrqPkXPbWg';
 
 export function UserProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<User | null>(() => {
+    const savedUser = localStorage.getItem('currentUser');
+    return savedUser ? JSON.parse(savedUser) : null;
+  });
+  
   const [users, setUsers] = useState<User[]>(() => {
     const savedUsers = localStorage.getItem(USERS_STORAGE_KEY);
     return savedUsers ? JSON.parse(savedUsers) : [];
@@ -36,6 +40,10 @@ export function UserProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(users));
   }, [users]);
+
+  useEffect(() => {
+    localStorage.setItem('currentUser', JSON.stringify(user));
+  }, [user]);
 
   const register = (userData: User) => {
     const normalizedUsername = userData.username.toLowerCase();
@@ -47,7 +55,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
     const newUser = {
       ...userData,
       username: userData.username,
-      xUsername: userData.xUsername || userData.username // Default to username if xUsername not provided
+      xUsername: userData.xUsername || userData.username
     };
 
     setUsers([...users, newUser]);
@@ -57,8 +65,10 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
   const login = (credentials: { username: string; password: string }) => {
     const inputUsername = credentials.username.toLowerCase();
+    const inputPassword = credentials.password;
     
-    if (inputUsername === ADMIN_USERNAME.toLowerCase() && credentials.password === ADMIN_PASSWORD) {
+    // Check for admin login
+    if (inputUsername === ADMIN_USERNAME.toLowerCase() && inputPassword === ADMIN_PASSWORD) {
       const adminUser: User = {
         username: ADMIN_USERNAME,
         name: 'Sam Charles',
@@ -68,6 +78,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
         isAdmin: true
       };
       setUser(adminUser);
+      localStorage.setItem('currentUser', JSON.stringify(adminUser));
       toast.success("Successfully logged in as admin!");
       return;
     }
@@ -79,17 +90,19 @@ export function UserProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    if (foundUser.password !== credentials.password) {
+    if (foundUser.password !== inputPassword) {
       toast.error("Invalid password");
       return;
     }
 
     setUser(foundUser);
+    localStorage.setItem('currentUser', JSON.stringify(foundUser));
     toast.success("Successfully logged in!");
   };
 
   const logout = () => {
     setUser(null);
+    localStorage.removeItem('currentUser');
     toast.success("Successfully logged out!");
   };
 
@@ -103,9 +116,9 @@ export function UserProvider({ children }: { children: ReactNode }) {
       u.username.toLowerCase() === normalizedUsername ? { ...u, ...updatedUser } : u
     ));
     
-    // Update current user if it's the same user
     if (user && user.username.toLowerCase() === normalizedUsername) {
       setUser(updatedUser);
+      localStorage.setItem('currentUser', JSON.stringify(updatedUser));
     }
   };
 
