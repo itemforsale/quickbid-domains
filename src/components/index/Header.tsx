@@ -36,9 +36,14 @@ export const Header = ({ onSearch }: HeaderProps) => {
   return (
     <div className="text-center mb-12 animate-fade-in">
       <DarkModeToggle />
-      <h1 className="text-5xl font-bold mb-4 bg-gradient-to-r from-purple-500 via-pink-500 to-orange-500 text-transparent bg-clip-text hover:scale-105 transition-transform duration-300 cursor-default">
-        <span className="font-mono">{count}</span>dna.com
-      </h1>
+      <div className="space-y-4">
+        <h1 className="text-3xl font-bold text-foreground mb-2">
+          60 Minute Domain Name Auctions
+        </h1>
+        <h2 className="text-5xl font-bold mb-4 bg-gradient-to-r from-purple-500 via-pink-500 to-orange-500 text-transparent bg-clip-text hover:scale-105 transition-transform duration-300 cursor-default">
+          <span className="font-mono">{count}</span>dna.com
+        </h2>
+      </div>
       <p className="text-lg text-foreground mb-8">
         Only 60 minutes left to bid on a domain name
       </p>
