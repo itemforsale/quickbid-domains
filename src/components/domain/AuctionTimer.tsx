@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
-import { differenceInMinutes, differenceInSeconds } from "date-fns";
 
 interface AuctionTimerProps {
   endTime: Date;
@@ -14,19 +13,20 @@ export const AuctionTimer = ({ endTime, onEnd }: AuctionTimerProps) => {
   useEffect(() => {
     const updateTimer = () => {
       const now = new Date();
-      const minutesLeft = differenceInMinutes(endTime, now);
-      const secondsLeft = differenceInMinutes(endTime, now) <= 0 
-        ? differenceInSeconds(endTime, now) 
-        : (differenceInSeconds(endTime, now) % 60);
+      const timeDiff = endTime.getTime() - now.getTime();
 
-      if (minutesLeft <= 0 && secondsLeft <= 0) {
+      if (timeDiff <= 0) {
         setTimeLeft("Ended");
         onEnd();
         return;
       }
 
-      setIsEnding(minutesLeft <= 10);
-      setTimeLeft(`${minutesLeft}m ${secondsLeft}s`);
+      // Calculate minutes and seconds
+      const minutes = Math.floor(timeDiff / (1000 * 60));
+      const seconds = Math.floor((timeDiff % (1000 * 60)) / 1000);
+
+      setIsEnding(minutes <= 10);
+      setTimeLeft(`${minutes}m ${seconds}s`);
     };
 
     updateTimer();
