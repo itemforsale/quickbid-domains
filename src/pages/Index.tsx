@@ -11,6 +11,7 @@ interface Domain {
   name: string;
   currentBid: number;
   currentBidder?: string;
+  bidTimestamp?: Date;
   endTime: Date;
 }
 
@@ -44,7 +45,12 @@ const Index = () => {
     setDomains((prevDomains) =>
       prevDomains.map((domain) =>
         domain.id === domainId
-          ? { ...domain, currentBid: amount, currentBidder: user.username }
+          ? {
+              ...domain,
+              currentBid: amount,
+              currentBidder: user.username,
+              bidTimestamp: new Date(),
+            }
           : domain
       )
     );

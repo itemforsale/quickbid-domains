@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useUser } from "@/contexts/UserContext";
+import { formatDistanceToNow } from "date-fns";
 
 interface DomainCardProps {
   domain: string;
@@ -12,6 +13,7 @@ interface DomainCardProps {
   onBid: (amount: number) => void;
   currentBid: number;
   currentBidder?: string;
+  bidTimestamp?: Date;
 }
 
 export const DomainCard = ({
@@ -21,6 +23,7 @@ export const DomainCard = ({
   onBid,
   currentBid,
   currentBidder,
+  bidTimestamp,
 }: DomainCardProps) => {
   const { user } = useUser();
   const [timeLeft, setTimeLeft] = useState("");
@@ -56,6 +59,10 @@ export const DomainCard = ({
     setBidAmount(bidAmount + 10);
   };
 
+  const formatBidder = (username: string) => {
+    return `@${username}`;
+  };
+
   return (
     <Card className="p-6 backdrop-blur-sm bg-white/50 border border-gray-200 rounded-xl transition-all duration-300 hover:shadow-lg animate-fade-in">
       <div className="flex flex-col gap-4">
@@ -81,7 +88,14 @@ export const DomainCard = ({
             {currentBidder && (
               <div className="text-right">
                 <p className="text-sm text-gray-500">Highest Bidder</p>
-                <p className="text-sm font-medium text-gray-900">{currentBidder}</p>
+                <p className="text-sm font-medium text-gray-900">
+                  {formatBidder(currentBidder)}
+                  {bidTimestamp && (
+                    <span className="text-xs text-gray-500 block">
+                      {formatDistanceToNow(bidTimestamp, { addSuffix: true })}
+                    </span>
+                  )}
+                </p>
               </div>
             )}
           </div>
