@@ -26,15 +26,29 @@ export const LoginForm = ({ onSuccess }: LoginFormProps) => {
 
     setIsLoading(true);
     try {
-      // First try to find the user's email by username
+      // Special case for admin user
+      if (formData.username === '60dna') {
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email: 'admin@example.com',
+          password: formData.password,
+        });
+        
+        if (error) throw error;
+        onSuccess?.();
+        return;
+      }
+
+      // For regular users, find their email by username
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('email')
         .eq('username', formData.username)
-        .maybeSingle();
+        .single();
 
       if (profileError) {
-        throw profileError;
+        console.error('Profile lookup error:', profileError);
+        toast.error("User not found");
+        return;
       }
 
       if (!profile?.email) {
@@ -42,10 +56,18 @@ export const LoginForm = ({ onSuccess }: LoginFormProps) => {
         return;
       }
 
-      await login({
-        username: formData.username,
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: profile.email,
         password: formData.password,
       });
+
+      if (error) {
+        console.error('Login error:', error);
+        toast.error("Invalid credentials");
+        return;
+      }
+
+      toast.success("Successfully logged in!");
       onSuccess?.();
     } catch (error: any) {
       console.error('Login error:', error);
