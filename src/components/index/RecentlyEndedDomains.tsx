@@ -20,7 +20,9 @@ export const RecentlyEndedDomains = ({ domains }: RecentlyEndedDomainsProps) => 
                 <span className="text-primary font-medium">${domain.currentBid}</span>
               </div>
               <p className="text-sm text-muted-foreground">
-                Final Bid: @{domain.currentBidder || 'No bids'}
+                {domain.currentBidder 
+                  ? `Final Bid: @${domain.currentBidder}`
+                  : "Not sold"}
               </p>
               <p className="text-xs text-muted-foreground">
                 Ended: {domain.endTime.toLocaleDateString()}
