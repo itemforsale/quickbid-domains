@@ -2,6 +2,7 @@ import { useState } from "react";
 import { DomainCard } from "@/components/DomainCard";
 import { SearchBar } from "@/components/SearchBar";
 import { LoginForm } from "@/components/LoginForm";
+import { RegisterForm } from "@/components/RegisterForm";
 import { useUser } from "@/contexts/UserContext";
 import { Button } from "@/components/ui/button";
 
@@ -35,6 +36,7 @@ const Index = () => {
   const { user, logout } = useUser();
   const [domains, setDomains] = useState<Domain[]>(generateInitialDomains());
   const [searchQuery, setSearchQuery] = useState("");
+  const [showLogin, setShowLogin] = useState(true);
 
   const handleBid = (domainId: number, amount: number) => {
     if (!user) return;
@@ -73,7 +75,23 @@ const Index = () => {
               </Button>
             </div>
           ) : (
-            <LoginForm />
+            <div className="mb-8">
+              <div className="flex justify-center gap-4 mb-4">
+                <Button
+                  variant={showLogin ? "default" : "outline"}
+                  onClick={() => setShowLogin(true)}
+                >
+                  Login
+                </Button>
+                <Button
+                  variant={!showLogin ? "default" : "outline"}
+                  onClick={() => setShowLogin(false)}
+                >
+                  Register
+                </Button>
+              </div>
+              {showLogin ? <LoginForm /> : <RegisterForm />}
+            </div>
           )}
           
           <div className="mt-8">
