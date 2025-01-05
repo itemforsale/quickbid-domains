@@ -30,26 +30,26 @@ export const LoginForm = ({ onSuccess }: LoginFormProps) => {
       
       // Special case for admin user
       if (formData.username === '60dna') {
+        console.log('Admin login attempt');
         email = 'admin@example.com';
       } else {
+        console.log('Regular user login attempt for username:', formData.username);
         // For regular users, find their email by username
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
           .select('email')
-          .eq('username', formData.username)
+          .eq('username', formData.username.toLowerCase())
           .single();
 
         if (profileError) {
           console.error('Profile lookup error:', profileError);
           toast.error("User not found");
-          setIsLoading(false);
           return;
         }
 
         if (!profile?.email) {
           console.error('No email found for username:', formData.username);
           toast.error("User not found");
-          setIsLoading(false);
           return;
         }
 
@@ -58,9 +58,8 @@ export const LoginForm = ({ onSuccess }: LoginFormProps) => {
 
       console.log('Attempting login with email:', email);
 
-      // Sign in with email and password
       const { data, error } = await supabase.auth.signInWithPassword({
-        email,
+        email: email,
         password: formData.password,
       });
 
@@ -80,6 +79,7 @@ export const LoginForm = ({ onSuccess }: LoginFormProps) => {
         return;
       }
 
+      console.log('Login successful:', data.user);
       toast.success("Successfully logged in!");
       onSuccess?.();
     } catch (error: any) {
@@ -98,7 +98,7 @@ export const LoginForm = ({ onSuccess }: LoginFormProps) => {
           type="text"
           placeholder="Username"
           value={formData.username}
-          onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+          onChange={(e) => setFormData({ ...formData, username: e.target.value.trim() })}
           className="w-full"
           disabled={isLoading}
         />
