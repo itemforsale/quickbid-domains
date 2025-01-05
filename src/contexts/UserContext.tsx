@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, ReactNode, useEffect } from "react";
 import { toast } from "sonner";
 
-export interface User {
+interface User {
   name: string;
   email: string;
   username: string;

@@ -92,12 +92,12 @@ const Index = () => {
     );
   };
 
-  const handleDomainSubmission = (domainName: string, startingPrice: number, buyNowPrice: number | null, durationDays: number) => {
+  const handleDomainSubmission = (domainName: string, startingPrice: number, buyNowPrice: number | null) => {
     const newDomain: Domain = {
       id: domains.length + 1,
       name: domainName,
       currentBid: startingPrice,
-      endTime: new Date(Date.now() + durationDays * 24 * 60 * 60 * 1000),
+      endTime: new Date(Date.now() + 60 * 60000),
       bidHistory: [],
       status: 'pending',
       buyNowPrice: buyNowPrice || undefined,

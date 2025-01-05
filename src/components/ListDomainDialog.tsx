@@ -8,14 +8,14 @@ import { DomainSubmissionForm } from "@/components/DomainSubmissionForm";
 import { useState } from "react";
 
 interface ListDomainDialogProps {
-  onDomainSubmit: (domain: string, startingPrice: number, buyNowPrice: number | null, durationDays: number) => void;
+  onDomainSubmit: (domain: string, startingPrice: number, buyNowPrice: number | null) => void;
 }
 
 export const ListDomainDialog = ({ onDomainSubmit }: ListDomainDialogProps) => {
   const [isOpen, setIsOpen] = useState(false);
 
-  const handleSubmit = (domain: string, startingPrice: number, buyNowPrice: number | null, durationDays: number) => {
-    onDomainSubmit(domain, startingPrice, buyNowPrice, durationDays);
+  const handleSubmit = (domain: string, startingPrice: number, buyNowPrice: number | null) => {
+    onDomainSubmit(domain, startingPrice, buyNowPrice);
     setIsOpen(false);
   };
 
