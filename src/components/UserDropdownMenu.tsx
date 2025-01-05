@@ -84,7 +84,7 @@ export const UserDropdownMenu = ({
               <span>Won Domains ({wonDomains.length})</span>
             </DropdownMenuItem>
             {wonDomains.map((domain) => {
-              const sellerDetails = users.find(u => u.username === domain.listedBy);
+              const sellerDetails = users.find((u) => u.username === domain.listedBy);
               const sellerXUsername = sellerDetails?.xUsername;
 
               return (
@@ -95,7 +95,7 @@ export const UserDropdownMenu = ({
                   </div>
                   <div className="text-xs text-muted-foreground mt-1 space-y-1">
                     <div>
-                      Listed by: {' '}
+                      Listed by:{" "}
                       {sellerXUsername ? (
                         <a
                           href={`https://x.com/${sellerXUsername}`}
