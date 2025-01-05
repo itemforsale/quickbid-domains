@@ -40,7 +40,23 @@ export const useNotifications = ({ username, domains }: UseNotificationsProps) =
             domain.purchaseDate > lastCheckTime) { // Only show for new wins
           const message = `Congratulations! You've won the auction for ${domain.name}!`;
           setNotifications(prev => [...prev, { id: wonId, message }]);
-          toast.success(message);
+          
+          // Show toast with action button
+          toast.success(message, {
+            duration: 10000, // 10 seconds
+            action: {
+              label: "View Details",
+              onClick: () => {
+                // Open the user dropdown menu to show won domains
+                const userDropdownButton = document.querySelector('[aria-haspopup="menu"]') as HTMLButtonElement;
+                if (userDropdownButton) {
+                  userDropdownButton.click();
+                }
+              },
+            },
+            dismissible: true,
+          });
+          
           shownNotifications.add(wonId);
           setHasUnread(true);
           
