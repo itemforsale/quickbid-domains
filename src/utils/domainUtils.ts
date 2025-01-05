@@ -23,7 +23,7 @@ export const handleDomainBid = async (
       bid_timestamp: new Date().toISOString(),
       bid_history: bidHistory
     })
-    .eq('id', domainId)
+    .eq('id', domainId.toString())
     .select()
     .single();
 
@@ -57,7 +57,7 @@ export const handleDomainBuyNow = async (
       final_price: domain.buyNowPrice,
       purchase_date: new Date().toISOString()
     })
-    .eq('id', domainId);
+    .eq('id', domainId.toString());
 
   if (error) {
     console.error('Error updating domain:', error);
@@ -83,18 +83,16 @@ export const createNewDomain = async (
   const endTime = new Date();
   endTime.setHours(endTime.getHours() + 24); // 24-hour auction
 
-  const newDomain = {
-    name,
-    current_bid: startingPrice,
-    end_time: endTime.toISOString(),
-    buy_now_price: buyNowPrice,
-    status: 'active',
-    listed_by: username
-  };
-
   const { data, error } = await supabase
     .from('domains')
-    .insert(newDomain)
+    .insert({
+      name,
+      current_bid: startingPrice,
+      end_time: endTime.toISOString(),
+      buy_now_price: buyNowPrice,
+      status: 'active',
+      listed_by: username
+    })
     .select()
     .single();
 
@@ -104,13 +102,13 @@ export const createNewDomain = async (
   }
 
   return {
-    id: data.id,
+    id: parseInt(data.id),
     name: data.name,
     currentBid: data.current_bid,
     endTime: new Date(data.end_time),
     bidHistory: [],
     status: 'active',
-    buyNowPrice: data.buy_now_price,
+    buyNowPrice: data.buy_now_price || undefined,
     featured: false,
     createdAt: new Date(data.created_at),
     listedBy: data.listed_by
