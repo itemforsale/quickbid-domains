@@ -1,37 +1,81 @@
 import { Domain } from "@/types/domain";
-import { setupWebSocket } from "./domains/websocket";
-import { setupBroadcastChannel } from "./domains/broadcast";
-import { getStoredDomains, updateDomains } from "./domains/storage";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
-export const setupDomainUpdates = (onUpdate: (domains: Domain[]) => void) => {
-  const cleanupWebSocket = setupWebSocket(onUpdate);
-  const cleanupBroadcast = setupBroadcastChannel(onUpdate);
+export const setupWebSocket = (onUpdate: (domains: Domain[]) => void) => {
+  const channel = supabase
+    .channel('schema-db-changes')
+    .on(
+      'postgres_changes',
+      {
+        event: '*', // Listen to all changes (INSERT, UPDATE, DELETE)
+        schema: 'public',
+        table: 'domains'
+      },
+      async () => {
+        // Fetch the latest data when any change occurs
+        const { data: domains } = await supabase
+          .from('domains')
+          .select('*')
+          .order('created_at', { ascending: false });
+
+        if (domains) {
+          const transformedDomains = domains.map((domain): Domain => ({
+            id: domain.id,
+            name: domain.name,
+            currentBid: domain.current_bid,
+            endTime: new Date(domain.end_time),
+            bidHistory: domain.bid_history || [],
+            status: domain.status,
+            currentBidder: domain.current_bidder,
+            bidTimestamp: domain.bid_timestamp ? new Date(domain.bid_timestamp) : undefined,
+            buyNowPrice: domain.buy_now_price,
+            finalPrice: domain.final_price,
+            purchaseDate: domain.purchase_date ? new Date(domain.purchase_date) : undefined,
+            featured: domain.featured,
+            createdAt: new Date(domain.created_at),
+            listedBy: domain.listed_by
+          }));
+          
+          onUpdate(transformedDomains);
+          toast.success("Domain listings updated!");
+        }
+      }
+    )
+    .subscribe();
 
   return () => {
-    cleanupWebSocket();
-    cleanupBroadcast();
+    supabase.removeChannel(channel);
   };
 };
 
 export const getDomains = async (): Promise<Domain[]> => {
-  const storedData = getStoredDomains();
-  if (storedData) {
-    return storedData.domains.map((domain: any) => ({
-      ...domain,
-      endTime: new Date(domain.endTime),
-      createdAt: domain.createdAt ? new Date(domain.createdAt) : new Date(),
-      bidTimestamp: domain.bidTimestamp ? new Date(domain.bidTimestamp) : undefined,
-      purchaseDate: domain.purchaseDate ? new Date(domain.purchaseDate) : undefined,
-      bidHistory: (domain.bidHistory || []).map((bid: any) => ({
-        ...bid,
-        timestamp: new Date(bid.timestamp)
-      })),
-      listedBy: domain.listedBy || 'Anonymous',
-    }));
+  const { data: domains, error } = await supabase
+    .from('domains')
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error('Error fetching domains:', error);
+    return [];
   }
 
-  return [];
-};
+  if (!domains) return [];
 
-// Re-export setupWebSocket for direct usage
-export { setupWebSocket } from "./domains/websocket";
+  return domains.map((domain): Domain => ({
+    id: domain.id,
+    name: domain.name,
+    currentBid: domain.current_bid,
+    endTime: new Date(domain.end_time),
+    bidHistory: domain.bid_history || [],
+    status: domain.status,
+    currentBidder: domain.current_bidder,
+    bidTimestamp: domain.bid_timestamp ? new Date(domain.bid_timestamp) : undefined,
+    buyNowPrice: domain.buy_now_price,
+    finalPrice: domain.final_price,
+    purchaseDate: domain.purchase_date ? new Date(domain.purchase_date) : undefined,
+    featured: domain.featured,
+    createdAt: new Date(domain.created_at),
+    listedBy: domain.listed_by
+  }));
+};

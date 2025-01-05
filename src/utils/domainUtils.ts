@@ -1,81 +1,118 @@
 import { Domain } from "@/types/domain";
+import { supabase } from "@/integrations/supabase/client";
 
-export const handleDomainBid = (
+export const handleDomainBid = async (
   domains: Domain[],
   domainId: number,
   amount: number,
   username: string
-): Domain[] => {
-  return domains.map((domain) => {
-    if (domain.id === domainId) {
-      const updatedDomain = {
-        ...domain,
-        currentBid: amount,
-        currentBidder: username,
-        bidTimestamp: new Date(),
-        bidHistory: [
-          ...domain.bidHistory,
-          {
-            bidder: username,
-            amount: amount,
-            timestamp: new Date(),
-          },
-        ],
-      };
+): Promise<Domain[]> => {
+  const domain = domains.find((d) => d.id === domainId);
+  if (!domain) return domains;
 
-      if (domain.buyNowPrice && amount >= domain.buyNowPrice) {
-        return {
-          ...updatedDomain,
-          status: 'sold',
-          finalPrice: amount,
-          purchaseDate: new Date(),
-          listedBy: domain.listedBy || 'Anonymous', // Ensure listedBy has a fallback
-        };
-      }
+  const bidHistory = [
+    ...(domain.bidHistory || []),
+    { bidder: username, amount, timestamp: new Date() }
+  ];
 
-      return updatedDomain;
-    }
-    return domain;
-  });
+  const { data, error } = await supabase
+    .from('domains')
+    .update({
+      current_bid: amount,
+      current_bidder: username,
+      bid_timestamp: new Date().toISOString(),
+      bid_history: bidHistory
+    })
+    .eq('id', domainId)
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error updating domain:', error);
+    return domains;
+  }
+
+  return domains.map(d => d.id === domainId ? {
+    ...d,
+    currentBid: amount,
+    currentBidder: username,
+    bidTimestamp: new Date(),
+    bidHistory
+  } : d);
 };
 
-export const handleDomainBuyNow = (
+export const handleDomainBuyNow = async (
   domains: Domain[],
   domainId: number,
   username: string
-): Domain[] => {
-  return domains.map((domain) => {
-    if (domain.id === domainId && domain.buyNowPrice) {
-      return {
-        ...domain,
-        status: 'sold',
-        currentBid: domain.buyNowPrice,
-        currentBidder: username,
-        finalPrice: domain.buyNowPrice,
-        purchaseDate: new Date(),
-        listedBy: domain.listedBy || 'Anonymous', // Ensure listedBy has a fallback
-      };
-    }
-    return domain;
-  });
+): Promise<Domain[]> => {
+  const domain = domains.find((d) => d.id === domainId);
+  if (!domain || !domain.buyNowPrice) return domains;
+
+  const { error } = await supabase
+    .from('domains')
+    .update({
+      status: 'sold',
+      current_bidder: username,
+      final_price: domain.buyNowPrice,
+      purchase_date: new Date().toISOString()
+    })
+    .eq('id', domainId);
+
+  if (error) {
+    console.error('Error updating domain:', error);
+    return domains;
+  }
+
+  return domains.map(d => d.id === domainId ? {
+    ...d,
+    status: 'sold',
+    currentBidder: username,
+    finalPrice: domain.buyNowPrice,
+    purchaseDate: new Date()
+  } : d);
 };
 
-export const createNewDomain = (
+export const createNewDomain = async (
   id: number,
   name: string,
   startingPrice: number,
   buyNowPrice: number | null,
   username: string
-): Domain => {
-  return {
-    id,
+): Promise<Domain> => {
+  const endTime = new Date();
+  endTime.setHours(endTime.getHours() + 24); // 24-hour auction
+
+  const newDomain = {
     name,
-    currentBid: startingPrice,
-    endTime: new Date(Date.now() + 60 * 60000),
+    current_bid: startingPrice,
+    end_time: endTime.toISOString(),
+    buy_now_price: buyNowPrice,
+    status: 'active',
+    listed_by: username
+  };
+
+  const { data, error } = await supabase
+    .from('domains')
+    .insert(newDomain)
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error creating domain:', error);
+    throw error;
+  }
+
+  return {
+    id: data.id,
+    name: data.name,
+    currentBid: data.current_bid,
+    endTime: new Date(data.end_time),
     bidHistory: [],
-    status: 'pending',
-    buyNowPrice: buyNowPrice || undefined,
-    createdAt: new Date(),
-    listedBy: username || 'Anonymous', // Ensure listedBy has a fallback
+    status: 'active',
+    buyNowPrice: data.buy_now_price,
+    featured: false,
+    createdAt: new Date(data.created_at),
+    listedBy: data.listed_by
   };
 };
