@@ -7,6 +7,7 @@ interface Domain {
   name: string;
   finalPrice: number;
   purchaseDate: Date;
+  listedBy: string;  // Added this field
 }
 
 interface UserProfileProps {
@@ -30,36 +31,58 @@ export const UserProfile = ({ username, wonDomains }: UserProfileProps) => {
           <p className="text-gray-500">No domains won yet</p>
         ) : (
           <div className="grid gap-3">
-            {wonDomains.map((domain) => (
-              <div
-                key={domain.id}
-                className="p-3 bg-white/80 rounded-lg border border-gray-100"
-              >
-                <div className="flex justify-between items-center">
-                  <span className="font-medium">{domain.name}</span>
-                  <span className="text-green-600">${domain.finalPrice}</span>
+            {wonDomains.map((domain) => {
+              const sellerDetails = users.find(u => u.username === domain.listedBy);
+              const sellerXUsername = sellerDetails?.xUsername;
+
+              return (
+                <div
+                  key={domain.id}
+                  className="p-3 bg-white/80 rounded-lg border border-gray-100"
+                >
+                  <div className="flex justify-between items-center">
+                    <span className="font-medium">{domain.name}</span>
+                    <span className="text-green-600">${domain.finalPrice}</span>
+                  </div>
+                  <div className="flex justify-between items-center mt-2">
+                    <p className="text-sm text-gray-500">
+                      Won on {domain.purchaseDate.toLocaleDateString()}
+                    </p>
+                    {xUsername ? (
+                      <a
+                        href={`https://x.com/${xUsername}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800 transition-colors"
+                      >
+                        @{xUsername} <ExternalLink size={14} />
+                      </a>
+                    ) : (
+                      <span className="text-sm text-gray-500">
+                        @{username}
+                      </span>
+                    )}
+                  </div>
+                  <div className="mt-2 pt-2 border-t border-gray-100">
+                    <p className="text-sm text-gray-600">
+                      Seller: {' '}
+                      {sellerXUsername ? (
+                        <a
+                          href={`https://x.com/${sellerXUsername}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-800 transition-colors"
+                        >
+                          @{sellerXUsername} <ExternalLink size={14} />
+                        </a>
+                      ) : (
+                        <span>@{domain.listedBy}</span>
+                      )}
+                    </p>
+                  </div>
                 </div>
-                <div className="flex justify-between items-center mt-2">
-                  <p className="text-sm text-gray-500">
-                    Won on {domain.purchaseDate.toLocaleDateString()}
-                  </p>
-                  {xUsername ? (
-                    <a
-                      href={`https://x.com/${xUsername}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800 transition-colors"
-                    >
-                      @{xUsername} <ExternalLink size={14} />
-                    </a>
-                  ) : (
-                    <span className="text-sm text-gray-500">
-                      @{username}
-                    </span>
-                  )}
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>

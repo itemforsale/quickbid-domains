@@ -155,6 +155,7 @@ const Index = () => {
       name: d.name,
       finalPrice: d.finalPrice!,
       purchaseDate: d.purchaseDate!,
+      listedBy: d.listedBy,  // Added this field
     }));
 
   const filteredActiveDomains = activeDomains.filter((domain) =>
