@@ -9,6 +9,7 @@ import { BidHistory } from "./BidHistory";
 import { BidInput } from "./BidInput";
 import { CurrentBid } from "./CurrentBid";
 import { DomainHeader } from "./domain/DomainHeader";
+import { cn } from "@/lib/utils";
 
 interface Bid {
   bidder: string;
@@ -53,13 +54,14 @@ export const DomainCard = ({
   const [isEnded, setIsEnded] = useState(false);
   const [bidAmount, setBidAmount] = useState(currentBid + 10);
   const [isNew, setIsNew] = useState(false);
+  const [isEndingSoon, setIsEndingSoon] = useState(false);
+  const [flash, setFlash] = useState(false);
 
   useEffect(() => {
     if (createdAt && createdAt instanceof Date) {
       const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
       setIsNew(createdAt > fiveMinutesAgo);
 
-      // Set up timer to remove "NEW" badge after 5 minutes
       const timeUntilNotNew = createdAt.getTime() + 5 * 60 * 1000 - Date.now();
       if (timeUntilNotNew > 0) {
         const timer = setTimeout(() => setIsNew(false), timeUntilNotNew);
@@ -68,16 +70,28 @@ export const DomainCard = ({
     }
   }, [createdAt]);
 
+  // Flash animation interval
+  useInterval(() => {
+    if (isEndingSoon) {
+      setFlash(prev => !prev);
+    }
+  }, 500);
+
   const calculateTimeLeft = () => {
     const difference = endTime.getTime() - new Date().getTime();
     
     if (difference <= 0) {
       setIsEnded(true);
+      setIsEndingSoon(false);
       return "Auction ended";
     }
 
     const minutes = Math.floor((difference / 1000 / 60) % 60);
     const seconds = Math.floor((difference / 1000) % 60);
+
+    // Check if less than 10 minutes remaining
+    setIsEndingSoon(minutes < 10);
+
     return `${minutes}:${seconds < 10 ? "0" : ""}${seconds}`;
   };
 
@@ -123,12 +137,14 @@ export const DomainCard = ({
   };
 
   return (
-    <Card className={`group relative overflow-hidden transition-all duration-300 hover:shadow-xl animate-fade-in
-      ${isEnded ? 'opacity-50' : ''}
-      ${featured 
+    <Card className={cn(
+      "group relative overflow-hidden transition-all duration-300 hover:shadow-xl animate-fade-in",
+      isEnded && "opacity-50",
+      featured 
         ? 'bg-gradient-to-br from-yellow-50 to-white border-yellow-200 shadow-yellow-100' 
-        : 'bg-gradient-to-br from-gray-50 to-white border-gray-200'
-      }`}>
+        : 'bg-gradient-to-br from-gray-50 to-white border-gray-200',
+      isEndingSoon && flash && "border-red-500 bg-red-50"
+    )}>
       <div className="absolute inset-0 bg-white/40 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
       
       <div className="relative p-6">
@@ -146,9 +162,22 @@ export const DomainCard = ({
                 <Timer className="w-4 h-4" />
                 {isEnded ? 'Ended' : 'Time Left'}
               </p>
-              <p className="text-lg font-mono font-bold text-gray-900 group-hover:text-primary transition-colors">
-                {timeLeft}
-              </p>
+              <div className="flex items-center gap-2">
+                <p className={cn(
+                  "text-lg font-mono font-bold transition-colors",
+                  isEndingSoon ? "text-red-600" : "text-gray-900 group-hover:text-primary"
+                )}>
+                  {timeLeft}
+                </p>
+                {isEndingSoon && !isEnded && (
+                  <span className={cn(
+                    "text-xs font-semibold px-2 py-1 rounded-full",
+                    flash ? "bg-red-100 text-red-600" : "bg-transparent"
+                  )}>
+                    Ending Soon!
+                  </span>
+                )}
+              </div>
             </div>
           </div>
           
