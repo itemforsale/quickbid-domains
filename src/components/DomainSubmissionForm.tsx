@@ -3,16 +3,24 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
-import { Globe, DollarSign, Rocket } from "lucide-react";
+import { Globe, DollarSign, Rocket, Clock } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface DomainSubmissionFormProps {
-  onSubmit: (domain: string, startingPrice: number, buyNowPrice: number | null) => void;
+  onSubmit: (domain: string, startingPrice: number, buyNowPrice: number | null, durationDays: number) => void;
 }
 
 export const DomainSubmissionForm = ({ onSubmit }: DomainSubmissionFormProps) => {
   const [domainName, setDomainName] = useState("");
   const [startingPrice, setStartingPrice] = useState("");
   const [buyNowPrice, setBuyNowPrice] = useState("");
+  const [durationDays, setDurationDays] = useState("7");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -24,6 +32,7 @@ export const DomainSubmissionForm = ({ onSubmit }: DomainSubmissionFormProps) =>
 
     const startingPriceNum = parseFloat(startingPrice);
     const buyNowPriceNum = buyNowPrice ? parseFloat(buyNowPrice) : null;
+    const durationDaysNum = parseInt(durationDays);
 
     if (isNaN(startingPriceNum) || startingPriceNum <= 0) {
       toast.error("Please enter a valid starting price");
@@ -41,10 +50,11 @@ export const DomainSubmissionForm = ({ onSubmit }: DomainSubmissionFormProps) =>
       return;
     }
 
-    onSubmit(domainName, startingPriceNum, buyNowPriceNum);
+    onSubmit(domainName, startingPriceNum, buyNowPriceNum, durationDaysNum);
     setDomainName("");
     setStartingPrice("");
     setBuyNowPrice("");
+    setDurationDays("7");
     toast.success("Domain submitted for auction!");
   };
 
@@ -91,6 +101,20 @@ export const DomainSubmissionForm = ({ onSubmit }: DomainSubmissionFormProps) =>
               step="0.01"
               className="pl-10"
             />
+          </div>
+          <div className="relative">
+            <Clock className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
+            <Select value={durationDays} onValueChange={setDurationDays}>
+              <SelectTrigger className="w-full pl-10">
+                <SelectValue placeholder="Select auction duration" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="7">7 days</SelectItem>
+                <SelectItem value="14">14 days</SelectItem>
+                <SelectItem value="21">21 days</SelectItem>
+                <SelectItem value="30">30 days</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           <Button type="submit" className="w-full bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary">
             Submit Domain
