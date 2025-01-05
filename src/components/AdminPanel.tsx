@@ -102,6 +102,8 @@ export const AdminPanel = ({
   const handleSearchVisibilityChange = (checked: boolean) => {
     setHideSearch(checked);
     localStorage.setItem('hideSearch', checked.toString());
+    // Dispatch custom event for same-tab communication
+    window.dispatchEvent(new Event('hideSearchChange'));
     toast.success(`Search bar ${checked ? 'hidden' : 'visible'} on main site`);
   };
 

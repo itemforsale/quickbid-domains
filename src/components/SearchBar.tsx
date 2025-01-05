@@ -8,7 +8,9 @@ interface SearchBarProps {
 }
 
 export const SearchBar = ({ onSearch }: SearchBarProps) => {
-  const [isHidden, setIsHidden] = useState(false);
+  const [isHidden, setIsHidden] = useState(() => {
+    return localStorage.getItem('hideSearch') === 'true';
+  });
 
   useEffect(() => {
     const checkSearchVisibility = () => {
@@ -19,15 +21,22 @@ export const SearchBar = ({ onSearch }: SearchBarProps) => {
     // Check initially
     checkSearchVisibility();
 
-    // Set up storage event listener
-    const handleStorageChange = (e: StorageEvent) => {
+    // Create a custom event for same-tab communication
+    const handleCustomStorage = () => {
+      checkSearchVisibility();
+    };
+
+    window.addEventListener('hideSearchChange', handleCustomStorage);
+    window.addEventListener('storage', (e) => {
       if (e.key === 'hideSearch') {
         checkSearchVisibility();
       }
-    };
+    });
 
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
+    return () => {
+      window.removeEventListener('hideSearchChange', handleCustomStorage);
+      window.removeEventListener('storage', handleCustomStorage);
+    };
   }, []);
 
   if (isHidden) return null;
