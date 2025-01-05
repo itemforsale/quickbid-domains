@@ -129,16 +129,25 @@ const Index = () => {
     );
   };
 
+  const now = new Date();
+
   const pendingDomains = domains.filter(d => d.status === 'pending');
+  
   const activeDomains = domains.filter(d => {
-    const now = new Date();
     return d.status === 'active' && d.endTime > now;
   });
+
   const endedDomains = domains.filter(d => {
-    const now = new Date();
-    return d.status === 'active' && d.endTime <= now;
+    return d.status === 'active' && d.endTime <= now && d.bidHistory.length === 0;
   });
-  const soldDomains = domains.filter(d => d.status === 'sold');
+
+  const soldDomains = domains.filter(d => {
+    return (
+      d.status === 'sold' || 
+      (d.status === 'active' && d.endTime <= now && d.bidHistory.length > 0)
+    );
+  });
+
   const userWonDomains = soldDomains
     .filter(d => d.currentBidder === user?.username)
     .map(d => ({
