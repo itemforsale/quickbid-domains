@@ -1,5 +1,6 @@
 import { Card } from "@/components/ui/card";
 import { ExternalLink } from "lucide-react";
+import { useUser } from "@/contexts/UserContext";
 
 interface Domain {
   id: number;
@@ -14,6 +15,12 @@ interface UserProfileProps {
 }
 
 export const UserProfile = ({ username, wonDomains }: UserProfileProps) => {
+  const { users } = useUser();
+  
+  // Find user's X.com username if available
+  const userDetails = users.find(u => u.username === username);
+  const xUsername = userDetails?.xUsername;
+
   return (
     <Card className="p-6 mb-8 backdrop-blur-sm bg-white/50 border border-gray-200 rounded-xl">
       <h2 className="text-xl font-semibold mb-4">Profile: @{username}</h2>
@@ -36,14 +43,20 @@ export const UserProfile = ({ username, wonDomains }: UserProfileProps) => {
                   <p className="text-sm text-gray-500">
                     Won on {domain.purchaseDate.toLocaleDateString()}
                   </p>
-                  <a
-                    href={`https://x.com/${username}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800 transition-colors"
-                  >
-                    @{username} <ExternalLink size={14} />
-                  </a>
+                  {xUsername ? (
+                    <a
+                      href={`https://x.com/${xUsername}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800 transition-colors"
+                    >
+                      @{xUsername} <ExternalLink size={14} />
+                    </a>
+                  ) : (
+                    <span className="text-sm text-gray-500">
+                      @{username}
+                    </span>
+                  )}
                 </div>
               </div>
             ))}
