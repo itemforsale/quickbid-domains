@@ -5,7 +5,7 @@ interface Domain {
   name: string;
   currentBid: number;
   buyNowPrice?: number;
-  status: 'pending' | 'active' | 'sold';
+  status: 'pending' | 'active' | 'sold' | 'featured';
 }
 
 interface PendingDomainsProps {
