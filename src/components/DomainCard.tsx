@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useInterval } from "react-use";
 import { toast } from "sonner";
+import { Hammer } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useUser } from "@/contexts/UserContext";
@@ -97,6 +98,10 @@ export const DomainCard = ({
               Active
             </span>
             <h3 className="mt-2 text-xl font-semibold text-gray-900">{domain}</h3>
+            <div className="flex items-center gap-2 mt-1 text-gray-600">
+              <Hammer className="w-4 h-4" />
+              <span className="text-sm">{bidHistory.length} bids</span>
+            </div>
           </div>
           <div className="text-right">
             <p className="text-sm text-gray-500">Time Left</p>
