@@ -45,12 +45,14 @@ export const DomainCard = ({
 }: DomainCardProps) => {
   const { user } = useUser();
   const [timeLeft, setTimeLeft] = useState("");
+  const [isEnded, setIsEnded] = useState(false);
   const [bidAmount, setBidAmount] = useState(currentBid + 10);
 
   const calculateTimeLeft = () => {
     const difference = endTime.getTime() - new Date().getTime();
     
     if (difference <= 0) {
+      setIsEnded(true);
       return "Auction ended";
     }
 
@@ -64,6 +66,10 @@ export const DomainCard = ({
   }, 1000);
 
   const handleBid = () => {
+    if (isEnded) {
+      toast.error("This auction has ended");
+      return;
+    }
     if (!user) {
       toast.error("Please login to place a bid");
       return;
@@ -78,6 +84,10 @@ export const DomainCard = ({
   };
 
   const handleBuyNow = () => {
+    if (isEnded) {
+      toast.error("This auction has ended");
+      return;
+    }
     if (!user) {
       toast.error("Please login to purchase the domain");
       return;
@@ -94,6 +104,7 @@ export const DomainCard = ({
 
   return (
     <Card className={`group relative overflow-hidden transition-all duration-300 hover:shadow-xl animate-fade-in
+      ${isEnded ? 'opacity-50' : ''}
       ${featured 
         ? 'bg-gradient-to-br from-yellow-50 to-white border-yellow-200 shadow-yellow-100' 
         : 'bg-gradient-to-br from-gray-50 to-white border-gray-200'
@@ -105,8 +116,12 @@ export const DomainCard = ({
           <div className="flex justify-between items-start">
             <div>
               <div className="flex gap-2">
-                <span className="px-2 py-1 text-xs font-medium bg-primary/10 text-primary rounded-full animate-pulse">
-                  Active
+                <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                  isEnded 
+                    ? 'bg-gray-100 text-gray-600'
+                    : 'bg-primary/10 text-primary animate-pulse'
+                }`}>
+                  {isEnded ? 'Ended' : 'Active'}
                 </span>
                 {featured && (
                   <span className="px-2 py-1 text-xs font-medium bg-yellow-100 text-yellow-700 rounded-full flex items-center gap-1">
@@ -126,7 +141,7 @@ export const DomainCard = ({
             <div className="text-right">
               <p className="text-sm text-gray-500 flex items-center gap-1 justify-end">
                 <Timer className="w-4 h-4" />
-                Time Left
+                {isEnded ? 'Ended' : 'Time Left'}
               </p>
               <p className="text-lg font-mono font-bold text-gray-900 group-hover:text-primary transition-colors">
                 {timeLeft}
@@ -142,7 +157,7 @@ export const DomainCard = ({
               formatBidder={formatBidder}
             />
             
-            {buyNowPrice && (
+            {!isEnded && buyNowPrice && (
               <div className="flex justify-between items-center p-3 bg-green-50 rounded-lg border border-green-100 group-hover:bg-green-100/50 transition-colors">
                 <span className="text-sm font-medium text-green-700">Buy Now Price:</span>
                 <div className="flex gap-2 items-center">
@@ -158,11 +173,13 @@ export const DomainCard = ({
               </div>
             )}
             
-            <BidInput
-              bidAmount={bidAmount}
-              onBidAmountChange={setBidAmount}
-              onBid={handleBid}
-            />
+            {!isEnded && (
+              <BidInput
+                bidAmount={bidAmount}
+                onBidAmountChange={setBidAmount}
+                onBid={handleBid}
+              />
+            )}
 
             <BidHistory bids={bidHistory} formatBidder={formatBidder} />
           </div>
