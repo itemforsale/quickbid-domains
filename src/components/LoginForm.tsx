@@ -11,25 +11,20 @@ interface LoginFormProps {
 export const LoginForm = ({ onSuccess }: LoginFormProps) => {
   const { login } = useUser();
   const [formData, setFormData] = useState({
-    name: "",
-    email: "",
     username: "",
     password: "",
   });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.name || !formData.password) {
+    if (!formData.username || !formData.password) {
       toast.error("Please fill in all fields");
       return;
     }
     login({
-      name: formData.name,
-      email: formData.email || `${formData.name.toLowerCase()}@example.com`,
-      username: formData.username || formData.name.toLowerCase(),
+      username: formData.username,
       password: formData.password,
     });
-    toast.success("Successfully logged in!");
     onSuccess?.();
   };
 
@@ -39,9 +34,9 @@ export const LoginForm = ({ onSuccess }: LoginFormProps) => {
       <div>
         <Input
           type="text"
-          placeholder="Name"
-          value={formData.name}
-          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+          placeholder="Username"
+          value={formData.username}
+          onChange={(e) => setFormData({ ...formData, username: e.target.value })}
           className="w-full"
         />
       </div>

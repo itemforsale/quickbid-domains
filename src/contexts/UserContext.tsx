@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, ReactNode } from "react";
+import { toast } from "sonner";
 
 interface User {
   name: string;
@@ -10,7 +11,8 @@ interface User {
 
 interface UserContextType {
   user: User | null;
-  login: (user: User) => void;
+  login: (credentials: { username: string; password: string; }) => void;
+  register: (user: User) => void;
   logout: () => void;
 }
 
@@ -18,13 +20,37 @@ const UserContext = createContext<UserContextType | undefined>(undefined);
 
 export function UserProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const [users, setUsers] = useState<User[]>([]);
 
-  const login = (userData: User) => {
-    // Check for specific admin credentials
-    if (userData.username === '60dna' && userData.password === 'xMWR6IXrqPkXPbWg') {
-      userData.isAdmin = true;
+  const register = (userData: User) => {
+    if (users.some(u => u.username === userData.username)) {
+      toast.error("Username already exists");
+      return;
     }
+    setUsers([...users, userData]);
     setUser(userData);
+  };
+
+  const login = (credentials: { username: string; password: string }) => {
+    const foundUser = users.find(u => u.username === credentials.username);
+    
+    if (!foundUser) {
+      toast.error("User not found");
+      return;
+    }
+
+    if (foundUser.password !== credentials.password) {
+      toast.error("Invalid password");
+      return;
+    }
+
+    // Check for admin credentials
+    if (credentials.username === '60dna' && credentials.password === 'xMWR6IXrqPkXPbWg') {
+      foundUser.isAdmin = true;
+    }
+
+    setUser(foundUser);
+    toast.success("Successfully logged in!");
   };
 
   const logout = () => {
@@ -32,7 +58,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <UserContext.Provider value={{ user, login, logout }}>
+    <UserContext.Provider value={{ user, login, register, logout }}>
       {children}
     </UserContext.Provider>
   );

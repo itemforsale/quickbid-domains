@@ -9,7 +9,7 @@ interface RegisterFormProps {
 }
 
 export const RegisterForm = ({ onSuccess }: RegisterFormProps) => {
-  const { login } = useUser();
+  const { register } = useUser();
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -23,8 +23,7 @@ export const RegisterForm = ({ onSuccess }: RegisterFormProps) => {
       toast.error("Please fill in all fields");
       return;
     }
-    login(formData);
-    toast.success("Successfully registered and logged in!");
+    register(formData);
     onSuccess?.();
   };
 
@@ -52,7 +51,7 @@ export const RegisterForm = ({ onSuccess }: RegisterFormProps) => {
       <div>
         <Input
           type="text"
-          placeholder="X.com Username"
+          placeholder="Username"
           value={formData.username}
           onChange={(e) => setFormData({ ...formData, username: e.target.value })}
           className="w-full"
