@@ -31,7 +31,15 @@ export const DomainCard = ({
   return (
     <Card className="p-4 backdrop-blur-sm bg-white/50">
       <div className="space-y-2">
-        <h3 className="font-medium">{domain.name}</h3>
+        <div className="flex justify-between items-start">
+          <h3 className="font-medium">{domain.name}</h3>
+          {domain.featured && (
+            <span className="px-2 py-1 text-xs font-medium bg-yellow-100 text-yellow-700 rounded-full flex items-center gap-1">
+              <Star className="w-3 h-3 fill-yellow-500" />
+              Featured
+            </span>
+          )}
+        </div>
         <p className="text-sm text-gray-600">
           {isPending ? "Starting" : "Current"} Price: ${domain.currentBid}
         </p>
