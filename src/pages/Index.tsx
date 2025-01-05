@@ -9,6 +9,7 @@ import { RecentlyEndedDomains } from "@/components/index/RecentlyEndedDomains";
 import { AdminPanel } from "@/components/AdminPanel";
 import { PendingDomains } from "@/components/PendingDomains";
 import { Advertisement } from "@/components/Advertisement";
+import { AboutBioBox } from "@/components/AboutBioBox";
 
 const STORAGE_KEY = 'quickbid_domains';
 
@@ -149,6 +150,7 @@ const Index = () => {
     <div className="min-h-screen bg-background text-foreground px-4 py-8 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
         <Header onSearch={setSearchQuery} />
+        <AboutBioBox />
         <Advertisement />
         
         <UserSection
