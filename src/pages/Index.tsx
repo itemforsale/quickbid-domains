@@ -11,45 +11,58 @@ import { PendingDomains } from "@/components/PendingDomains";
 import { Advertisement } from "@/components/Advertisement";
 import { AboutBioBox } from "@/components/AboutBioBox";
 import { handleDomainBid, handleDomainBuyNow, createNewDomain } from "@/utils/domainUtils";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 const STORAGE_KEY = 'quickbid_domains';
+const REFRESH_INTERVAL = 10000; // Refresh every 10 seconds
 
 const Index = () => {
   const { user, logout } = useUser();
-  const [domains, setDomains] = useState<Domain[]>(() => {
-    const savedDomains = localStorage.getItem(STORAGE_KEY);
-    if (savedDomains) {
-      const parsedDomains = JSON.parse(savedDomains);
-      return parsedDomains.map((domain: any) => ({
-        ...domain,
-        endTime: new Date(domain.endTime),
-        createdAt: domain.createdAt ? new Date(domain.createdAt) : new Date(),
-        bidTimestamp: domain.bidTimestamp ? new Date(domain.bidTimestamp) : undefined,
-        purchaseDate: domain.purchaseDate ? new Date(domain.purchaseDate) : undefined,
-        bidHistory: domain.bidHistory.map((bid: any) => ({
-          ...bid,
-          timestamp: new Date(bid.timestamp)
-        })),
-        listedBy: domain.listedBy || 'Anonymous', // Ensure listedBy has a fallback
-      }));
-    }
-    return [];
-  });
-
+  const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState("");
 
+  // Use React Query for data fetching with automatic refresh
+  const { data: domains = [] } = useQuery({
+    queryKey: ['domains'],
+    queryFn: () => {
+      const savedDomains = localStorage.getItem(STORAGE_KEY);
+      if (savedDomains) {
+        const parsedDomains = JSON.parse(savedDomains);
+        return parsedDomains.map((domain: any) => ({
+          ...domain,
+          endTime: new Date(domain.endTime),
+          createdAt: domain.createdAt ? new Date(domain.createdAt) : new Date(),
+          bidTimestamp: domain.bidTimestamp ? new Date(domain.bidTimestamp) : undefined,
+          purchaseDate: domain.purchaseDate ? new Date(domain.purchaseDate) : undefined,
+          bidHistory: domain.bidHistory.map((bid: any) => ({
+            ...bid,
+            timestamp: new Date(bid.timestamp)
+          })),
+          listedBy: domain.listedBy || 'Anonymous',
+        }));
+      }
+      return [];
+    },
+    refetchInterval: REFRESH_INTERVAL,
+  });
+
+  // Save domains to localStorage whenever they change
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(domains));
+    if (domains) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(domains));
+    }
   }, [domains]);
 
   const handleBid = (domainId: number, amount: number) => {
     if (!user) return;
-    setDomains(prevDomains => handleDomainBid(prevDomains, domainId, amount, user.username));
+    const updatedDomains = handleDomainBid(domains, domainId, amount, user.username);
+    queryClient.setQueryData(['domains'], updatedDomains);
   };
 
   const handleBuyNow = (domainId: number) => {
     if (!user) return;
-    setDomains(prevDomains => handleDomainBuyNow(prevDomains, domainId, user.username));
+    const updatedDomains = handleDomainBuyNow(domains, domainId, user.username);
+    queryClient.setQueryData(['domains'], updatedDomains);
   };
 
   const handleDomainSubmission = (name: string, startingPrice: number, buyNowPrice: number | null) => {
@@ -63,21 +76,21 @@ const Index = () => {
       user.username
     );
 
-    setDomains(prevDomains => [...prevDomains, newDomain]);
+    queryClient.setQueryData(['domains'], [...domains, newDomain]);
   };
 
   const handleDeleteListing = (domainId: number) => {
-    setDomains((prevDomains) => prevDomains.filter((domain) => domain.id !== domainId));
+    const updatedDomains = domains.filter((domain) => domain.id !== domainId);
+    queryClient.setQueryData(['domains'], updatedDomains);
   };
 
   const handleFeatureDomain = (domainId: number) => {
-    setDomains((prevDomains) =>
-      prevDomains.map((domain) =>
-        domain.id === domainId
-          ? { ...domain, featured: !domain.featured }
-          : domain
-      )
+    const updatedDomains = domains.map((domain) =>
+      domain.id === domainId
+        ? { ...domain, featured: !domain.featured }
+        : domain
     );
+    queryClient.setQueryData(['domains'], updatedDomains);
   };
 
   const now = new Date();
@@ -104,7 +117,7 @@ const Index = () => {
       name: d.name,
       finalPrice: d.finalPrice!,
       purchaseDate: d.purchaseDate!,
-      listedBy: d.listedBy || 'Anonymous', // Ensure listedBy has a fallback
+      listedBy: d.listedBy || 'Anonymous',
     }));
 
   const filteredActiveDomains = activeDomains.filter(domain =>
@@ -130,14 +143,16 @@ const Index = () => {
           <AdminPanel
             pendingDomains={pendingDomains}
             activeDomains={activeDomains}
-            onApproveDomain={(id) => setDomains(prevDomains =>
-              prevDomains.map(domain =>
+            onApproveDomain={(id) => {
+              const updatedDomains = domains.map(domain =>
                 domain.id === id ? { ...domain, status: 'active' } : domain
-              )
-            )}
-            onRejectDomain={(id) => setDomains(prevDomains =>
-              prevDomains.filter(domain => domain.id !== id)
-            )}
+              );
+              queryClient.setQueryData(['domains'], updatedDomains);
+            }}
+            onRejectDomain={(id) => {
+              const updatedDomains = domains.filter(domain => domain.id !== id);
+              queryClient.setQueryData(['domains'], updatedDomains);
+            }}
             onDeleteListing={handleDeleteListing}
             onFeatureDomain={handleFeatureDomain}
           />
