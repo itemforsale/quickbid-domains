@@ -4,6 +4,26 @@ import { Domain } from "@/types/domain";
 const WS_URL = 'wss://api.60dna.com/ws'; // This is a placeholder URL, replace with your actual WebSocket endpoint
 let ws: WebSocket | null = null;
 
+// Default domains data if no data exists in localStorage
+const DEFAULT_DOMAINS: Domain[] = [
+  {
+    id: 1,
+    name: "example.com",
+    currentBid: 100,
+    endTime: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours from now
+    status: "active",
+    bidHistory: [],
+    createdAt: new Date(),
+    listedBy: "System",
+    currentBidder: undefined,
+    bidTimestamp: undefined,
+    buyNowPrice: null,
+    featured: false,
+    finalPrice: null,
+    purchaseDate: undefined
+  }
+];
+
 export const setupWebSocket = (onUpdate: (domains: Domain[]) => void) => {
   if (!ws) {
     ws = new WebSocket(WS_URL);
