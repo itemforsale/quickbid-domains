@@ -48,6 +48,10 @@ export function UserProvider({ children }: { children: ReactNode }) {
         parsedUsers.push(defaultUsers[0]);
       }
       
+      // Broadcast initial state to other tabs/windows
+      const channel = new BroadcastChannel('users_sync');
+      channel.postMessage({ type: 'USERS_UPDATE', users: parsedUsers });
+      
       return parsedUsers;
     } catch (error) {
       console.error('Error loading users:', error);
@@ -59,11 +63,23 @@ export function UserProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const channel = new BroadcastChannel('users_sync');
     
+    // Listen for updates from other tabs/windows
     channel.onmessage = (event) => {
       if (event.data.type === 'USERS_UPDATE') {
+        console.log('Received users update:', event.data.users);
         setUsers(event.data.users);
+        
+        // Update localStorage when receiving updates
+        try {
+          localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(event.data.users));
+        } catch (error) {
+          console.error('Error saving received users:', error);
+        }
       }
     };
+
+    // Request current state from other tabs when initializing
+    channel.postMessage({ type: 'REQUEST_USERS' });
 
     return () => channel.close();
   }, []);
@@ -74,6 +90,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
       localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(users));
       const channel = new BroadcastChannel('users_sync');
       channel.postMessage({ type: 'USERS_UPDATE', users });
+      console.log('Broadcasting users update:', users);
     } catch (error) {
       console.error('Error saving users:', error);
     }
