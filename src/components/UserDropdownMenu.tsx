@@ -23,6 +23,7 @@ interface UserDropdownMenuProps {
     name: string;
     finalPrice: number;
     purchaseDate: Date;
+    listedBy: string;
   }[];
   onLogout: () => void;
   onDomainSubmit: (domain: string, startingPrice: number, buyNowPrice: number | null) => void;
@@ -52,7 +53,7 @@ export const UserDropdownMenu = ({
             </Avatar>
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent className="w-56" align="end" forceMount>
+        <DropdownMenuContent className="w-72" align="end" forceMount>
           <DropdownMenuLabel className="font-normal">
             <div className="flex flex-col space-y-1">
               <p className="text-sm font-medium leading-none">@{username}</p>
@@ -76,12 +77,34 @@ export const UserDropdownMenu = ({
               <User className="mr-2 h-4 w-4" />
               <span>Won Domains ({wonDomains.length})</span>
             </DropdownMenuItem>
-            {wonDomains.map((domain) => (
-              <DropdownMenuItem key={domain.id} className="pl-8 text-sm">
-                <span className="flex-1">{domain.name}</span>
-                <span className="text-green-600">${domain.finalPrice}</span>
-              </DropdownMenuItem>
-            ))}
+            {wonDomains.map((domain) => {
+              const sellerDetails = users.find(u => u.username === domain.listedBy);
+              const sellerXUsername = sellerDetails?.xUsername;
+
+              return (
+                <DropdownMenuItem key={domain.id} className="pl-8 text-sm flex-col items-start py-2">
+                  <div className="flex w-full justify-between items-center">
+                    <span className="font-medium">{domain.name}</span>
+                    <span className="text-green-600">${domain.finalPrice}</span>
+                  </div>
+                  <div className="text-xs text-muted-foreground mt-1">
+                    Seller: {' '}
+                    {sellerXUsername ? (
+                      <a
+                        href={`https://x.com/${sellerXUsername}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-800"
+                      >
+                        @{sellerXUsername} <ExternalLink size={12} />
+                      </a>
+                    ) : (
+                      <span>@{domain.listedBy}</span>
+                    )}
+                  </div>
+                </DropdownMenuItem>
+              );
+            })}
           </DropdownMenuGroup>
           <DropdownMenuSeparator />
           <ListDomainDialog onDomainSubmit={onDomainSubmit} />
