@@ -49,7 +49,7 @@ export const Header = ({ onSearch }: HeaderProps) => {
         </h2>
       </div>
       <p className="text-lg text-foreground mb-8">
-        Only 60 minutes left to bid on a domain name
+        Peer-to-Peer Simplicity: Trade directly with others using your X.com username
       </p>
       <div className="mt-8">
         <SearchBar onSearch={onSearch} />

@@ -38,7 +38,7 @@ export const AboutBioBox = () => {
         <ul className="list-disc list-inside space-y-2 text-muted-foreground ml-4">
           <li>
             <span className="font-semibold text-foreground">Peer-to-Peer Simplicity:</span>{" "}
-            Trade directly with others using your X.com username—no emails or complex marketplaces required.
+            Trade directly with others using your X.com username.
           </li>
           <li>
             <span className="font-semibold text-foreground">Quick Auctions:</span>{" "}
