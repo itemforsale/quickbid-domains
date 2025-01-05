@@ -35,6 +35,8 @@ export const ActiveAuctions = ({ domains, onBid, onBuyNow }: ActiveAuctionsProps
             onBid={(amount) => onBid(domain.id, amount)}
             onBuyNow={() => onBuyNow(domain.id)}
             featured={domain.featured}
+            createdAt={domain.createdAt}
+            listedBy={domain.listedBy}
           />
         ))}
       </div>
