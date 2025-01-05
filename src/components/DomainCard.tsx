@@ -55,7 +55,7 @@ export const DomainCard = ({
   const [isNew, setIsNew] = useState(false);
 
   useEffect(() => {
-    if (createdAt) {
+    if (createdAt && createdAt instanceof Date) {
       const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
       setIsNew(createdAt > fiveMinutesAgo);
 

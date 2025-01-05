@@ -22,6 +22,7 @@ const Index = () => {
       return parsedDomains.map((domain: any) => ({
         ...domain,
         endTime: new Date(domain.endTime),
+        createdAt: domain.createdAt ? new Date(domain.createdAt) : new Date(),
         bidTimestamp: domain.bidTimestamp ? new Date(domain.bidTimestamp) : undefined,
         purchaseDate: domain.purchaseDate ? new Date(domain.purchaseDate) : undefined,
         bidHistory: domain.bidHistory.map((bid: any) => ({
@@ -32,6 +33,7 @@ const Index = () => {
     }
     return [];
   });
+
   const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
