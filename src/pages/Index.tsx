@@ -98,6 +98,8 @@ const Index = () => {
   };
 
   const handleDomainSubmission = (domainName: string, startingPrice: number, buyNowPrice: number | null) => {
+    if (!user) return;
+    
     const newDomain: Domain = {
       id: domains.length + 1,
       name: domainName,
@@ -107,7 +109,7 @@ const Index = () => {
       status: 'pending',
       buyNowPrice: buyNowPrice || undefined,
       createdAt: new Date(),
-      listedBy: user?.username || 'Anonymous',
+      listedBy: user.username, // Ensure we're using the current user's username
     };
 
     setDomains((prevDomains) => [...prevDomains, newDomain]);
