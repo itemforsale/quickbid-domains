@@ -73,7 +73,7 @@ export const UserDropdownMenu = ({
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
           <DropdownMenuGroup>
-            <DropdownMenuItem>
+            <DropdownMenuItem className="cursor-default">
               <User className="mr-2 h-4 w-4" />
               <span>Won Domains ({wonDomains.length})</span>
             </DropdownMenuItem>
@@ -82,19 +82,20 @@ export const UserDropdownMenu = ({
               const sellerXUsername = sellerDetails?.xUsername;
 
               return (
-                <DropdownMenuItem key={domain.id} className="pl-8 text-sm flex-col items-start py-2">
+                <DropdownMenuItem key={domain.id} className="pl-8 text-sm flex-col items-start py-2 cursor-default">
                   <div className="flex w-full justify-between items-center">
                     <span className="font-medium">{domain.name}</span>
                     <span className="text-green-600">${domain.finalPrice}</span>
                   </div>
                   <div className="text-xs text-muted-foreground mt-1">
-                    Seller: {' '}
+                    Listed by: {' '}
                     {sellerXUsername ? (
                       <a
                         href={`https://x.com/${sellerXUsername}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-800"
+                        onClick={(e) => e.stopPropagation()}
                       >
                         @{sellerXUsername} <ExternalLink size={12} />
                       </a>
