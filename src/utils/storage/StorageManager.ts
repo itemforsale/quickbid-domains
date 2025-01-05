@@ -65,15 +65,21 @@ export class StorageManager {
   getDomains(): Domain[] {
     try {
       const savedDomains = localStorage.getItem(STORAGE_KEY);
-      if (savedDomains) {
-        const parsedDomains = JSON.parse(savedDomains);
-        console.log('Retrieved domains from localStorage:', parsedDomains);
-        return parsedDomains.map(this.parseDomainDates);
+      if (!savedDomains) {
+        console.log('No domains found in localStorage');
+        return [];
       }
+
+      const parsedDomains = JSON.parse(savedDomains);
+      console.log('Retrieved raw domains from localStorage:', parsedDomains);
+      
+      const domains = parsedDomains.map(this.parseDomainDates);
+      console.log('Parsed domains with dates:', domains);
+      return domains;
     } catch (error) {
       console.error('Error reading domains:', error);
+      return [];
     }
-    return [];
   }
 
   private parseDomainDates(domain: any): Domain {

@@ -4,6 +4,13 @@ import { StorageManager } from "./storage/StorageManager";
 
 export const setupWebSocket = (onUpdate: (domains: Domain[]) => void) => {
   const storageManager = StorageManager.getInstance();
+  
+  // Initial load from localStorage
+  const initialDomains = storageManager.getDomains();
+  if (initialDomains && initialDomains.length > 0) {
+    console.log('Loading initial domains from storage:', initialDomains);
+    onUpdate(initialDomains);
+  }
 
   // Handle WebSocket messages
   wsManager.connect((data) => {
@@ -19,6 +26,7 @@ export const setupWebSocket = (onUpdate: (domains: Domain[]) => void) => {
           timestamp: new Date(bid.timestamp)
         }))
       }));
+      console.log('Received domains update:', domains);
       onUpdate(domains);
       storageManager.saveDomains(domains);
     }
@@ -31,11 +39,15 @@ export const setupWebSocket = (onUpdate: (domains: Domain[]) => void) => {
 };
 
 export const getDomains = async (): Promise<Domain[]> => {
+  console.log('Getting domains...');
   const storageManager = StorageManager.getInstance();
-  return storageManager.getDomains();
+  const domains = storageManager.getDomains();
+  console.log('Retrieved domains:', domains);
+  return domains || [];
 };
 
 export const updateDomains = (domains: Domain[]) => {
+  console.log('Updating domains:', domains);
   const storageManager = StorageManager.getInstance();
   wsManager.sendMessage({ 
     type: 'update_domains',
