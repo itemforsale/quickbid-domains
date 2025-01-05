@@ -19,7 +19,12 @@ export const LoginForm = () => {
       toast.error("Please fill in all fields");
       return;
     }
-    login(formData);
+    login({
+      name: formData.name,
+      email: formData.email || `${formData.name.toLowerCase()}@example.com`,
+      username: formData.username || formData.name.toLowerCase(),
+      password: formData.password,
+    });
     toast.success("Successfully logged in!");
   };
 
