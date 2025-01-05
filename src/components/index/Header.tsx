@@ -62,7 +62,7 @@ export const Header = ({ onSearch }: HeaderProps) => {
         </h2>
       </div>
       <p className="text-lg text-foreground mb-8">
-        Peer-to-Peer Simplicity: Trade directly with others using your X.com username
+        Trade directly with others using your X.com username
       </p>
       <div className="mt-8">
         <SearchBar onSearch={onSearch} />
