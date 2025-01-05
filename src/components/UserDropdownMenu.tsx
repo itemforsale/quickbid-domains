@@ -5,15 +5,16 @@ import {
   DropdownMenuContent,
   DropdownMenuGroup,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ExternalLink, LogOut, User, Mail } from "lucide-react";
+import { LogOut, User } from "lucide-react";
 import { useUser } from "@/contexts/UserContext";
 import { ListDomainDialog } from "@/components/ListDomainDialog";
 import { NotificationBell } from "@/components/NotificationBell";
 import { Domain } from "@/types/domain";
+import { UserMenuItem } from "./user/UserMenuItem";
+import { UserMenuHeader } from "./user/UserMenuHeader";
 
 interface UserDropdownMenuProps {
   username: string;
@@ -36,7 +37,7 @@ export const UserDropdownMenu = ({
   onLogout,
   onDomainSubmit,
 }: UserDropdownMenuProps) => {
-  const { users, user } = useUser();
+  const { users } = useUser();
   const userDetails = username === '60dna' 
     ? {
         username: '60dna',
@@ -46,8 +47,6 @@ export const UserDropdownMenu = ({
         isAdmin: true
       } 
     : users.find((u) => u.username.toLowerCase() === username.toLowerCase());
-  
-  const xUsername = userDetails?.xUsername || userDetails?.username;
 
   return (
     <div className="fixed top-4 right-4 z-50 flex items-center gap-2">
@@ -64,29 +63,11 @@ export const UserDropdownMenu = ({
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent className="w-72" align="end" forceMount>
-          <DropdownMenuLabel className="font-normal">
-            <div className="flex flex-col space-y-1">
-              <p className="text-sm font-medium leading-none">@{username}</p>
-              {xUsername && (
-                <p className="text-xs leading-none text-muted-foreground">
-                  <a
-                    href={`https://x.com/${xUsername}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-1 hover:text-primary"
-                  >
-                    @{xUsername} <ExternalLink size={12} />
-                  </a>
-                </p>
-              )}
-              {userDetails?.email && (
-                <p className="text-xs leading-none text-muted-foreground flex items-center gap-1">
-                  <Mail size={12} />
-                  {userDetails.email}
-                </p>
-              )}
-            </div>
-          </DropdownMenuLabel>
+          <UserMenuHeader 
+            username={username}
+            xUsername={userDetails?.xUsername}
+            email={userDetails?.email}
+          />
           <DropdownMenuSeparator />
           <DropdownMenuGroup>
             <DropdownMenuItem className="cursor-default">
@@ -104,51 +85,12 @@ export const UserDropdownMenu = ({
                   } 
                 : users.find((u) => u.username.toLowerCase() === domain.listedBy.toLowerCase());
 
-              const sellerXUsername = sellerDetails?.xUsername || sellerDetails?.username;
-
               return (
-                <DropdownMenuItem key={domain.id} className="pl-8 text-sm flex-col items-start py-2 cursor-default">
-                  <div className="flex w-full justify-between items-center">
-                    <span className="font-medium">{domain.name}</span>
-                    <span className="text-green-600">${domain.finalPrice}</span>
-                  </div>
-                  <div className="text-xs text-muted-foreground mt-1 space-y-1">
-                    <div>
-                      Listed by:{" "}
-                      {sellerDetails ? (
-                        <>
-                          {sellerXUsername ? (
-                            <a
-                              href={`https://x.com/${sellerXUsername}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-800"
-                              onClick={(e) => e.stopPropagation()}
-                            >
-                              @{sellerXUsername} <ExternalLink size={12} />
-                            </a>
-                          ) : (
-                            <span>@{domain.listedBy}</span>
-                          )}
-                          {sellerDetails.email && (
-                            <div className="flex items-center gap-1 mt-1">
-                              <Mail size={12} />
-                              <a
-                                href={`mailto:${sellerDetails.email}`}
-                                className="text-blue-600 hover:text-blue-800"
-                                onClick={(e) => e.stopPropagation()}
-                              >
-                                {sellerDetails.email}
-                              </a>
-                            </div>
-                          )}
-                        </>
-                      ) : (
-                        <span>@{domain.listedBy}</span>
-                      )}
-                    </div>
-                  </div>
-                </DropdownMenuItem>
+                <UserMenuItem
+                  key={domain.id}
+                  domain={domain}
+                  sellerDetails={sellerDetails}
+                />
               );
             })}
           </DropdownMenuGroup>
