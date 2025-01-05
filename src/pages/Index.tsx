@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useUser } from "@/contexts/UserContext";
 import { Domain } from "@/types/domain";
 import { Header } from "@/components/index/Header";
@@ -6,61 +6,32 @@ import { UserSection } from "@/components/index/UserSection";
 import { ActiveAuctions } from "@/components/index/ActiveAuctions";
 import { SoldDomains } from "@/components/index/SoldDomains";
 import { RecentlyEndedDomains } from "@/components/index/RecentlyEndedDomains";
-import { AdminPanel } from "@/components/AdminPanel";
-import { PendingDomains } from "@/components/PendingDomains";
+import { AdminSection } from "@/components/index/AdminSection";
 import { Advertisement } from "@/components/Advertisement";
 import { AboutBioBox } from "@/components/AboutBioBox";
 import { handleDomainBid, handleDomainBuyNow, createNewDomain } from "@/utils/domainUtils";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { getDomains, setupWebSocket } from "@/utils/domainUpdates";
-import { toast } from "sonner";
+import { getDomains } from "@/utils/domainUpdates";
 import { broadcastManager } from "@/utils/broadcastManager";
-
-const STORAGE_KEY = 'quickbid_domains';
-const REFRESH_INTERVAL = 10000; // Refresh every 10 seconds
+import { useAuctionUpdates } from "@/hooks/useAuctionUpdates";
+import { LoadingSpinner } from "@/components/LoadingSpinner";
+import { ErrorMessage } from "@/components/ErrorMessage";
 
 const Index = () => {
   const { user, logout } = useUser();
   const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState("");
 
-  // Set up WebSocket connection for real-time updates
-  useEffect(() => {
-    const cleanup = setupWebSocket((updatedDomains) => {
-      queryClient.setQueryData(['domains'], updatedDomains);
-      broadcastManager.broadcast('domains_updated', updatedDomains);
-      toast.success("Domain listings updated!");
-    });
-
-    // Listen for updates from other tabs
-    const handleDomainUpdate = (event: CustomEvent) => {
-      if (event.detail.type === 'domains_updated') {
-        queryClient.setQueryData(['domains'], event.detail.data);
-      }
-    };
-
-    window.addEventListener('domain_update', handleDomainUpdate as EventListener);
-
-    return () => {
-      cleanup();
-      window.removeEventListener('domain_update', handleDomainUpdate as EventListener);
-    };
-  }, [queryClient]);
+  // Set up real-time updates
+  useAuctionUpdates();
 
   // Use React Query for data fetching with automatic refresh
   const { data: domains = [], isLoading, error } = useQuery({
     queryKey: ['domains'],
     queryFn: getDomains,
-    refetchInterval: REFRESH_INTERVAL,
+    refetchInterval: 10000,
     staleTime: 5000,
   });
-
-  // Save domains to localStorage whenever they change
-  useEffect(() => {
-    if (domains) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(domains));
-    }
-  }, [domains]);
 
   const handleBid = (domainId: number, amount: number) => {
     if (!user) return;
@@ -92,63 +63,21 @@ const Index = () => {
     broadcastManager.broadcast('domains_updated', updatedDomains);
   };
 
-  const handleDeleteListing = (domainId: number) => {
-    const updatedDomains = domains.filter((domain) => domain.id !== domainId);
-    queryClient.setQueryData(['domains'], updatedDomains);
-  };
-
-  const handleFeatureDomain = (domainId: number) => {
-    const updatedDomains = domains.map((domain) =>
-      domain.id === domainId
-        ? { ...domain, featured: !domain.featured }
-        : domain
-    );
-    queryClient.setQueryData(['domains'], updatedDomains);
-  };
+  if (isLoading) return <LoadingSpinner />;
+  if (error) return <ErrorMessage message="Error loading domains. Please try again later." />;
 
   const now = new Date();
-
-  const pendingDomains = domains.filter(d => d.status === 'pending');
-  const activeDomains = domains.filter(d => 
-    d.status === 'active' && d.endTime > now
-  );
-  const endedDomains = domains.filter(d => 
-    d.status === 'active' && d.endTime <= now && d.bidHistory.length === 0
-  );
-  const soldDomains = domains.filter(d => 
-    d.status === 'sold' || 
-    (d.status === 'active' && d.endTime <= now && d.bidHistory.length > 0)
-  );
-
-  const userWonDomains = soldDomains
-    .filter(d => d.currentBidder === user?.username)
-    .map(d => ({
-      id: d.id,
-      name: d.name,
-      finalPrice: d.finalPrice!,
-      purchaseDate: d.purchaseDate!,
-      listedBy: d.listedBy || 'Anonymous',
-    }));
+  const { 
+    pendingDomains,
+    activeDomains,
+    endedDomains,
+    soldDomains,
+    userWonDomains
+  } = categorizeDomains(domains, now, user?.username);
 
   const filteredActiveDomains = activeDomains.filter(domain =>
     domain.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-gray-900"></div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-red-500">Error loading domains. Please try again later.</div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-background text-foreground px-2 sm:px-4 lg:px-8 py-4 sm:py-8">
@@ -166,27 +95,14 @@ const Index = () => {
         />
 
         {user?.isAdmin && (
-          <AdminPanel
+          <AdminSection
             pendingDomains={pendingDomains}
             activeDomains={activeDomains}
-            onApproveDomain={(id) => {
-              const updatedDomains = domains.map(domain =>
-                domain.id === id ? { ...domain, status: 'active' } : domain
-              );
-              queryClient.setQueryData(['domains'], updatedDomains);
-            }}
-            onRejectDomain={(id) => {
-              const updatedDomains = domains.filter(domain => domain.id !== id);
-              queryClient.setQueryData(['domains'], updatedDomains);
-            }}
-            onDeleteListing={handleDeleteListing}
-            onFeatureDomain={handleFeatureDomain}
+            queryClient={queryClient}
           />
         )}
 
         <div className="space-y-8">
-          <PendingDomains domains={pendingDomains} />
-
           {filteredActiveDomains.length > 0 && (
             <ActiveAuctions
               domains={filteredActiveDomains}

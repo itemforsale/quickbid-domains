@@ -79,3 +79,35 @@ export const createNewDomain = (
     listedBy: username || 'Anonymous', // Ensure listedBy has a fallback
   };
 };
+
+export const categorizeDomains = (domains: Domain[], now: Date, username?: string) => {
+  const pendingDomains = domains.filter(d => d.status === 'pending');
+  const activeDomains = domains.filter(d => 
+    d.status === 'active' && d.endTime > now
+  );
+  const endedDomains = domains.filter(d => 
+    d.status === 'active' && d.endTime <= now && d.bidHistory.length === 0
+  );
+  const soldDomains = domains.filter(d => 
+    d.status === 'sold' || 
+    (d.status === 'active' && d.endTime <= now && d.bidHistory.length > 0)
+  );
+
+  const userWonDomains = soldDomains
+    .filter(d => d.currentBidder === username)
+    .map(d => ({
+      id: d.id,
+      name: d.name,
+      finalPrice: d.finalPrice!,
+      purchaseDate: d.purchaseDate!,
+      listedBy: d.listedBy || 'Anonymous',
+    }));
+
+  return {
+    pendingDomains,
+    activeDomains,
+    endedDomains,
+    soldDomains,
+    userWonDomains
+  };
+};
