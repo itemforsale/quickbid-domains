@@ -8,14 +8,21 @@ export const setupWebSocket = (onUpdate: (domains: Domain[]) => void) => {
   // Handle WebSocket messages
   wsManager.connect((data) => {
     if (data.type === 'domains_update' || data.type === 'initial_data') {
-      const domains = data.domains;
+      const domains = data.domains.map((domain: any) => ({
+        ...domain,
+        endTime: new Date(domain.endTime),
+        createdAt: new Date(domain.createdAt),
+        bidTimestamp: domain.bidTimestamp ? new Date(domain.bidTimestamp) : undefined,
+        purchaseDate: domain.purchaseDate ? new Date(domain.purchaseDate) : undefined,
+        bidHistory: (domain.bidHistory || []).map((bid: any) => ({
+          ...bid,
+          timestamp: new Date(bid.timestamp)
+        }))
+      }));
       onUpdate(domains);
       storageManager.saveDomains(domains);
     }
   });
-
-  // Subscribe to storage updates
-  storageManager.subscribeToUpdates(onUpdate);
 
   return () => {
     wsManager.disconnect();

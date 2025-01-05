@@ -6,6 +6,20 @@ class WebSocketManager {
   private ws: WebSocket | null = null;
   private reconnectAttempts = 0;
   private onMessageCallback: ((data: any) => void) | null = null;
+  private broadcastChannel: BroadcastChannel;
+
+  constructor() {
+    this.broadcastChannel = new BroadcastChannel('domainUpdates');
+    this.setupBroadcastChannel();
+  }
+
+  private setupBroadcastChannel() {
+    this.broadcastChannel.onmessage = (event) => {
+      if (event.data.type === 'domain_update' && this.onMessageCallback) {
+        this.onMessageCallback(event.data);
+      }
+    };
+  }
 
   connect(onMessage: (data: any) => void) {
     this.onMessageCallback = onMessage;
@@ -27,6 +41,11 @@ class WebSocketManager {
           const data = JSON.parse(event.data);
           if (this.onMessageCallback) {
             this.onMessageCallback(data);
+            // Broadcast the update to other tabs
+            this.broadcastChannel.postMessage({
+              type: 'domain_update',
+              ...data
+            });
           }
         } catch (error) {
           console.error('WebSocket message parsing error:', error);
@@ -74,6 +93,7 @@ class WebSocketManager {
       this.ws.close();
       this.ws = null;
     }
+    this.broadcastChannel.close();
   }
 }
 

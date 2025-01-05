@@ -4,14 +4,20 @@ const STORAGE_KEY = 'quickbid_domains';
 
 export class StorageManager {
   private static instance: StorageManager;
-  private broadcastChannel: BroadcastChannel | null = null;
+  private broadcastChannel: BroadcastChannel;
 
   private constructor() {
-    try {
-      this.broadcastChannel = new BroadcastChannel('domainUpdates');
-    } catch (error) {
-      console.warn('BroadcastChannel not supported');
-    }
+    this.broadcastChannel = new BroadcastChannel('domainUpdates');
+    this.setupBroadcastChannel();
+  }
+
+  private setupBroadcastChannel() {
+    this.broadcastChannel.onmessage = (event) => {
+      if (event.data.type === 'storage_update') {
+        // Update local storage without broadcasting
+        this.saveDomainsWithoutBroadcast(event.data.domains);
+      }
+    };
   }
 
   static getInstance(): StorageManager {
@@ -22,9 +28,28 @@ export class StorageManager {
   }
 
   saveDomains(domains: Domain[]) {
+    this.saveDomainsWithoutBroadcast(domains);
+    // Broadcast the update to other tabs
+    this.broadcastChannel.postMessage({
+      type: 'storage_update',
+      domains
+    });
+  }
+
+  private saveDomainsWithoutBroadcast(domains: Domain[]) {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(domains));
-      this.broadcastUpdate(domains);
+      const serializedDomains = domains.map(domain => ({
+        ...domain,
+        endTime: domain.endTime.toISOString(),
+        createdAt: domain.createdAt.toISOString(),
+        bidTimestamp: domain.bidTimestamp?.toISOString(),
+        purchaseDate: domain.purchaseDate?.toISOString(),
+        bidHistory: domain.bidHistory.map(bid => ({
+          ...bid,
+          timestamp: bid.timestamp.toISOString()
+        }))
+      }));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(serializedDomains));
     } catch (error) {
       console.error('Error saving domains:', error);
     }
@@ -34,7 +59,8 @@ export class StorageManager {
     try {
       const savedDomains = localStorage.getItem(STORAGE_KEY);
       if (savedDomains) {
-        return JSON.parse(savedDomains).map(this.parseDomainDates);
+        const parsedDomains = JSON.parse(savedDomains);
+        return parsedDomains.map(this.parseDomainDates);
       }
     } catch (error) {
       console.error('Error reading domains:', error);
@@ -46,7 +72,7 @@ export class StorageManager {
     return {
       ...domain,
       endTime: new Date(domain.endTime),
-      createdAt: domain.createdAt ? new Date(domain.createdAt) : new Date(),
+      createdAt: new Date(domain.createdAt),
       bidTimestamp: domain.bidTimestamp ? new Date(domain.bidTimestamp) : undefined,
       purchaseDate: domain.purchaseDate ? new Date(domain.purchaseDate) : undefined,
       bidHistory: (domain.bidHistory || []).map((bid: any) => ({
@@ -56,28 +82,7 @@ export class StorageManager {
     };
   }
 
-  private broadcastUpdate(domains: Domain[]) {
-    if (this.broadcastChannel) {
-      this.broadcastChannel.postMessage({
-        type: 'domains-update',
-        domains
-      });
-    }
-  }
-
-  subscribeToUpdates(callback: (domains: Domain[]) => void) {
-    if (this.broadcastChannel) {
-      this.broadcastChannel.onmessage = (event) => {
-        if (event.data.type === 'domains-update') {
-          callback(event.data.domains.map(this.parseDomainDates));
-        }
-      };
-    }
-  }
-
   cleanup() {
-    if (this.broadcastChannel) {
-      this.broadcastChannel.close();
-    }
+    this.broadcastChannel.close();
   }
 }
