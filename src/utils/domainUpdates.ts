@@ -1,7 +1,7 @@
 import { Domain } from "@/types/domain";
 import { setupWebSocket } from "./domains/websocket";
 import { setupBroadcastChannel } from "./domains/broadcast";
-import { getStoredDomains } from "./domains/storage";
+import { getStoredDomains, updateDomains } from "./domains/storage";
 
 export const setupDomainUpdates = (onUpdate: (domains: Domain[]) => void) => {
   const cleanupWebSocket = setupWebSocket(onUpdate);

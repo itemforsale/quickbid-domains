@@ -1,6 +1,6 @@
 import { DomainUpdate } from "./types";
 import { broadcastUpdate } from "./broadcast";
-import { isDataStale } from "./storage";
+import { updateDomains } from "./storage";
 
 const WS_URL = 'wss://api.60dna.com/ws';
 let ws: WebSocket | null = null;
@@ -38,9 +38,9 @@ export const setupWebSocket = (onUpdate: (domains: any[]) => void) => {
           const data: DomainUpdate = JSON.parse(event.data);
           
           if (data.type === 'domains_update' && data.domains) {
-            const timestamp = Date.now();
-            onUpdate(data.domains);
-            broadcastUpdate({ ...data, timestamp });
+            const updatedData = updateDomains(data.domains);
+            onUpdate(updatedData.domains);
+            broadcastUpdate({ ...data, timestamp: updatedData.timestamp });
           }
           
           if (data.type === 'heartbeat') {
