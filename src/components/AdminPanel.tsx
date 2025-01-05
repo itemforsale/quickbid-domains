@@ -5,6 +5,8 @@ import { UserCard } from "./admin/UserCard";
 import { EditUserDialog } from "./admin/EditUserDialog";
 import { DomainCard } from "./admin/DomainCard";
 import { AdvertisementSettings } from "./admin/AdvertisementSettings";
+import { Switch } from "./ui/switch";
+import { Label } from "./ui/label";
 
 interface Domain {
   id: number;
@@ -43,6 +45,9 @@ export const AdminPanel = ({
   const { users, deleteUser, updateUser } = useUser();
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [hideSearch, setHideSearch] = useState(() => {
+    return localStorage.getItem('hideSearch') === 'true';
+  });
 
   const handleApprove = (domainId: number) => {
     onApproveDomain(domainId);
@@ -94,9 +99,27 @@ export const AdminPanel = ({
     }
   };
 
+  const handleSearchVisibilityChange = (checked: boolean) => {
+    setHideSearch(checked);
+    localStorage.setItem('hideSearch', checked.toString());
+    toast.success(`Search bar ${checked ? 'hidden' : 'visible'} on main site`);
+  };
+
   return (
     <div className="space-y-8">
       <AdvertisementSettings />
+
+      <div className="space-y-4">
+        <h2 className="text-2xl font-semibold mb-4">Site Settings</h2>
+        <div className="flex items-center space-x-4 p-4 bg-card rounded-lg border">
+          <Switch
+            id="hide-search"
+            checked={hideSearch}
+            onCheckedChange={handleSearchVisibilityChange}
+          />
+          <Label htmlFor="hide-search">Hide search bar on main site</Label>
+        </div>
+      </div>
 
       <div className="space-y-4">
         <h2 className="text-2xl font-semibold mb-4">User Management</h2>

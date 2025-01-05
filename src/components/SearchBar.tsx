@@ -1,12 +1,37 @@
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search } from "lucide-react";
+import { useEffect, useState } from "react";
 
 interface SearchBarProps {
   onSearch: (query: string) => void;
 }
 
 export const SearchBar = ({ onSearch }: SearchBarProps) => {
+  const [isHidden, setIsHidden] = useState(false);
+
+  useEffect(() => {
+    const checkSearchVisibility = () => {
+      const hideSearch = localStorage.getItem('hideSearch') === 'true';
+      setIsHidden(hideSearch);
+    };
+
+    // Check initially
+    checkSearchVisibility();
+
+    // Set up storage event listener
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'hideSearch') {
+        checkSearchVisibility();
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
+
+  if (isHidden) return null;
+
   return (
     <div className="relative w-full max-w-xl mx-auto">
       <Input
