@@ -44,7 +44,6 @@ export const DomainCard = ({
   const { user } = useUser();
   const [timeLeft, setTimeLeft] = useState("");
   const [bidAmount, setBidAmount] = useState(currentBid + 10);
-  const [proxyBidAmount, setProxyBidAmount] = useState(currentBid + 20);
 
   const calculateTimeLeft = () => {
     const difference = endTime.getTime() - new Date().getTime();
@@ -71,14 +70,9 @@ export const DomainCard = ({
       toast.error("Bid must be higher than current bid");
       return;
     }
-    if (proxyBidAmount && proxyBidAmount < bidAmount) {
-      toast.error("Proxy bid must be higher than your bid amount");
-      return;
-    }
-    onBid(bidAmount, proxyBidAmount > bidAmount ? proxyBidAmount : undefined);
+    onBid(currentBid + 10, bidAmount);
     toast.success("Bid placed successfully!");
     setBidAmount(bidAmount + 10);
-    setProxyBidAmount(bidAmount + 20);
   };
 
   const handleBuyNow = () => {
@@ -142,9 +136,7 @@ export const DomainCard = ({
           
           <BidInput
             bidAmount={bidAmount}
-            proxyBidAmount={proxyBidAmount}
             onBidAmountChange={setBidAmount}
-            onProxyBidAmountChange={setProxyBidAmount}
             onBid={handleBid}
           />
 
