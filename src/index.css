@@ -59,4 +59,9 @@
     @apply bg-background text-foreground antialiased min-h-screen;
     font-feature-settings: "rlig" 1, "calt" 1;
   }
+
+  /* Optimize theme transition */
+  body * {
+    @apply transition-colors duration-200;
+  }
 }

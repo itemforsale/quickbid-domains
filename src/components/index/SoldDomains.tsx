@@ -13,7 +13,7 @@ export const SoldDomains = ({ domains }: SoldDomainsProps) => {
       <h2 className="text-2xl font-semibold mb-6 text-foreground">Recently Sold</h2>
       <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-4">
         {domains.map((domain) => (
-          <Card key={domain.id} className="p-4 backdrop-blur-sm bg-background/50 border-border">
+          <Card key={domain.id} className="p-4 bg-background border-border">
             <div className="space-y-2">
               <div className="flex justify-between items-start">
                 <h3 className="font-medium text-foreground">{domain.name}</h3>
