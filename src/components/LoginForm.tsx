@@ -3,6 +3,7 @@ import { useUser } from "@/contexts/UserContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 interface LoginFormProps {
   onSuccess?: () => void;
@@ -25,11 +26,30 @@ export const LoginForm = ({ onSuccess }: LoginFormProps) => {
 
     setIsLoading(true);
     try {
+      // First try to find the user's email by username
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('email')
+        .eq('username', formData.username)
+        .maybeSingle();
+
+      if (profileError) {
+        throw profileError;
+      }
+
+      if (!profile?.email) {
+        toast.error("User not found");
+        return;
+      }
+
       await login({
         username: formData.username,
         password: formData.password,
       });
       onSuccess?.();
+    } catch (error: any) {
+      console.error('Login error:', error);
+      toast.error(error.message || "Failed to login");
     } finally {
       setIsLoading(false);
     }
