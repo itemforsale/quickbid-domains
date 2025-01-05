@@ -10,8 +10,8 @@ interface UserMenuHeaderProps {
 export const UserMenuHeader = ({ username, xUsername, email }: UserMenuHeaderProps) => {
   return (
     <DropdownMenuLabel className="font-normal">
-      <div className="flex flex-col space-y-1">
-        <p className="text-sm font-medium leading-none">@{username}</p>
+      <div className="flex flex-col space-y-2">
+        <p className="text-base font-semibold leading-none">@{username}</p>
         {xUsername && (
           <p className="text-xs leading-none text-muted-foreground">
             <a
