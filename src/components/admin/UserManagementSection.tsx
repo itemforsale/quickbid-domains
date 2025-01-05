@@ -1,0 +1,70 @@
+import { toast } from "sonner";
+import { useUser } from "@/contexts/UserContext";
+import { useState } from "react";
+import { UserCard } from "./UserCard";
+import { EditUserDialog } from "./EditUserDialog";
+
+interface User {
+  name: string;
+  email: string;
+  username: string;
+  xUsername?: string;
+  isAdmin?: boolean;
+  password?: string;
+}
+
+export const UserManagementSection = () => {
+  const { users, deleteUser, updateUser } = useUser();
+  const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+
+  const handleDeleteUser = (username: string) => {
+    deleteUser(username);
+    toast.success("User deleted successfully!");
+  };
+
+  const handleEditUser = (user: User) => {
+    setEditingUser(user);
+    setIsEditDialogOpen(true);
+  };
+
+  const handleSaveEdit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (editingUser) {
+      const originalUser = users.find(u => u.username === editingUser.username);
+      if (originalUser) {
+        updateUser({
+          ...editingUser,
+          password: originalUser.password
+        });
+        setIsEditDialogOpen(false);
+        setEditingUser(null);
+        toast.success("User updated successfully!");
+      }
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      <h2 className="text-2xl font-semibold mb-4">User Management</h2>
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {users?.map((user) => (
+          <UserCard
+            key={user.username}
+            user={user}
+            onEdit={handleEditUser}
+            onDelete={handleDeleteUser}
+          />
+        ))}
+      </div>
+
+      <EditUserDialog
+        isOpen={isEditDialogOpen}
+        onOpenChange={setIsEditDialogOpen}
+        editingUser={editingUser}
+        onUserChange={setEditingUser}
+        onSave={handleSaveEdit}
+      />
+    </div>
+  );
+};
