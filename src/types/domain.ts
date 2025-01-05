@@ -15,4 +15,5 @@ export interface Domain {
   finalPrice?: number;
   purchaseDate?: Date;
   featured?: boolean;
+  createdAt: Date;
 }
