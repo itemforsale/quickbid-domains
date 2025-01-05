@@ -15,6 +15,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 const STORAGE_KEY = 'quickbid_domains';
 const REFRESH_INTERVAL = 10000; // Refresh every 10 seconds
+const GITHUB_RAW_URL = 'https://raw.githubusercontent.com/itemforsale/quickbid-domains/main/domains.json';
 
 const Index = () => {
   const { user, logout } = useUser();
@@ -24,24 +25,46 @@ const Index = () => {
   // Use React Query for data fetching with automatic refresh
   const { data: domains = [] } = useQuery({
     queryKey: ['domains'],
-    queryFn: () => {
-      const savedDomains = localStorage.getItem(STORAGE_KEY);
-      if (savedDomains) {
-        const parsedDomains = JSON.parse(savedDomains);
-        return parsedDomains.map((domain: any) => ({
+    queryFn: async () => {
+      try {
+        const response = await fetch(GITHUB_RAW_URL);
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        const data = await response.json();
+        return data.map((domain: any) => ({
           ...domain,
           endTime: new Date(domain.endTime),
           createdAt: domain.createdAt ? new Date(domain.createdAt) : new Date(),
           bidTimestamp: domain.bidTimestamp ? new Date(domain.bidTimestamp) : undefined,
           purchaseDate: domain.purchaseDate ? new Date(domain.purchaseDate) : undefined,
-          bidHistory: domain.bidHistory.map((bid: any) => ({
+          bidHistory: (domain.bidHistory || []).map((bid: any) => ({
             ...bid,
             timestamp: new Date(bid.timestamp)
           })),
           listedBy: domain.listedBy || 'Anonymous',
         }));
+      } catch (error) {
+        console.error('Error fetching domains:', error);
+        // Fallback to localStorage if GitHub fetch fails
+        const savedDomains = localStorage.getItem(STORAGE_KEY);
+        if (savedDomains) {
+          const parsedDomains = JSON.parse(savedDomains);
+          return parsedDomains.map((domain: any) => ({
+            ...domain,
+            endTime: new Date(domain.endTime),
+            createdAt: domain.createdAt ? new Date(domain.createdAt) : new Date(),
+            bidTimestamp: domain.bidTimestamp ? new Date(domain.bidTimestamp) : undefined,
+            purchaseDate: domain.purchaseDate ? new Date(domain.purchaseDate) : undefined,
+            bidHistory: (domain.bidHistory || []).map((bid: any) => ({
+              ...bid,
+              timestamp: new Date(bid.timestamp)
+            })),
+            listedBy: domain.listedBy || 'Anonymous',
+          }));
+        }
+        return [];
       }
-      return [];
     },
     refetchInterval: REFRESH_INTERVAL,
   });
