@@ -49,7 +49,7 @@ export const Header = ({ onSearch }: HeaderProps) => {
           variant="outline"
           size="sm"
           className="gap-2 bg-black hover:bg-black/90 text-white border-none text-xs sm:text-sm"
-          onClick={() => window.open('https://x.com/i/communities/1679163145921626113', '_blank')}
+          onClick={() => window.open('https://x.com/samcharles', '_blank')}
         >
           <X className="h-3 w-3 sm:h-4 sm:w-4" />
           Join our community

@@ -34,11 +34,11 @@ const Index = () => {
   }, [queryClient]);
 
   // Use React Query for data fetching with automatic refresh
-  const { data: domains = [], isLoading, error } = useQuery({
+  const { data: domains = [] } = useQuery({
     queryKey: ['domains'],
     queryFn: getDomains,
     refetchInterval: REFRESH_INTERVAL,
-    staleTime: 5000,
+    staleTime: 5000, // Consider data stale after 5 seconds
   });
 
   // Save domains to localStorage whenever they change
@@ -91,12 +91,15 @@ const Index = () => {
   const now = new Date();
 
   const pendingDomains = domains.filter(d => d.status === 'pending');
+  
   const activeDomains = domains.filter(d => 
     d.status === 'active' && d.endTime > now
   );
+
   const endedDomains = domains.filter(d => 
     d.status === 'active' && d.endTime <= now && d.bidHistory.length === 0
   );
+
   const soldDomains = domains.filter(d => 
     d.status === 'sold' || 
     (d.status === 'active' && d.endTime <= now && d.bidHistory.length > 0)
@@ -116,25 +119,9 @@ const Index = () => {
     domain.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-gray-900"></div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-red-500">Error loading domains. Please try again later.</div>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-background text-foreground px-2 sm:px-4 lg:px-8 py-4 sm:py-8">
-      <div className="max-w-7xl mx-auto space-y-8">
+      <div className="max-w-7xl mx-auto">
         <Header onSearch={setSearchQuery} />
         <AboutBioBox />
         <Advertisement />
@@ -166,30 +153,18 @@ const Index = () => {
           />
         )}
 
-        <div className="space-y-8">
-          <PendingDomains domains={pendingDomains} />
+        <PendingDomains domains={pendingDomains} />
 
-          {filteredActiveDomains.length > 0 && (
-            <ActiveAuctions
-              domains={filteredActiveDomains}
-              onBid={handleBid}
-              onBuyNow={handleBuyNow}
-            />
-          )}
+        <div className="space-y-8 sm:space-y-12">
+          <ActiveAuctions
+            domains={filteredActiveDomains}
+            onBid={handleBid}
+            onBuyNow={handleBuyNow}
+          />
 
-          {endedDomains.length > 0 && (
-            <RecentlyEndedDomains domains={endedDomains} />
-          )}
+          <RecentlyEndedDomains domains={endedDomains} />
 
-          {soldDomains.length > 0 && (
-            <SoldDomains domains={soldDomains} />
-          )}
-
-          {domains.length === 0 && (
-            <div className="text-center py-12">
-              <p className="text-gray-500">No domains available at the moment.</p>
-            </div>
-          )}
+          <SoldDomains domains={soldDomains} />
         </div>
       </div>
     </div>

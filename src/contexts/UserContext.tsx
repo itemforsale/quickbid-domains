@@ -1,6 +1,5 @@
 import React, { createContext, useContext, useState, ReactNode, useEffect } from "react";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
 
 interface User {
   name: string;
@@ -35,99 +34,63 @@ export function UserProvider({ children }: { children: ReactNode }) {
   });
 
   useEffect(() => {
-    // Subscribe to auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        if (session) {
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', session.user.id)
-            .single();
-
-          if (profile) {
-            setUser({
-              username: profile.username || '',
-              email: profile.email || '',
-              name: profile.username || '',
-              password: '', // We don't store passwords
-              xUsername: profile.x_username,
-              isAdmin: profile.username === ADMIN_USERNAME
-            });
-          }
-        } else {
-          setUser(null);
-        }
-      }
-    );
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, []);
-
-  useEffect(() => {
     localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(users));
   }, [users]);
 
-  const register = async (userData: User) => {
-    try {
-      const { data, error } = await supabase.auth.signUp({
-        email: userData.email,
-        password: userData.password,
-        options: {
-          data: {
-            username: userData.username,
-            x_username: userData.xUsername
-          }
-        }
-      });
-
-      if (error) throw error;
-
-      toast.success("Successfully registered! Please check your email to verify your account.");
-    } catch (error: any) {
-      toast.error(error.message);
+  const register = (userData: User) => {
+    const normalizedUsername = userData.username.toLowerCase();
+    if (users.some(u => u.username.toLowerCase() === normalizedUsername)) {
+      toast.error("Username already exists");
+      return;
     }
+
+    const newUser = {
+      ...userData,
+      username: userData.username,
+      xUsername: userData.xUsername || userData.username // Default to username if xUsername not provided
+    };
+
+    setUsers([...users, newUser]);
+    setUser(newUser);
+    toast.success("Successfully registered!");
   };
 
-  const login = async (credentials: { username: string; password: string }) => {
-    try {
-      // First try to find the user's email by username
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('email')
-        .eq('username', credentials.username)
-        .single();
-
-      if (!profile?.email) {
-        toast.error("User not found");
-        return;
-      }
-
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: profile.email,
-        password: credentials.password,
-      });
-
-      if (error) throw error;
-
-      toast.success("Successfully logged in!");
-    } catch (error: any) {
-      toast.error(error.message);
+  const login = (credentials: { username: string; password: string }) => {
+    const inputUsername = credentials.username.toLowerCase();
+    
+    if (inputUsername === ADMIN_USERNAME.toLowerCase() && credentials.password === ADMIN_PASSWORD) {
+      const adminUser: User = {
+        username: ADMIN_USERNAME,
+        name: 'Sam Charles',
+        email: 'sam@wizard.uk',
+        password: ADMIN_PASSWORD,
+        xUsername: 'samcharles',
+        isAdmin: true
+      };
+      setUser(adminUser);
+      toast.success("Successfully logged in as admin!");
+      return;
     }
+
+    const foundUser = users.find(u => u.username.toLowerCase() === inputUsername);
+    
+    if (!foundUser) {
+      toast.error("User not found");
+      return;
+    }
+
+    if (foundUser.password !== credentials.password) {
+      toast.error("Invalid password");
+      return;
+    }
+
+    setUser(foundUser);
+    toast.success("Successfully logged in!");
   };
 
-  const logout = async () => {
-    try {
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
-      
-      setUser(null);
-      toast.success("Successfully logged out!");
-    } catch (error: any) {
-      toast.error(error.message);
-    }
+  const logout = () => {
+    setUser(null);
+    toast.success("Successfully logged out!");
   };
 
   const deleteUser = (username: string) => {
@@ -140,6 +103,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
       u.username.toLowerCase() === normalizedUsername ? { ...u, ...updatedUser } : u
     ));
     
+    // Update current user if it's the same user
     if (user && user.username.toLowerCase() === normalizedUsername) {
       setUser(updatedUser);
     }

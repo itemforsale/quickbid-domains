@@ -8,12 +8,6 @@ interface SoldDomainsProps {
 export const SoldDomains = ({ domains }: SoldDomainsProps) => {
   if (domains.length === 0) return null;
 
-  const formatDate = (date: Date | string | undefined) => {
-    if (!date) return "N/A";
-    const dateObj = date instanceof Date ? date : new Date(date);
-    return dateObj.toLocaleDateString();
-  };
-
   return (
     <div>
       <h2 className="text-2xl font-semibold mb-6 text-foreground">Recently Sold</h2>
@@ -29,7 +23,7 @@ export const SoldDomains = ({ domains }: SoldDomainsProps) => {
                 Sold to @{domain.currentBidder}
               </p>
               <p className="text-xs text-muted-foreground">
-                {formatDate(domain.purchaseDate)}
+                {domain.purchaseDate?.toLocaleDateString()}
               </p>
             </div>
           </Card>
