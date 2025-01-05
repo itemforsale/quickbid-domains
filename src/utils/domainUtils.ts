@@ -1,14 +1,9 @@
 import { Domain } from "@/types/domain";
 
-export const handleDomainBid = (
-  domains: Domain[],
-  domainId: number,
-  amount: number,
-  username: string
-): Domain[] => {
-  return domains.map((domain) => {
+export const handleDomainBid = (domains: Domain[], domainId: number, amount: number, username: string): Domain[] => {
+  return domains.map(domain => {
     if (domain.id === domainId) {
-      const updatedDomain = {
+      return {
         ...domain,
         currentBid: amount,
         currentBidder: username,
@@ -18,42 +13,24 @@ export const handleDomainBid = (
           {
             bidder: username,
             amount: amount,
-            timestamp: new Date(),
-          },
-        ],
+            timestamp: new Date()
+          }
+        ]
       };
-
-      if (domain.buyNowPrice && amount >= domain.buyNowPrice) {
-        return {
-          ...updatedDomain,
-          status: 'sold',
-          finalPrice: amount,
-          purchaseDate: new Date(),
-          listedBy: domain.listedBy || 'Anonymous', // Ensure listedBy has a fallback
-        };
-      }
-
-      return updatedDomain;
     }
     return domain;
   });
 };
 
-export const handleDomainBuyNow = (
-  domains: Domain[],
-  domainId: number,
-  username: string
-): Domain[] => {
-  return domains.map((domain) => {
-    if (domain.id === domainId && domain.buyNowPrice) {
+export const handleDomainBuyNow = (domains: Domain[], domainId: number, username: string): Domain[] => {
+  return domains.map(domain => {
+    if (domain.id === domainId) {
       return {
         ...domain,
         status: 'sold',
-        currentBid: domain.buyNowPrice,
         currentBidder: username,
-        finalPrice: domain.buyNowPrice,
         purchaseDate: new Date(),
-        listedBy: domain.listedBy || 'Anonymous', // Ensure listedBy has a fallback
+        finalPrice: domain.buyNowPrice || domain.currentBid
       };
     }
     return domain;
@@ -65,43 +42,64 @@ export const createNewDomain = (
   name: string,
   startingPrice: number,
   buyNowPrice: number | null,
-  username: string
+  listedBy: string
 ): Domain => {
+  const now = new Date();
+  const endTime = new Date(now.getTime() + 60 * 60 * 1000); // 1 hour from now
+
   return {
     id,
     name,
     currentBid: startingPrice,
-    endTime: new Date(Date.now() + 60 * 60000),
+    endTime,
     bidHistory: [],
-    status: 'pending',
+    status: 'active',
     buyNowPrice: buyNowPrice || undefined,
-    createdAt: new Date(),
-    listedBy: username || 'Anonymous', // Ensure listedBy has a fallback
+    createdAt: now,
+    listedBy
   };
 };
 
-export const categorizeDomains = (domains: Domain[], now: Date, username?: string) => {
-  const pendingDomains = domains.filter(d => d.status === 'pending');
-  const activeDomains = domains.filter(d => 
-    d.status === 'active' && d.endTime > now
-  );
-  const endedDomains = domains.filter(d => 
-    d.status === 'active' && d.endTime <= now && d.bidHistory.length === 0
-  );
-  const soldDomains = domains.filter(d => 
-    d.status === 'sold' || 
-    (d.status === 'active' && d.endTime <= now && d.bidHistory.length > 0)
-  );
+export const categorizeDomains = (
+  domains: Domain[],
+  currentTime: Date,
+  currentUsername?: string
+) => {
+  const pendingDomains: Domain[] = [];
+  const activeDomains: Domain[] = [];
+  const endedDomains: Domain[] = [];
+  const soldDomains: Domain[] = [];
+  const userWonDomains: { 
+    id: number;
+    name: string;
+    finalPrice: number;
+    purchaseDate: Date;
+    listedBy: string;
+  }[] = [];
 
-  const userWonDomains = soldDomains
-    .filter(d => d.currentBidder === username)
-    .map(d => ({
-      id: d.id,
-      name: d.name,
-      finalPrice: d.finalPrice!,
-      purchaseDate: d.purchaseDate!,
-      listedBy: d.listedBy || 'Anonymous',
-    }));
+  domains.forEach(domain => {
+    if (domain.status === 'pending') {
+      pendingDomains.push(domain);
+    } else if (domain.status === 'sold') {
+      soldDomains.push(domain);
+      if (currentUsername && domain.currentBidder === currentUsername) {
+        userWonDomains.push({
+          id: domain.id,
+          name: domain.name,
+          finalPrice: domain.finalPrice || domain.currentBid,
+          purchaseDate: domain.purchaseDate || new Date(),
+          listedBy: domain.listedBy
+        });
+      }
+    } else {
+      const endTime = new Date(domain.endTime);
+      if (endTime > currentTime) {
+        activeDomains.push(domain);
+      } else {
+        endedDomains.push(domain);
+      }
+    }
+  });
 
   return {
     pendingDomains,
