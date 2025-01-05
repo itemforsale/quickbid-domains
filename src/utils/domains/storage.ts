@@ -25,3 +25,8 @@ export const getStoredDomains = (): StoredDomains | null => {
     return null;
   }
 };
+
+// Export updateDomains function
+export const updateDomains = (domains: Domain[]) => {
+  updateLocalStorage(domains, Date.now());
+};

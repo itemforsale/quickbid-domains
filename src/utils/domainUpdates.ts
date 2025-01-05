@@ -1,10 +1,10 @@
 import { Domain } from "@/types/domain";
-import { setupWebSocket } from "./domains/websocket";
+import { setupWebSocket as setupWS } from "./domains/websocket";
 import { setupBroadcastChannel } from "./domains/broadcast";
 import { getStoredDomains } from "./domains/storage";
 
 export const setupDomainUpdates = (onUpdate: (domains: Domain[]) => void) => {
-  const cleanupWebSocket = setupWebSocket(onUpdate);
+  const cleanupWebSocket = setupWS(onUpdate);
   const cleanupBroadcast = setupBroadcastChannel(onUpdate);
 
   return () => {
@@ -33,4 +33,5 @@ export const getDomains = async (): Promise<Domain[]> => {
   return [];
 };
 
-export { updateDomains } from "./domains/storage";
+// Re-export setupWebSocket for direct usage
+export { setupWS as setupWebSocket } from "./domains/websocket";
