@@ -23,7 +23,17 @@ export const RegisterForm = ({ onSuccess }: RegisterFormProps) => {
       toast.error("Please fill in all fields");
       return;
     }
-    register(formData);
+
+    // Create registration data with name as username and X username from the username field
+    const registrationData = {
+      name: formData.name,
+      email: formData.email,
+      username: formData.name.toLowerCase().replace(/\s+/g, ''), // Convert name to lowercase and remove spaces for username
+      password: formData.password,
+      xUsername: formData.username // Use the username field as xUsername
+    };
+
+    register(registrationData);
     onSuccess?.();
   };
 
