@@ -10,11 +10,12 @@ export const LoginForm = () => {
     name: "",
     email: "",
     username: "",
+    password: "",
   });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.name || !formData.email || !formData.username) {
+    if (!formData.name || !formData.email || !formData.username || !formData.password) {
       toast.error("Please fill in all fields");
       return;
     }
@@ -46,9 +47,18 @@ export const LoginForm = () => {
       <div>
         <Input
           type="text"
-          placeholder="Username"
+          placeholder="X.com Username"
           value={formData.username}
           onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+          className="w-full"
+        />
+      </div>
+      <div>
+        <Input
+          type="password"
+          placeholder="Password"
+          value={formData.password}
+          onChange={(e) => setFormData({ ...formData, password: e.target.value })}
           className="w-full"
         />
       </div>
