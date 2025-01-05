@@ -13,7 +13,7 @@ export const AuthDialogs = () => {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <div className="flex justify-center gap-4 mb-4">
+    <div className="fixed top-4 right-20 flex justify-center gap-4 z-50">
       <Dialog open={isOpen && showLogin} onOpenChange={(open) => {
         setIsOpen(open);
         if (open) setShowLogin(true);
