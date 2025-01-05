@@ -9,7 +9,7 @@ import { RecentlyEndedDomains } from "@/components/index/RecentlyEndedDomains";
 import { AdminSection } from "@/components/index/AdminSection";
 import { Advertisement } from "@/components/Advertisement";
 import { AboutBioBox } from "@/components/AboutBioBox";
-import { handleDomainBid, handleDomainBuyNow, createNewDomain } from "@/utils/domainUtils";
+import { handleDomainBid, handleDomainBuyNow, createNewDomain, categorizeDomains } from "@/utils/domainUtils";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getDomains } from "@/utils/domainUpdates";
 import { broadcastManager } from "@/utils/broadcastManager";
