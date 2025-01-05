@@ -12,6 +12,7 @@ import { CurrentBid } from "./CurrentBid";
 interface Bid {
   bidder: string;
   amount: number;
+  proxyAmount?: number;
   timestamp: Date;
 }
 
@@ -19,7 +20,7 @@ interface DomainCardProps {
   domain: string;
   initialPrice: number;
   endTime: Date;
-  onBid: (amount: number) => void;
+  onBid: (amount: number, proxyAmount?: number) => void;
   currentBid: number;
   currentBidder?: string;
   bidTimestamp?: Date;
@@ -43,6 +44,7 @@ export const DomainCard = ({
   const { user } = useUser();
   const [timeLeft, setTimeLeft] = useState("");
   const [bidAmount, setBidAmount] = useState(currentBid + 10);
+  const [proxyBidAmount, setProxyBidAmount] = useState(currentBid + 20);
 
   const calculateTimeLeft = () => {
     const difference = endTime.getTime() - new Date().getTime();
@@ -69,9 +71,14 @@ export const DomainCard = ({
       toast.error("Bid must be higher than current bid");
       return;
     }
-    onBid(bidAmount);
+    if (proxyBidAmount && proxyBidAmount < bidAmount) {
+      toast.error("Proxy bid must be higher than your bid amount");
+      return;
+    }
+    onBid(bidAmount, proxyBidAmount > bidAmount ? proxyBidAmount : undefined);
     toast.success("Bid placed successfully!");
     setBidAmount(bidAmount + 10);
+    setProxyBidAmount(bidAmount + 20);
   };
 
   const handleBuyNow = () => {
@@ -135,7 +142,9 @@ export const DomainCard = ({
           
           <BidInput
             bidAmount={bidAmount}
+            proxyBidAmount={proxyBidAmount}
             onBidAmountChange={setBidAmount}
+            onProxyBidAmountChange={setProxyBidAmount}
             onBid={handleBid}
           />
 
