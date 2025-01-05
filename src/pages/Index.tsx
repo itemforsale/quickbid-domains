@@ -7,29 +7,9 @@ import { DomainSubmissionForm } from "@/components/DomainSubmissionForm";
 import { UserProfile } from "@/components/UserProfile";
 import { AdminPanel } from "@/components/AdminPanel";
 import { PendingDomains } from "@/components/PendingDomains";
+import { NotificationBell } from "@/components/NotificationBell";
 import { useUser } from "@/contexts/UserContext";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-
-interface Bid {
-  bidder: string;
-  amount: number;
-  timestamp: Date;
-}
-
-interface Domain {
-  id: number;
-  name: string;
-  currentBid: number;
-  currentBidder?: string;
-  bidTimestamp?: Date;
-  endTime: Date;
-  bidHistory: Bid[];
-  buyNowPrice?: number;
-  status: 'pending' | 'active' | 'sold';
-  finalPrice?: number;
-  purchaseDate?: Date;
-}
 
 const STORAGE_KEY = 'quickbid_domains';
 
@@ -39,7 +19,6 @@ const Index = () => {
     const savedDomains = localStorage.getItem(STORAGE_KEY);
     if (savedDomains) {
       const parsedDomains = JSON.parse(savedDomains);
-      // Convert string dates back to Date objects
       return parsedDomains.map((domain: any) => ({
         ...domain,
         endTime: new Date(domain.endTime),
@@ -56,7 +35,6 @@ const Index = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [showLogin, setShowLogin] = useState(true);
 
-  // Save domains to localStorage whenever they change
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(domains));
   }, [domains]);
@@ -179,6 +157,7 @@ const Index = () => {
                 <p className="text-gray-700">
                   Welcome, <span className="font-semibold">{user.username}</span>!
                 </p>
+                <NotificationBell username={user.username} domains={domains} />
                 <Button variant="outline" onClick={logout}>
                   Logout
                 </Button>
