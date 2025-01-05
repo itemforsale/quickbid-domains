@@ -12,11 +12,12 @@ interface User {
 
 interface UserContextType {
   user: User | null;
-  users: User[];  // Added this
+  users: User[];
   login: (credentials: { username: string; password: string; }) => void;
   register: (user: User) => void;
   logout: () => void;
-  deleteUser: (username: string) => void;  // Added this
+  deleteUser: (username: string) => void;
+  updateUser: (updatedUser: User) => void;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -47,7 +48,6 @@ export function UserProvider({ children }: { children: ReactNode }) {
   };
 
   const login = (credentials: { username: string; password: string }) => {
-    // Check for admin login first
     if (credentials.username === ADMIN_USERNAME && credentials.password === ADMIN_PASSWORD) {
       const adminUser: User = {
         username: ADMIN_USERNAME,
@@ -61,7 +61,6 @@ export function UserProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    // Check for regular user login
     const foundUser = users.find(u => u.username === credentials.username);
     
     if (!foundUser) {
@@ -87,8 +86,22 @@ export function UserProvider({ children }: { children: ReactNode }) {
     setUsers(users.filter(u => u.username !== username));
   };
 
+  const updateUser = (updatedUser: User) => {
+    setUsers(users.map(u => 
+      u.username === updatedUser.username ? { ...u, ...updatedUser } : u
+    ));
+  };
+
   return (
-    <UserContext.Provider value={{ user, users, login, register, logout, deleteUser }}>
+    <UserContext.Provider value={{ 
+      user, 
+      users, 
+      login, 
+      register, 
+      logout, 
+      deleteUser,
+      updateUser
+    }}>
       {children}
     </UserContext.Provider>
   );

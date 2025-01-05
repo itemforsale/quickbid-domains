@@ -3,6 +3,16 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Trash2, Star, User, Edit } from "lucide-react";
 import { useUser } from "@/contexts/UserContext";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useState } from "react";
 
 interface Domain {
   id: number;
@@ -38,7 +48,9 @@ export const AdminPanel = ({
   onFeatureDomain,
   activeDomains 
 }: AdminPanelProps) => {
-  const { users, deleteUser } = useUser();
+  const { users, deleteUser, updateUser } = useUser();
+  const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
   const handleApprove = (domainId: number) => {
     onApproveDomain(domainId);
@@ -69,9 +81,19 @@ export const AdminPanel = ({
     toast.success("User deleted successfully!");
   };
 
-  const handleEditUser = (username: string) => {
-    // For now just show a toast, we can implement the edit functionality later
-    toast.info("Edit user functionality coming soon!");
+  const handleEditUser = (user: User) => {
+    setEditingUser(user);
+    setIsEditDialogOpen(true);
+  };
+
+  const handleSaveEdit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (editingUser) {
+      updateUser(editingUser);
+      setIsEditDialogOpen(false);
+      setEditingUser(null);
+      toast.success("User updated successfully!");
+    }
   };
 
   return (
@@ -94,7 +116,7 @@ export const AdminPanel = ({
                 {!user.isAdmin && (
                   <div className="flex justify-end gap-2 mt-4">
                     <Button
-                      onClick={() => handleEditUser(user.username)}
+                      onClick={() => handleEditUser(user)}
                       variant="outline"
                       size="sm"
                     >
@@ -116,6 +138,49 @@ export const AdminPanel = ({
           ))}
         </div>
       </div>
+
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit User Details</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleSaveEdit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="name">Name</Label>
+              <Input
+                id="name"
+                value={editingUser?.name || ''}
+                onChange={(e) => setEditingUser(prev => prev ? {...prev, name: e.target.value} : null)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                value={editingUser?.email || ''}
+                onChange={(e) => setEditingUser(prev => prev ? {...prev, email: e.target.value} : null)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="xUsername">X.com Username (optional)</Label>
+              <Input
+                id="xUsername"
+                value={editingUser?.xUsername || ''}
+                onChange={(e) => setEditingUser(prev => prev ? {...prev, xUsername: e.target.value} : null)}
+              />
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button type="button" variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button type="submit">
+                Save Changes
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
 
       <div className="space-y-4">
         <h2 className="text-2xl font-semibold mb-4">Admin Panel - Pending Domains</h2>
