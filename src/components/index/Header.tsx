@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 import { DarkModeToggle } from "@/components/DarkModeToggle";
 import { useUser } from "@/contexts/UserContext";
 import { toast } from "sonner";
+import { X } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface HeaderProps {
   onSearch: (query: string) => void;
@@ -42,6 +44,17 @@ export const Header = ({ onSearch }: HeaderProps) => {
 
   return (
     <div className="text-center mb-12 animate-fade-in relative">
+      <div className="absolute left-0 top-0">
+        <Button
+          variant="outline"
+          size="sm"
+          className="gap-2"
+          onClick={() => window.open('https://x.com/samcharles', '_blank')}
+        >
+          <X className="h-4 w-4" />
+          Join our community
+        </Button>
+      </div>
       <DarkModeToggle />
       <div className="space-y-4 mt-16">
         <h2 className="text-5xl font-bold mb-4 bg-gradient-to-r from-purple-500 via-pink-500 to-orange-500 text-transparent bg-clip-text hover:scale-105 transition-transform duration-300 cursor-default">
