@@ -14,6 +14,7 @@ import { handleDomainBid, handleDomainBuyNow, createNewDomain } from "@/utils/do
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getDomains, setupWebSocket } from "@/utils/domainUpdates";
 import { toast } from "sonner";
+import { broadcastManager } from "@/utils/broadcastManager";
 
 const STORAGE_KEY = 'quickbid_domains';
 const REFRESH_INTERVAL = 10000; // Refresh every 10 seconds
@@ -27,10 +28,23 @@ const Index = () => {
   useEffect(() => {
     const cleanup = setupWebSocket((updatedDomains) => {
       queryClient.setQueryData(['domains'], updatedDomains);
+      broadcastManager.broadcast('domains_updated', updatedDomains);
       toast.success("Domain listings updated!");
     });
 
-    return cleanup;
+    // Listen for updates from other tabs
+    const handleDomainUpdate = (event: CustomEvent) => {
+      if (event.detail.type === 'domains_updated') {
+        queryClient.setQueryData(['domains'], event.detail.data);
+      }
+    };
+
+    window.addEventListener('domain_update', handleDomainUpdate as EventListener);
+
+    return () => {
+      cleanup();
+      window.removeEventListener('domain_update', handleDomainUpdate as EventListener);
+    };
   }, [queryClient]);
 
   // Use React Query for data fetching with automatic refresh
@@ -52,12 +66,14 @@ const Index = () => {
     if (!user) return;
     const updatedDomains = handleDomainBid(domains, domainId, amount, user.username);
     queryClient.setQueryData(['domains'], updatedDomains);
+    broadcastManager.broadcast('domains_updated', updatedDomains);
   };
 
   const handleBuyNow = (domainId: number) => {
     if (!user) return;
     const updatedDomains = handleDomainBuyNow(domains, domainId, user.username);
     queryClient.setQueryData(['domains'], updatedDomains);
+    broadcastManager.broadcast('domains_updated', updatedDomains);
   };
 
   const handleDomainSubmission = (name: string, startingPrice: number, buyNowPrice: number | null) => {
@@ -71,7 +87,9 @@ const Index = () => {
       user.username
     );
 
-    queryClient.setQueryData(['domains'], [...domains, newDomain]);
+    const updatedDomains = [...domains, newDomain];
+    queryClient.setQueryData(['domains'], updatedDomains);
+    broadcastManager.broadcast('domains_updated', updatedDomains);
   };
 
   const handleDeleteListing = (domainId: number) => {
