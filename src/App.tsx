@@ -12,13 +12,13 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <UserProvider>
       <TooltipProvider>
-        <Toaster />
-        <Sonner />
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Index />} />
           </Routes>
         </BrowserRouter>
+        <Toaster />
+        <Sonner />
       </TooltipProvider>
     </UserProvider>
   </QueryClientProvider>
