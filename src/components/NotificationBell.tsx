@@ -55,6 +55,11 @@ export const NotificationBell = ({ username, domains }: NotificationBellProps) =
           toast.success(message);
           shownNotifications.add(wonId);
           setHasUnread(true);
+          
+          // Automatically dismiss win notification after 5 seconds
+          setTimeout(() => {
+            dismissNotification(wonId);
+          }, 5000);
         }
       });
     };
