@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useInterval } from "react-use";
 import { toast } from "sonner";
-import { Hammer, Star, Timer, New } from "lucide-react";
+import { Hammer, Star, Timer, Sparkles } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useUser } from "@/contexts/UserContext";
@@ -148,7 +148,7 @@ export const DomainCard = ({
                 )}
                 {isNew && (
                   <span className="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-700 rounded-full flex items-center gap-1">
-                    <New className="w-3 h-3" />
+                    <Sparkles className="w-3 h-3" />
                     NEW
                   </span>
                 )}
