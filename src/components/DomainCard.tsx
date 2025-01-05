@@ -1,10 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useInterval } from "react-use";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useUser } from "@/contexts/UserContext";
-import { formatDistanceToNow } from "date-fns";
+import { BidHistory } from "./BidHistory";
+import { BidInput } from "./BidInput";
+import { CurrentBid } from "./CurrentBid";
 
 interface Bid {
   bidder: string;
@@ -88,58 +89,20 @@ export const DomainCard = ({
         </div>
         
         <div className="flex flex-col gap-2">
-          <div className="flex justify-between items-center">
-            <div>
-              <p className="text-sm text-gray-500">Current Bid</p>
-              <p className="text-lg font-bold text-gray-900">${currentBid}</p>
-            </div>
-            {currentBidder && (
-              <div className="text-right">
-                <p className="text-sm text-gray-500">Highest Bidder</p>
-                <p className="text-sm font-medium text-gray-900">
-                  {formatBidder(currentBidder)} (${currentBid})
-                </p>
-                {bidTimestamp && (
-                  <p className="text-xs text-gray-500">
-                    {formatDistanceToNow(new Date(bidTimestamp), { addSuffix: true })}
-                  </p>
-                )}
-              </div>
-            )}
-          </div>
+          <CurrentBid
+            currentBid={currentBid}
+            currentBidder={currentBidder}
+            bidTimestamp={bidTimestamp}
+            formatBidder={formatBidder}
+          />
           
-          <div className="flex gap-2">
-            <input
-              type="number"
-              value={bidAmount}
-              onChange={(e) => setBidAmount(Number(e.target.value))}
-              className="w-24 px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-            />
-            <Button
-              onClick={handleBid}
-              className="bg-primary hover:bg-primary/90 text-white transition-colors"
-            >
-              Place Bid
-            </Button>
-          </div>
+          <BidInput
+            bidAmount={bidAmount}
+            onBidAmountChange={setBidAmount}
+            onBid={handleBid}
+          />
 
-          {bidHistory && bidHistory.length > 0 && (
-            <div className="mt-4">
-              <p className="text-sm font-medium text-gray-700 mb-2">Bid History</p>
-              <div className="space-y-2">
-                {bidHistory.map((bid, index) => (
-                  <div key={index} className="flex justify-between text-sm">
-                    <span className="text-gray-600">
-                      {formatBidder(bid.bidder)} (${bid.amount})
-                    </span>
-                    <span className="text-gray-500">
-                      {formatDistanceToNow(new Date(bid.timestamp), { addSuffix: true })}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
+          <BidHistory bids={bidHistory} formatBidder={formatBidder} />
         </div>
       </div>
     </Card>
