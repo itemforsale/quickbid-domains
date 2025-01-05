@@ -12,6 +12,7 @@ import { Advertisement } from "@/components/Advertisement";
 import { AboutBioBox } from "@/components/AboutBioBox";
 import { handleDomainBid, handleDomainBuyNow, createNewDomain } from "@/utils/domainUtils";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 const STORAGE_KEY = 'quickbid_domains';
 const REFRESH_INTERVAL = 10000; // Refresh every 10 seconds
@@ -22,29 +23,57 @@ const Index = () => {
   const [searchQuery, setSearchQuery] = useState("");
 
   // Use React Query for data fetching with automatic refresh
-  const { data: domains = [] } = useQuery({
+  const { data: domains = [], isError } = useQuery({
     queryKey: ['domains'],
-    queryFn: () => {
-      const savedDomains = localStorage.getItem(STORAGE_KEY);
-      if (savedDomains) {
-        const parsedDomains = JSON.parse(savedDomains);
-        return parsedDomains.map((domain: any) => ({
+    queryFn: async () => {
+      try {
+        const response = await fetch('https://60dna.com/api/domains');
+        if (!response.ok) {
+          throw new Error('Failed to fetch domains');
+        }
+        const data = await response.json();
+        return data.map((domain: any) => ({
           ...domain,
           endTime: new Date(domain.endTime),
           createdAt: domain.createdAt ? new Date(domain.createdAt) : new Date(),
           bidTimestamp: domain.bidTimestamp ? new Date(domain.bidTimestamp) : undefined,
           purchaseDate: domain.purchaseDate ? new Date(domain.purchaseDate) : undefined,
-          bidHistory: domain.bidHistory.map((bid: any) => ({
+          bidHistory: domain.bidHistory?.map((bid: any) => ({
             ...bid,
             timestamp: new Date(bid.timestamp)
-          })),
+          })) || [],
           listedBy: domain.listedBy || 'Anonymous',
         }));
+      } catch (error) {
+        console.error('Error fetching domains:', error);
+        // Fallback to localStorage if API fails
+        const savedDomains = localStorage.getItem(STORAGE_KEY);
+        if (savedDomains) {
+          const parsedDomains = JSON.parse(savedDomains);
+          return parsedDomains.map((domain: any) => ({
+            ...domain,
+            endTime: new Date(domain.endTime),
+            createdAt: domain.createdAt ? new Date(domain.createdAt) : new Date(),
+            bidTimestamp: domain.bidTimestamp ? new Date(domain.bidTimestamp) : undefined,
+            purchaseDate: domain.purchaseDate ? new Date(domain.purchaseDate) : undefined,
+            bidHistory: domain.bidHistory.map((bid: any) => ({
+              ...bid,
+              timestamp: new Date(bid.timestamp)
+            })),
+            listedBy: domain.listedBy || 'Anonymous',
+          }));
+        }
+        return [];
       }
-      return [];
     },
     refetchInterval: REFRESH_INTERVAL,
   });
+
+  useEffect(() => {
+    if (isError) {
+      toast.error("Failed to fetch live data. Using cached data instead.");
+    }
+  }, [isError]);
 
   // Save domains to localStorage whenever they change
   useEffect(() => {
