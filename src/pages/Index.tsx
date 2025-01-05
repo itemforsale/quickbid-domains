@@ -10,6 +10,8 @@ import { PendingDomains } from "@/components/PendingDomains";
 import { NotificationBell } from "@/components/NotificationBell";
 import { useUser } from "@/contexts/UserContext";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Domain } from "@/types/domain";
 
 const STORAGE_KEY = 'quickbid_domains';
 
