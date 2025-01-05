@@ -37,7 +37,7 @@ export const Advertisement = () => {
             <img
               src={adContent.imageUrl}
               alt={adContent.title}
-              className="w-full h-full object-contain rounded-lg shadow-md"
+              className="w-full h-full object-contain"
             />
           </div>
         ) : (
