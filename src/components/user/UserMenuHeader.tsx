@@ -11,7 +11,7 @@ export const UserMenuHeader = ({ username, xUsername, email }: UserMenuHeaderPro
   return (
     <DropdownMenuLabel className="font-normal">
       <div className="flex flex-col space-y-2">
-        <p className="text-base font-semibold leading-none">@{username}</p>
+        <p className="text-lg font-bold leading-none text-primary">@{username}</p>
         {xUsername && (
           <p className="text-xs leading-none text-muted-foreground">
             <a
