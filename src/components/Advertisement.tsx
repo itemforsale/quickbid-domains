@@ -33,7 +33,7 @@ export const Advertisement = () => {
         className="block hover:opacity-90 transition-opacity"
       >
         {adContent.type === 'banner' && adContent.imageUrl ? (
-          <div className="relative w-full h-[80px] sm:h-[100px] md:h-[120px]">
+          <div className="relative w-full h-[40px] sm:h-[50px] md:h-[60px]">
             <img
               src={adContent.imageUrl}
               alt={adContent.title}
