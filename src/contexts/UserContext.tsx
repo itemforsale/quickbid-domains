@@ -20,8 +20,8 @@ export function UserProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
 
   const login = (userData: User) => {
-    // For demo purposes, make user with username 'admin' an admin
-    if (userData.username === 'admin') {
+    // Check for specific admin credentials
+    if (userData.username === '60dna' && userData.password === 'xMWR6IXrqPkXPbWg') {
       userData.isAdmin = true;
     }
     setUser(userData);
