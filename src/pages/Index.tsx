@@ -7,6 +7,7 @@ import { ActiveAuctions } from "@/components/index/ActiveAuctions";
 import { SoldDomains } from "@/components/index/SoldDomains";
 import { AdminPanel } from "@/components/AdminPanel";
 import { PendingDomains } from "@/components/PendingDomains";
+import { Advertisement } from "@/components/Advertisement";
 
 const STORAGE_KEY = 'quickbid_domains';
 
@@ -140,6 +141,7 @@ const Index = () => {
     <div className="min-h-screen bg-background text-foreground px-4 py-8 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
         <Header onSearch={setSearchQuery} />
+        <Advertisement />
         
         <UserSection
           user={user}
