@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useInterval } from "react-use";
 import { toast } from "sonner";
-import { Hammer, Star } from "lucide-react";
+import { Hammer, Star, Timer } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useUser } from "@/contexts/UserContext";
@@ -93,65 +93,79 @@ export const DomainCard = ({
   };
 
   return (
-    <Card className={`p-6 backdrop-blur-sm border transition-all duration-300 hover:shadow-lg animate-fade-in
-      ${featured ? 'bg-gradient-to-br from-yellow-50 to-white border-yellow-200 shadow-yellow-100' : 'bg-white/50 border-gray-200'}`}>
-      <div className="flex flex-col gap-4">
-        <div className="flex justify-between items-start">
-          <div>
-            <div className="flex gap-2">
-              <span className="px-2 py-1 text-xs font-medium bg-primary/10 text-primary rounded-full">
-                Active
-              </span>
-              {featured && (
-                <span className="px-2 py-1 text-xs font-medium bg-yellow-100 text-yellow-700 rounded-full flex items-center gap-1">
-                  <Star className="w-3 h-3 fill-yellow-500" />
-                  Featured
+    <Card className={`group relative overflow-hidden transition-all duration-300 hover:shadow-xl animate-fade-in
+      ${featured 
+        ? 'bg-gradient-to-br from-yellow-50 to-white border-yellow-200 shadow-yellow-100' 
+        : 'bg-gradient-to-br from-gray-50 to-white border-gray-200'
+      }`}>
+      <div className="absolute inset-0 bg-white/40 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+      
+      <div className="relative p-6">
+        <div className="flex flex-col gap-4">
+          <div className="flex justify-between items-start">
+            <div>
+              <div className="flex gap-2">
+                <span className="px-2 py-1 text-xs font-medium bg-primary/10 text-primary rounded-full animate-pulse">
+                  Active
                 </span>
-              )}
-            </div>
-            <h3 className="mt-2 text-xl font-semibold text-gray-900">{domain}</h3>
-            <div className="flex items-center gap-2 mt-1 text-gray-600">
-              <Hammer className="w-4 h-4" />
-              <span className="text-sm">{bidHistory.length} bids</span>
-            </div>
-          </div>
-          <div className="text-right">
-            <p className="text-sm text-gray-500">Time Left</p>
-            <p className="text-lg font-mono font-bold text-gray-900">{timeLeft}</p>
-          </div>
-        </div>
-        
-        <div className="flex flex-col gap-2">
-          <CurrentBid
-            currentBid={currentBid}
-            currentBidder={currentBidder}
-            bidTimestamp={bidTimestamp}
-            formatBidder={formatBidder}
-          />
-          
-          {buyNowPrice && (
-            <div className="flex justify-between items-center p-2 bg-green-50 rounded-lg">
-              <span className="text-sm text-green-700">Buy Now Price:</span>
-              <div className="flex gap-2 items-center">
-                <span className="font-semibold text-green-700">${buyNowPrice}</span>
-                <Button
-                  onClick={handleBuyNow}
-                  variant="outline"
-                  className="bg-green-100 hover:bg-green-200 text-green-700 border-green-200"
-                >
-                  Buy Now
-                </Button>
+                {featured && (
+                  <span className="px-2 py-1 text-xs font-medium bg-yellow-100 text-yellow-700 rounded-full flex items-center gap-1">
+                    <Star className="w-3 h-3 fill-yellow-500" />
+                    Featured
+                  </span>
+                )}
+              </div>
+              <h3 className="mt-2 text-2xl font-bold text-gray-900 group-hover:text-primary transition-colors">
+                {domain}
+              </h3>
+              <div className="flex items-center gap-2 mt-1 text-gray-600">
+                <Hammer className="w-4 h-4" />
+                <span className="text-sm font-medium">{bidHistory.length} bids</span>
               </div>
             </div>
-          )}
+            <div className="text-right">
+              <p className="text-sm text-gray-500 flex items-center gap-1 justify-end">
+                <Timer className="w-4 h-4" />
+                Time Left
+              </p>
+              <p className="text-lg font-mono font-bold text-gray-900 group-hover:text-primary transition-colors">
+                {timeLeft}
+              </p>
+            </div>
+          </div>
           
-          <BidInput
-            bidAmount={bidAmount}
-            onBidAmountChange={setBidAmount}
-            onBid={handleBid}
-          />
+          <div className="flex flex-col gap-3">
+            <CurrentBid
+              currentBid={currentBid}
+              currentBidder={currentBidder}
+              bidTimestamp={bidTimestamp}
+              formatBidder={formatBidder}
+            />
+            
+            {buyNowPrice && (
+              <div className="flex justify-between items-center p-3 bg-green-50 rounded-lg border border-green-100 group-hover:bg-green-100/50 transition-colors">
+                <span className="text-sm font-medium text-green-700">Buy Now Price:</span>
+                <div className="flex gap-2 items-center">
+                  <span className="font-bold text-green-700">${buyNowPrice}</span>
+                  <Button
+                    onClick={handleBuyNow}
+                    variant="outline"
+                    className="bg-green-100 hover:bg-green-200 text-green-700 border-green-200"
+                  >
+                    Buy Now
+                  </Button>
+                </div>
+              </div>
+            )}
+            
+            <BidInput
+              bidAmount={bidAmount}
+              onBidAmountChange={setBidAmount}
+              onBid={handleBid}
+            />
 
-          <BidHistory bids={bidHistory} formatBidder={formatBidder} />
+            <BidHistory bids={bidHistory} formatBidder={formatBidder} />
+          </div>
         </div>
       </div>
     </Card>
