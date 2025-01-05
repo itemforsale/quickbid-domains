@@ -15,7 +15,7 @@ export const LoginForm = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.name || !formData.email || !formData.username || !formData.password) {
+    if (!formData.name || !formData.password) {
       toast.error("Please fill in all fields");
       return;
     }
@@ -32,24 +32,6 @@ export const LoginForm = () => {
           placeholder="Name"
           value={formData.name}
           onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-          className="w-full"
-        />
-      </div>
-      <div>
-        <Input
-          type="email"
-          placeholder="Email"
-          value={formData.email}
-          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-          className="w-full"
-        />
-      </div>
-      <div>
-        <Input
-          type="text"
-          placeholder="X.com Username"
-          value={formData.username}
-          onChange={(e) => setFormData({ ...formData, username: e.target.value })}
           className="w-full"
         />
       </div>
