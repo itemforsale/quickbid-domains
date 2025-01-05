@@ -18,6 +18,7 @@ export const useNotifications = ({ username, domains }: UseNotificationsProps) =
       domains.forEach(domain => {
         const outbidId = `outbid-${domain.id}`;
         const wonId = `won-${domain.id}`;
+        const buyNowId = `buynow-${domain.id}`;
         
         // Check for outbids
         if (domain.status === 'active' && 
@@ -31,39 +32,63 @@ export const useNotifications = ({ username, domains }: UseNotificationsProps) =
           setHasUnread(true);
         }
         
-        // Check for wins - only show for domains won after the component mounted
+        // Check for auction wins
         if (domain.status === 'sold' && 
             domain.currentBidder === username && 
             new Date() > domain.endTime && 
             !shownNotifications.has(wonId) &&
-            domain.purchaseDate && // Make sure purchaseDate exists
-            domain.purchaseDate > lastCheckTime) { // Only show for new wins
-          const message = `Congratulations! You've won the auction for ${domain.name}!`;
+            domain.purchaseDate && 
+            domain.purchaseDate > lastCheckTime) {
+          const message = `🎉 Congratulations! You've won the auction for ${domain.name}!`;
           setNotifications(prev => [...prev, { id: wonId, message }]);
           
-          // Show toast with action button
           toast.success(message, {
-            duration: 10000, // 10 seconds
+            duration: Infinity, // Keep until manually dismissed
             action: {
               label: "View Details",
               onClick: () => {
-                // Open the user dropdown menu to show won domains
                 const userDropdownButton = document.querySelector('[aria-haspopup="menu"]') as HTMLButtonElement;
                 if (userDropdownButton) {
                   userDropdownButton.click();
                 }
               },
             },
-            dismissible: true,
+            onDismiss: () => {
+              dismissNotification(wonId);
+            }
           });
           
           shownNotifications.add(wonId);
           setHasUnread(true);
+        }
+
+        // Check for buy now purchases
+        if (domain.status === 'sold' && 
+            domain.currentBidder === username && 
+            !shownNotifications.has(buyNowId) &&
+            domain.purchaseDate && 
+            domain.purchaseDate > lastCheckTime) {
+          const message = `🎉 Success! You've purchased ${domain.name} using Buy Now!`;
+          setNotifications(prev => [...prev, { id: buyNowId, message }]);
           
-          // Auto-dismiss win notifications after 5 seconds
-          setTimeout(() => {
-            dismissNotification(wonId);
-          }, 5000);
+          toast.success(message, {
+            duration: Infinity, // Keep until manually dismissed
+            action: {
+              label: "View Details",
+              onClick: () => {
+                const userDropdownButton = document.querySelector('[aria-haspopup="menu"]') as HTMLButtonElement;
+                if (userDropdownButton) {
+                  userDropdownButton.click();
+                }
+              },
+            },
+            onDismiss: () => {
+              dismissNotification(buyNowId);
+            }
+          });
+          
+          shownNotifications.add(buyNowId);
+          setHasUnread(true);
         }
       });
     };
