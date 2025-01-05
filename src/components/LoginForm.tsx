@@ -40,6 +40,7 @@ export const LoginForm = ({ onSuccess }: LoginFormProps) => {
           .single();
 
         if (profileError || !profile?.email) {
+          console.error('Profile lookup error:', profileError);
           toast.error("User not found");
           setIsLoading(false);
           return;
@@ -47,6 +48,8 @@ export const LoginForm = ({ onSuccess }: LoginFormProps) => {
 
         email = profile.email;
       }
+
+      console.log('Attempting login with email:', email); // Debug log
 
       // Sign in with email and password
       const { data, error } = await supabase.auth.signInWithPassword({
