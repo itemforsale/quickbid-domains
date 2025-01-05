@@ -16,4 +16,5 @@ export interface Domain {
   purchaseDate?: Date;
   featured?: boolean;
   createdAt: Date;
+  listedBy: string;
 }

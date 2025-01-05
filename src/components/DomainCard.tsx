@@ -1,13 +1,14 @@
 import { useState, useEffect } from "react";
 import { useInterval } from "react-use";
 import { toast } from "sonner";
-import { Hammer, Star, Timer, Sparkles } from "lucide-react";
+import { Hammer, Timer } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useUser } from "@/contexts/UserContext";
 import { BidHistory } from "./BidHistory";
 import { BidInput } from "./BidInput";
 import { CurrentBid } from "./CurrentBid";
+import { DomainHeader } from "./domain/DomainHeader";
 
 interface Bid {
   bidder: string;
@@ -44,6 +45,7 @@ export const DomainCard = ({
   onBuyNow,
   featured,
   createdAt,
+  listedBy = 'Anonymous',
 }: DomainCardProps) => {
   const { user } = useUser();
   const [timeLeft, setTimeLeft] = useState("");
@@ -131,36 +133,13 @@ export const DomainCard = ({
       <div className="relative p-6">
         <div className="flex flex-col gap-4">
           <div className="flex justify-between items-start">
-            <div>
-              <div className="flex gap-2">
-                <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                  isEnded 
-                    ? 'bg-gray-100 text-gray-600'
-                    : 'bg-primary/10 text-primary animate-pulse'
-                }`}>
-                  {isEnded ? 'Ended' : 'Active'}
-                </span>
-                {featured && (
-                  <span className="px-2 py-1 text-xs font-medium bg-yellow-100 text-yellow-700 rounded-full flex items-center gap-1">
-                    <Star className="w-3 h-3 fill-yellow-500" />
-                    Featured
-                  </span>
-                )}
-                {isNew && (
-                  <span className="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-700 rounded-full flex items-center gap-1">
-                    <Sparkles className="w-3 h-3" />
-                    NEW
-                  </span>
-                )}
-              </div>
-              <h3 className="mt-2 text-2xl font-bold text-gray-900 group-hover:text-primary transition-colors">
-                {domain}
-              </h3>
-              <div className="flex items-center gap-2 mt-1 text-gray-600">
-                <Hammer className="w-4 h-4" />
-                <span className="text-sm font-medium">{bidHistory.length} bids</span>
-              </div>
-            </div>
+            <DomainHeader
+              domain={domain}
+              isNew={isNew}
+              featured={featured || false}
+              isEnded={isEnded}
+              listedBy={listedBy}
+            />
             <div className="text-right">
               <p className="text-sm text-gray-500 flex items-center gap-1 justify-end">
                 <Timer className="w-4 h-4" />
@@ -172,6 +151,11 @@ export const DomainCard = ({
             </div>
           </div>
           
+          <div className="flex items-center gap-2 mt-1 text-gray-600">
+            <Hammer className="w-4 h-4" />
+            <span className="text-sm font-medium">{bidHistory.length} bids</span>
+          </div>
+
           <div className="flex flex-col gap-3">
             <CurrentBid
               currentBid={currentBid}

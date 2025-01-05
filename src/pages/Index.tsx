@@ -104,7 +104,8 @@ const Index = () => {
       bidHistory: [],
       status: 'pending',
       buyNowPrice: buyNowPrice || undefined,
-      createdAt: new Date(), // Add this line to set creation time
+      createdAt: new Date(),
+      listedBy: user?.username || 'Anonymous',
     };
 
     setDomains((prevDomains) => [...prevDomains, newDomain]);
