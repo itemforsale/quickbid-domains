@@ -19,7 +19,7 @@ export const BidInput = ({
     <div className="flex flex-col gap-2">
       <div>
         <label htmlFor="bidAmount" className="text-sm text-gray-500 mb-1 block">
-          Your Maximum Bid (Minimum ${minimumBid})
+          Your Maximum Bid (Minimum $ {minimumBid.toLocaleString()})
         </label>
         <input
           id="bidAmount"

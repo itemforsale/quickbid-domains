@@ -28,9 +28,9 @@ export const PendingDomains = ({ domains }: PendingDomainsProps) => {
                   Pending
                 </span>
               </div>
-              <p className="text-sm text-gray-600">Starting Price: ${domain.currentBid}</p>
+              <p className="text-sm text-gray-600">Starting Price: $ {domain.currentBid.toLocaleString()}</p>
               {domain.buyNowPrice && (
-                <p className="text-sm text-gray-600">Buy Now: ${domain.buyNowPrice}</p>
+                <p className="text-sm text-gray-600">Buy Now: $ {domain.buyNowPrice.toLocaleString()}</p>
               )}
             </div>
           </Card>

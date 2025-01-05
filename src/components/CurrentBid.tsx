@@ -17,13 +17,13 @@ export const CurrentBid = ({
     <div className="flex justify-between items-center">
       <div>
         <p className="text-sm text-gray-500">Current Bid</p>
-        <p className="text-lg font-bold text-gray-900">${currentBid}</p>
+        <p className="text-lg font-bold text-gray-900">$ {currentBid.toLocaleString()}</p>
       </div>
       {currentBidder && (
         <div className="text-right">
           <p className="text-sm text-gray-500">Highest Bidder</p>
           <p className="text-sm font-medium text-gray-900">
-            {formatBidder(currentBidder)} (${currentBid})
+            {formatBidder(currentBidder)} ($ {currentBid.toLocaleString()})
           </p>
           {bidTimestamp && (
             <p className="text-xs text-gray-500">

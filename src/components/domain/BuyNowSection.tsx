@@ -9,7 +9,7 @@ export const BuyNowSection = ({ price, onBuyNow }: BuyNowSectionProps) => (
   <div className="flex justify-between items-center p-3 bg-green-50 rounded-lg border border-green-100 group-hover:bg-green-100/50 transition-colors">
     <span className="text-sm font-medium text-green-700">Buy Now Price:</span>
     <div className="flex gap-2 items-center">
-      <span className="font-bold text-green-700">${price}</span>
+      <span className="font-bold text-green-700">$ {price.toLocaleString()}</span>
       <Button
         onClick={onBuyNow}
         variant="outline"
