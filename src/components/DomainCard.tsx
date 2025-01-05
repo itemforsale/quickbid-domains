@@ -6,6 +6,12 @@ import { Card } from "@/components/ui/card";
 import { useUser } from "@/contexts/UserContext";
 import { formatDistanceToNow } from "date-fns";
 
+interface Bid {
+  bidder: string;
+  amount: number;
+  timestamp: Date;
+}
+
 interface DomainCardProps {
   domain: string;
   initialPrice: number;
@@ -14,6 +20,7 @@ interface DomainCardProps {
   currentBid: number;
   currentBidder?: string;
   bidTimestamp?: Date;
+  bidHistory?: Bid[];
 }
 
 export const DomainCard = ({
@@ -24,6 +31,7 @@ export const DomainCard = ({
   currentBid,
   currentBidder,
   bidTimestamp,
+  bidHistory = [],
 }: DomainCardProps) => {
   const { user } = useUser();
   const [timeLeft, setTimeLeft] = useState("");
@@ -114,6 +122,24 @@ export const DomainCard = ({
               Place Bid
             </Button>
           </div>
+
+          {bidHistory && bidHistory.length > 0 && (
+            <div className="mt-4">
+              <p className="text-sm font-medium text-gray-700 mb-2">Bid History</p>
+              <div className="space-y-2">
+                {bidHistory.map((bid, index) => (
+                  <div key={index} className="flex justify-between text-sm">
+                    <span className="text-gray-600">
+                      {formatBidder(bid.bidder)} (${bid.amount})
+                    </span>
+                    <span className="text-gray-500">
+                      {formatDistanceToNow(new Date(bid.timestamp), { addSuffix: true })}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </Card>

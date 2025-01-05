@@ -6,6 +6,12 @@ import { RegisterForm } from "@/components/RegisterForm";
 import { useUser } from "@/contexts/UserContext";
 import { Button } from "@/components/ui/button";
 
+interface Bid {
+  bidder: string;
+  amount: number;
+  timestamp: Date;
+}
+
 interface Domain {
   id: number;
   name: string;
@@ -13,6 +19,7 @@ interface Domain {
   currentBidder?: string;
   bidTimestamp?: Date;
   endTime: Date;
+  bidHistory: Bid[];
 }
 
 const generateInitialDomains = (): Domain[] => {
@@ -30,6 +37,7 @@ const generateInitialDomains = (): Domain[] => {
     name: domain,
     currentBid: Math.floor(Math.random() * 1000) + 100,
     endTime: new Date(Date.now() + (Math.random() * 30 + 30) * 60000),
+    bidHistory: [],
   }));
 };
 
@@ -50,6 +58,14 @@ const Index = () => {
               currentBid: amount,
               currentBidder: user.username,
               bidTimestamp: new Date(),
+              bidHistory: [
+                ...domain.bidHistory,
+                {
+                  bidder: user.username,
+                  amount: amount,
+                  timestamp: new Date(),
+                },
+              ],
             }
           : domain
       )
