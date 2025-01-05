@@ -1,3 +1,5 @@
+import { StorageManager } from '../storage/StorageManager';
+
 const WS_URL = 'wss://api.60dna.com/ws';
 const MAX_RECONNECT_ATTEMPTS = 5;
 const RECONNECT_DELAY = 5000;
@@ -108,13 +110,13 @@ class WebSocketManager {
   }
 
   private fallbackToLocalStorage() {
-    const storageManager = new StorageManager();
-    const data = storageManager.getDomains();
-    if (data && this.onMessageCallback) {
+    const storageManager = StorageManager.getInstance();
+    const domains = storageManager.getDomains();
+    if (domains && this.onMessageCallback) {
       console.log('Falling back to localStorage data');
       this.onMessageCallback({
         type: 'fallback_data',
-        domains: data
+        domains: domains
       });
     }
   }
