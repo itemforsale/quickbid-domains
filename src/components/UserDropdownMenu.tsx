@@ -9,7 +9,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ExternalLink, LogOut, User } from "lucide-react";
+import { ExternalLink, LogOut, User, Mail } from "lucide-react";
 import { useUser } from "@/contexts/UserContext";
 import { ListDomainDialog } from "@/components/ListDomainDialog";
 import { NotificationBell } from "@/components/NotificationBell";
@@ -69,6 +69,12 @@ export const UserDropdownMenu = ({
                   </a>
                 </p>
               )}
+              {userDetails?.email && (
+                <p className="text-xs leading-none text-muted-foreground flex items-center gap-1">
+                  <Mail size={12} />
+                  {userDetails.email}
+                </p>
+              )}
             </div>
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
@@ -87,20 +93,34 @@ export const UserDropdownMenu = ({
                     <span className="font-medium">{domain.name}</span>
                     <span className="text-green-600">${domain.finalPrice}</span>
                   </div>
-                  <div className="text-xs text-muted-foreground mt-1">
-                    Listed by: {' '}
-                    {sellerXUsername ? (
-                      <a
-                        href={`https://x.com/${sellerXUsername}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-800"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        @{sellerXUsername} <ExternalLink size={12} />
-                      </a>
-                    ) : (
-                      <span>@{domain.listedBy}</span>
+                  <div className="text-xs text-muted-foreground mt-1 space-y-1">
+                    <div>
+                      Listed by: {' '}
+                      {sellerXUsername ? (
+                        <a
+                          href={`https://x.com/${sellerXUsername}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-800"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          @{sellerXUsername} <ExternalLink size={12} />
+                        </a>
+                      ) : (
+                        <span>@{domain.listedBy}</span>
+                      )}
+                    </div>
+                    {sellerDetails?.email && (
+                      <div className="flex items-center gap-1">
+                        <Mail size={12} />
+                        <a
+                          href={`mailto:${sellerDetails.email}`}
+                          className="text-blue-600 hover:text-blue-800"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          {sellerDetails.email}
+                        </a>
+                      </div>
                     )}
                   </div>
                 </DropdownMenuItem>
