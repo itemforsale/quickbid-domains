@@ -19,6 +19,8 @@ interface UserContextType {
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
 const USERS_STORAGE_KEY = 'quickbid_users';
+const ADMIN_USERNAME = '60dna';
+const ADMIN_PASSWORD = 'xMWR6IXrqPkXPbWg';
 
 export function UserProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -27,7 +29,6 @@ export function UserProvider({ children }: { children: ReactNode }) {
     return savedUsers ? JSON.parse(savedUsers) : [];
   });
 
-  // Persist users to localStorage whenever they change
   useEffect(() => {
     localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(users));
   }, [users]);
@@ -43,6 +44,21 @@ export function UserProvider({ children }: { children: ReactNode }) {
   };
 
   const login = (credentials: { username: string; password: string }) => {
+    // Check for admin login first
+    if (credentials.username === ADMIN_USERNAME && credentials.password === ADMIN_PASSWORD) {
+      const adminUser: User = {
+        username: ADMIN_USERNAME,
+        name: 'Admin',
+        email: 'admin@example.com',
+        password: ADMIN_PASSWORD,
+        isAdmin: true
+      };
+      setUser(adminUser);
+      toast.success("Successfully logged in as admin!");
+      return;
+    }
+
+    // Check for regular user login
     const foundUser = users.find(u => u.username === credentials.username);
     
     if (!foundUser) {
@@ -55,17 +71,13 @@ export function UserProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    // Check for admin credentials
-    if (credentials.username === '60dna' && credentials.password === 'xMWR6IXrqPkXPbWg') {
-      foundUser.isAdmin = true;
-    }
-
     setUser(foundUser);
     toast.success("Successfully logged in!");
   };
 
   const logout = () => {
     setUser(null);
+    toast.success("Successfully logged out!");
   };
 
   return (
