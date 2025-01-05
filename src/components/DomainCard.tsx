@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useInterval } from "react-use";
 import { toast } from "sonner";
-import { Hammer } from "lucide-react";
+import { Hammer, Star } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useUser } from "@/contexts/UserContext";
@@ -27,6 +27,7 @@ interface DomainCardProps {
   bidHistory?: Bid[];
   buyNowPrice?: number;
   onBuyNow?: () => void;
+  featured?: boolean;
 }
 
 export const DomainCard = ({
@@ -40,6 +41,7 @@ export const DomainCard = ({
   bidHistory = [],
   buyNowPrice,
   onBuyNow,
+  featured,
 }: DomainCardProps) => {
   const { user } = useUser();
   const [timeLeft, setTimeLeft] = useState("");
@@ -91,13 +93,22 @@ export const DomainCard = ({
   };
 
   return (
-    <Card className="p-6 backdrop-blur-sm bg-white/50 border border-gray-200 rounded-xl transition-all duration-300 hover:shadow-lg animate-fade-in">
+    <Card className={`p-6 backdrop-blur-sm border transition-all duration-300 hover:shadow-lg animate-fade-in
+      ${featured ? 'bg-gradient-to-br from-yellow-50 to-white border-yellow-200 shadow-yellow-100' : 'bg-white/50 border-gray-200'}`}>
       <div className="flex flex-col gap-4">
         <div className="flex justify-between items-start">
           <div>
-            <span className="px-2 py-1 text-xs font-medium bg-primary/10 text-primary rounded-full">
-              Active
-            </span>
+            <div className="flex gap-2">
+              <span className="px-2 py-1 text-xs font-medium bg-primary/10 text-primary rounded-full">
+                Active
+              </span>
+              {featured && (
+                <span className="px-2 py-1 text-xs font-medium bg-yellow-100 text-yellow-700 rounded-full flex items-center gap-1">
+                  <Star className="w-3 h-3 fill-yellow-500" />
+                  Featured
+                </span>
+              )}
+            </div>
             <h3 className="mt-2 text-xl font-semibold text-gray-900">{domain}</h3>
             <div className="flex items-center gap-2 mt-1 text-gray-600">
               <Hammer className="w-4 h-4" />

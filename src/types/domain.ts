@@ -14,4 +14,5 @@ export interface Domain {
   buyNowPrice?: number;
   finalPrice?: number;
   purchaseDate?: Date;
+  featured?: boolean;
 }

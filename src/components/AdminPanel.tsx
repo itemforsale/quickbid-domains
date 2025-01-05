@@ -1,7 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { Trash2 } from "lucide-react";
+import { Trash2, Star } from "lucide-react";
 
 interface Domain {
   id: number;
@@ -9,6 +9,7 @@ interface Domain {
   currentBid: number;
   buyNowPrice?: number;
   status: 'pending' | 'active' | 'sold';
+  featured?: boolean;
 }
 
 interface AdminPanelProps {
@@ -16,6 +17,7 @@ interface AdminPanelProps {
   onApproveDomain: (domainId: number) => void;
   onRejectDomain: (domainId: number) => void;
   onDeleteListing?: (domainId: number) => void;
+  onFeatureDomain?: (domainId: number) => void;
   activeDomains: Domain[];
 }
 
@@ -24,6 +26,7 @@ export const AdminPanel = ({
   onApproveDomain, 
   onRejectDomain,
   onDeleteListing,
+  onFeatureDomain,
   activeDomains 
 }: AdminPanelProps) => {
   const handleApprove = (domainId: number) => {
@@ -40,6 +43,13 @@ export const AdminPanel = ({
     if (onDeleteListing) {
       onDeleteListing(domainId);
       toast.success("Listing deleted successfully!");
+    }
+  };
+
+  const handleFeature = (domainId: number) => {
+    if (onFeatureDomain) {
+      onFeatureDomain(domainId);
+      toast.success("Domain featured status updated!");
     }
   };
 
@@ -94,7 +104,16 @@ export const AdminPanel = ({
                   {domain.buyNowPrice && (
                     <p className="text-sm text-gray-600">Buy Now Price: ${domain.buyNowPrice}</p>
                   )}
-                  <div className="flex justify-end mt-4">
+                  <div className="flex justify-end gap-2 mt-4">
+                    <Button
+                      onClick={() => handleFeature(domain.id)}
+                      variant="outline"
+                      size="sm"
+                      className={domain.featured ? "bg-yellow-100 text-yellow-700" : ""}
+                    >
+                      <Star className={`h-4 w-4 mr-2 ${domain.featured ? "fill-yellow-500" : ""}`} />
+                      {domain.featured ? "Featured" : "Feature"}
+                    </Button>
                     <Button
                       onClick={() => handleDelete(domain.id)}
                       variant="destructive"
