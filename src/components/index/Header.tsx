@@ -43,28 +43,28 @@ export const Header = ({ onSearch }: HeaderProps) => {
   };
 
   return (
-    <div className="text-center mb-12 animate-fade-in">
-      <div className="fixed left-4 top-4 z-50">
+    <div className="text-center mb-8 sm:mb-12 px-4 animate-fade-in">
+      <div className="fixed left-2 sm:left-4 top-4 z-50">
         <Button
           variant="outline"
           size="sm"
-          className="gap-2 bg-black hover:bg-black/90 text-white border-none"
+          className="gap-2 bg-black hover:bg-black/90 text-white border-none text-xs sm:text-sm"
           onClick={() => window.open('https://x.com/samcharles', '_blank')}
         >
-          <X className="h-4 w-4" />
+          <X className="h-3 w-3 sm:h-4 sm:w-4" />
           Join our community
         </Button>
       </div>
       <DarkModeToggle />
-      <div className="space-y-4 mt-16">
-        <h2 className="text-5xl font-bold mb-4 bg-gradient-to-r from-purple-500 via-pink-500 to-orange-500 text-transparent bg-clip-text hover:scale-105 transition-transform duration-300 cursor-default">
+      <div className="space-y-4 mt-12 sm:mt-16">
+        <h2 className="text-3xl sm:text-5xl font-bold mb-4 bg-gradient-to-r from-purple-500 via-pink-500 to-orange-500 text-transparent bg-clip-text hover:scale-105 transition-transform duration-300 cursor-default">
           <span className="font-mono">{count}</span>dna.com
         </h2>
       </div>
-      <p className="text-lg text-foreground mb-8">
+      <p className="text-base sm:text-lg text-foreground mb-6 sm:mb-8 px-4">
         Trade directly with others using your X.com username
       </p>
-      <div className="mt-8">
+      <div className="mt-6 sm:mt-8 px-2">
         <SearchBar onSearch={onSearch} />
       </div>
     </div>

@@ -120,7 +120,7 @@ const Index = () => {
   );
 
   return (
-    <div className="min-h-screen bg-background text-foreground px-4 py-8 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-background text-foreground px-2 sm:px-4 lg:px-8 py-4 sm:py-8">
       <div className="max-w-7xl mx-auto">
         <Header onSearch={setSearchQuery} />
         <AboutBioBox />
@@ -155,7 +155,7 @@ const Index = () => {
 
         <PendingDomains domains={pendingDomains} />
 
-        <div className="space-y-12">
+        <div className="space-y-8 sm:space-y-12">
           <ActiveAuctions
             domains={filteredActiveDomains}
             onBid={handleBid}

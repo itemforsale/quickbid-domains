@@ -122,9 +122,9 @@ export const DomainCard = ({
         ? 'bg-gradient-to-br from-yellow-50 to-white border-yellow-200 shadow-yellow-100' 
         : 'bg-gradient-to-br from-gray-50 to-white border-gray-200'
     )}>
-      <div className="relative p-6">
-        <div className="flex flex-col gap-4">
-          <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
+      <div className="relative p-4 sm:p-6">
+        <div className="flex flex-col gap-3 sm:gap-4">
+          <div className="flex flex-col sm:flex-row justify-between items-start gap-2 sm:gap-4">
             <DomainHeader
               domain={domain}
               isNew={isNew}
@@ -140,7 +140,7 @@ export const DomainCard = ({
           
           <BidCount count={bidHistory.length} />
 
-          <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-2 sm:gap-3">
             <CurrentBid
               currentBid={currentBid}
               currentBidder={currentBidder}
