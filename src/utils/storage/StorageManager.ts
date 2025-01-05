@@ -1,20 +1,21 @@
 import { Domain } from "@/types/domain";
 
 const STORAGE_KEY = 'quickbid_domains';
+const LAST_UPDATE_KEY = 'quickbid_last_update';
 
 export class StorageManager {
   private static instance: StorageManager;
   private broadcastChannel: BroadcastChannel;
 
   private constructor() {
-    this.broadcastChannel = new BroadcastChannel('domainUpdates');
+    this.broadcastChannel = new BroadcastChannel('auctionUpdates');
     this.setupBroadcastChannel();
   }
 
   private setupBroadcastChannel() {
     this.broadcastChannel.onmessage = (event) => {
       if (event.data.type === 'storage_update') {
-        // Update local storage without broadcasting
+        console.log('Received storage update broadcast:', event.data);
         this.saveDomainsWithoutBroadcast(event.data.domains);
       }
     };
@@ -29,10 +30,14 @@ export class StorageManager {
 
   saveDomains(domains: Domain[]) {
     this.saveDomainsWithoutBroadcast(domains);
-    // Broadcast the update to other tabs
+    const timestamp = Date.now();
+    localStorage.setItem(LAST_UPDATE_KEY, timestamp.toString());
+    
+    console.log('Broadcasting storage update');
     this.broadcastChannel.postMessage({
       type: 'storage_update',
-      domains
+      domains,
+      timestamp
     });
   }
 
@@ -40,15 +45,17 @@ export class StorageManager {
     try {
       const serializedDomains = domains.map(domain => ({
         ...domain,
-        endTime: domain.endTime.toISOString(),
-        createdAt: domain.createdAt.toISOString(),
-        bidTimestamp: domain.bidTimestamp?.toISOString(),
-        purchaseDate: domain.purchaseDate?.toISOString(),
+        endTime: domain.endTime instanceof Date ? domain.endTime.toISOString() : domain.endTime,
+        createdAt: domain.createdAt instanceof Date ? domain.createdAt.toISOString() : domain.createdAt,
+        bidTimestamp: domain.bidTimestamp instanceof Date ? domain.bidTimestamp.toISOString() : domain.bidTimestamp,
+        purchaseDate: domain.purchaseDate instanceof Date ? domain.purchaseDate.toISOString() : domain.purchaseDate,
         bidHistory: domain.bidHistory.map(bid => ({
           ...bid,
-          timestamp: bid.timestamp.toISOString()
+          timestamp: bid.timestamp instanceof Date ? bid.timestamp.toISOString() : bid.timestamp
         }))
       }));
+      
+      console.log('Saving domains to localStorage:', serializedDomains);
       localStorage.setItem(STORAGE_KEY, JSON.stringify(serializedDomains));
     } catch (error) {
       console.error('Error saving domains:', error);
@@ -60,6 +67,7 @@ export class StorageManager {
       const savedDomains = localStorage.getItem(STORAGE_KEY);
       if (savedDomains) {
         const parsedDomains = JSON.parse(savedDomains);
+        console.log('Retrieved domains from localStorage:', parsedDomains);
         return parsedDomains.map(this.parseDomainDates);
       }
     } catch (error) {
@@ -80,6 +88,11 @@ export class StorageManager {
         timestamp: new Date(bid.timestamp)
       }))
     };
+  }
+
+  getLastUpdateTimestamp(): number {
+    const timestamp = localStorage.getItem(LAST_UPDATE_KEY);
+    return timestamp ? parseInt(timestamp) : 0;
   }
 
   cleanup() {
