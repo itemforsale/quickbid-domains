@@ -51,7 +51,7 @@ export const DomainCard = ({
 }: DomainCardProps) => {
   const { user } = useUser();
   const [isEnded, setIsEnded] = useState(false);
-  const [bidAmount, setBidAmount] = useState(currentBid + 10);
+  const [bidAmount, setBidAmount] = useState(currentBid + 1);
   const [isNew, setIsNew] = useState(false);
 
   useEffect(() => {
@@ -80,9 +80,12 @@ export const DomainCard = ({
       toast.error("Bid must be higher than current bid");
       return;
     }
-    onBid(currentBid + 10, bidAmount);
+
+    // Place the actual bid at current + 1, but store the maximum bid amount
+    const actualBidAmount = currentBid + 1;
+    onBid(actualBidAmount, bidAmount);
     toast.success("Bid placed successfully!");
-    setBidAmount(bidAmount + 10);
+    setBidAmount(actualBidAmount + 1);
   };
 
   const handleBuyNow = () => {
@@ -149,6 +152,7 @@ export const DomainCard = ({
                 bidAmount={bidAmount}
                 onBidAmountChange={setBidAmount}
                 onBid={handleBid}
+                currentBid={currentBid}
               />
             )}
 
