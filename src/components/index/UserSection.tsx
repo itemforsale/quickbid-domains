@@ -1,8 +1,8 @@
 import { Button } from "@/components/ui/button";
 import { NotificationBell } from "@/components/NotificationBell";
-import { DomainSubmissionForm } from "@/components/DomainSubmissionForm";
 import { UserProfile } from "@/components/UserProfile";
 import { AuthDialogs } from "@/components/AuthDialogs";
+import { ListDomainDialog } from "@/components/ListDomainDialog";
 import { Domain } from "@/types/domain";
 
 interface UserSectionProps {
@@ -38,12 +38,12 @@ export const UserSection = ({
         <p className="text-gray-700">
           Welcome, <span className="font-semibold">{user.username}</span>!
         </p>
+        <ListDomainDialog onDomainSubmit={onDomainSubmit} />
         <NotificationBell username={user.username} domains={domains} />
         <Button variant="outline" onClick={onLogout}>
           Logout
         </Button>
       </div>
-      <DomainSubmissionForm onSubmit={onDomainSubmit} />
       <UserProfile username={user.username} wonDomains={wonDomains} />
     </div>
   );
