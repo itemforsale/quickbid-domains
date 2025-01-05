@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useInterval } from "react-use";
 import { toast } from "sonner";
-import { Hammer, Star, Timer } from "lucide-react";
+import { Hammer, Star, Timer, New } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useUser } from "@/contexts/UserContext";
@@ -28,6 +28,7 @@ interface DomainCardProps {
   buyNowPrice?: number;
   onBuyNow?: () => void;
   featured?: boolean;
+  createdAt?: Date;
 }
 
 export const DomainCard = ({
@@ -42,11 +43,27 @@ export const DomainCard = ({
   buyNowPrice,
   onBuyNow,
   featured,
+  createdAt,
 }: DomainCardProps) => {
   const { user } = useUser();
   const [timeLeft, setTimeLeft] = useState("");
   const [isEnded, setIsEnded] = useState(false);
   const [bidAmount, setBidAmount] = useState(currentBid + 10);
+  const [isNew, setIsNew] = useState(false);
+
+  useEffect(() => {
+    if (createdAt) {
+      const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
+      setIsNew(createdAt > fiveMinutesAgo);
+
+      // Set up timer to remove "NEW" badge after 5 minutes
+      const timeUntilNotNew = createdAt.getTime() + 5 * 60 * 1000 - Date.now();
+      if (timeUntilNotNew > 0) {
+        const timer = setTimeout(() => setIsNew(false), timeUntilNotNew);
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [createdAt]);
 
   const calculateTimeLeft = () => {
     const difference = endTime.getTime() - new Date().getTime();
@@ -127,6 +144,12 @@ export const DomainCard = ({
                   <span className="px-2 py-1 text-xs font-medium bg-yellow-100 text-yellow-700 rounded-full flex items-center gap-1">
                     <Star className="w-3 h-3 fill-yellow-500" />
                     Featured
+                  </span>
+                )}
+                {isNew && (
+                  <span className="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-700 rounded-full flex items-center gap-1">
+                    <New className="w-3 h-3" />
+                    NEW
                   </span>
                 )}
               </div>
