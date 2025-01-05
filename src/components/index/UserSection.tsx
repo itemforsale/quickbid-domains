@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Domain } from "@/types/domain";
+import type { User } from "@/contexts/UserContext";
 
 interface UserSectionProps {
   user: User | null;
