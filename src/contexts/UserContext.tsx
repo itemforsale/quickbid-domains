@@ -51,9 +51,10 @@ export function UserProvider({ children }: { children: ReactNode }) {
     if (credentials.username === ADMIN_USERNAME && credentials.password === ADMIN_PASSWORD) {
       const adminUser: User = {
         username: ADMIN_USERNAME,
-        name: 'Admin',
-        email: 'admin@example.com',
+        name: 'Sam Charles',
+        email: 'sam@wizard.uk',
         password: ADMIN_PASSWORD,
+        xUsername: 'samcharles',
         isAdmin: true
       };
       setUser(adminUser);
