@@ -7,13 +7,16 @@ const MAX_RECONNECT_ATTEMPTS = 5;
 const RECONNECT_DELAY = 5000;
 
 // Create a shared channel for cross-window communication
-let broadcastChannel: BroadcastChannel | null = null;
+const createBroadcastChannel = () => {
+  try {
+    return new BroadcastChannel('domainUpdates');
+  } catch (error) {
+    console.warn('BroadcastChannel not supported');
+    return null;
+  }
+};
 
-try {
-  broadcastChannel = new BroadcastChannel('domainUpdates');
-} catch (error) {
-  console.warn('BroadcastChannel not supported (possibly private window)');
-}
+let broadcastChannel = createBroadcastChannel();
 
 const handleWebSocketError = (error: Event) => {
   console.error('WebSocket error:', error);
@@ -38,6 +41,18 @@ const requestInitialData = () => {
   }
 };
 
+// Broadcast domain updates to all windows
+const broadcastUpdate = (domains: Domain[]) => {
+  if (broadcastChannel) {
+    broadcastChannel.postMessage({ type: 'domains-update', domains });
+  }
+  try {
+    localStorage.setItem('quickbid_domains', JSON.stringify(domains));
+  } catch (error) {
+    console.warn('Unable to save to localStorage');
+  }
+};
+
 export const setupWebSocket = (onUpdate: (domains: Domain[]) => void) => {
   if (!ws || ws.readyState === WebSocket.CLOSED) {
     try {
@@ -46,11 +61,6 @@ export const setupWebSocket = (onUpdate: (domains: Domain[]) => void) => {
       ws.onopen = () => {
         console.log('WebSocket connection established');
         reconnectAttempts = 0;
-        
-        // Request initial data from server
-        ws.send(JSON.stringify({ type: 'get_initial_data' }));
-        
-        // Also request data from other windows if possible
         requestInitialData();
       };
       
@@ -61,18 +71,7 @@ export const setupWebSocket = (onUpdate: (domains: Domain[]) => void) => {
           if (data.type === 'domains_update' || data.type === 'initial_data') {
             const domains = data.domains;
             onUpdate(domains);
-            
-            // Broadcast to other windows if possible
-            if (broadcastChannel) {
-              broadcastChannel.postMessage({ type: 'domains-update', domains });
-            }
-            
-            // Update localStorage
-            try {
-              localStorage.setItem('quickbid_domains', JSON.stringify(domains));
-            } catch (error) {
-              console.warn('Unable to save to localStorage (possibly private window)');
-            }
+            broadcastUpdate(domains);
           }
           
           if (data.type === 'heartbeat') {
@@ -84,13 +83,12 @@ export const setupWebSocket = (onUpdate: (domains: Domain[]) => void) => {
       };
 
       ws.onerror = handleWebSocketError;
-
       ws.onclose = () => {
         console.log('WebSocket connection closed');
         handleWebSocketError(new Event('connection_closed'));
       };
 
-      // Enhanced BroadcastChannel message handling if available
+      // Set up BroadcastChannel message handling
       if (broadcastChannel) {
         broadcastChannel.onmessage = (event) => {
           if (event.data.type === 'domains-update') {
@@ -105,27 +103,23 @@ export const setupWebSocket = (onUpdate: (domains: Domain[]) => void) => {
                 });
               }
             } catch (error) {
-              console.warn('Unable to access localStorage (possibly private window)');
+              console.warn('Unable to access localStorage');
             }
           }
         };
       }
 
-      // Listen for localStorage changes if available
-      try {
-        window.addEventListener('storage', (event) => {
-          if (event.key === 'quickbid_domains' && event.newValue) {
-            try {
-              const domains = JSON.parse(event.newValue);
-              onUpdate(domains);
-            } catch (error) {
-              console.error('Error parsing domains from localStorage:', error);
-            }
+      // Listen for localStorage changes
+      window.addEventListener('storage', (event) => {
+        if (event.key === 'quickbid_domains' && event.newValue) {
+          try {
+            const domains = JSON.parse(event.newValue);
+            onUpdate(domains);
+          } catch (error) {
+            console.error('Error parsing domains from localStorage:', error);
           }
-        });
-      } catch (error) {
-        console.warn('Unable to add storage listener (possibly private window)');
-      }
+        }
+      });
 
       // Request initial data when the page loads
       window.addEventListener('load', requestInitialData);
@@ -152,8 +146,7 @@ export const getDomains = async (): Promise<Domain[]> => {
     // First try to get data from localStorage
     const savedDomains = localStorage.getItem('quickbid_domains');
     if (savedDomains) {
-      const parsedDomains = JSON.parse(savedDomains);
-      return parsedDomains.map((domain: any) => ({
+      return JSON.parse(savedDomains).map((domain: any) => ({
         ...domain,
         endTime: new Date(domain.endTime),
         createdAt: domain.createdAt ? new Date(domain.createdAt) : new Date(),
@@ -167,13 +160,11 @@ export const getDomains = async (): Promise<Domain[]> => {
       }));
     }
   } catch (error) {
-    console.warn('Unable to access localStorage (possibly private window)');
+    console.warn('Unable to access localStorage');
   }
 
-  // If no data in localStorage or error occurred, request it from server and other windows
+  // If no data in localStorage or error occurred, request it
   requestInitialData();
-  
-  // Return empty array while waiting for data
   return [];
 };
 
@@ -185,12 +176,5 @@ export const updateDomains = (domains: Domain[]) => {
       domains: domains 
     }));
   }
-  try {
-    localStorage.setItem('quickbid_domains', JSON.stringify(domains));
-  } catch (error) {
-    console.warn('Unable to save to localStorage (possibly private window)');
-  }
-  if (broadcastChannel) {
-    broadcastChannel.postMessage({ type: 'domains-update', domains });
-  }
+  broadcastUpdate(domains);
 };
