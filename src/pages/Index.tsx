@@ -3,6 +3,7 @@ import { DomainCard } from "@/components/DomainCard";
 import { SearchBar } from "@/components/SearchBar";
 import { LoginForm } from "@/components/LoginForm";
 import { RegisterForm } from "@/components/RegisterForm";
+import { DomainSubmissionForm } from "@/components/DomainSubmissionForm";
 import { useUser } from "@/contexts/UserContext";
 import { Button } from "@/components/ui/button";
 
@@ -72,6 +73,18 @@ const Index = () => {
     );
   };
 
+  const handleDomainSubmission = (domainName: string) => {
+    const newDomain: Domain = {
+      id: domains.length + 1,
+      name: domainName,
+      currentBid: 100, // Starting bid
+      endTime: new Date(Date.now() + 60 * 60000), // 1 hour from now
+      bidHistory: [],
+    };
+
+    setDomains((prevDomains) => [...prevDomains, newDomain]);
+  };
+
   const filteredDomains = domains.filter((domain) =>
     domain.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -88,13 +101,16 @@ const Index = () => {
           </p>
           
           {user ? (
-            <div className="mb-8 flex items-center justify-center gap-4">
-              <p className="text-gray-700">
-                Welcome, <span className="font-semibold">{user.username}</span>!
-              </p>
-              <Button variant="outline" onClick={logout}>
-                Logout
-              </Button>
+            <div className="mb-8">
+              <div className="flex items-center justify-center gap-4 mb-8">
+                <p className="text-gray-700">
+                  Welcome, <span className="font-semibold">{user.username}</span>!
+                </p>
+                <Button variant="outline" onClick={logout}>
+                  Logout
+                </Button>
+              </div>
+              <DomainSubmissionForm onSubmit={handleDomainSubmission} />
             </div>
           ) : (
             <div className="mb-8">
@@ -131,6 +147,7 @@ const Index = () => {
               currentBid={domain.currentBid}
               currentBidder={domain.currentBidder}
               bidTimestamp={domain.bidTimestamp}
+              bidHistory={domain.bidHistory}
               onBid={(amount) => handleBid(domain.id, amount)}
             />
           ))}
