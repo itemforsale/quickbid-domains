@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useInterval } from "react-use";
 import { toast } from "sonner";
 import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { useUser } from "@/contexts/UserContext";
 import { BidHistory } from "./BidHistory";
 import { BidInput } from "./BidInput";
@@ -22,6 +23,8 @@ interface DomainCardProps {
   currentBidder?: string;
   bidTimestamp?: Date;
   bidHistory?: Bid[];
+  buyNowPrice?: number;
+  onBuyNow?: () => void;
 }
 
 export const DomainCard = ({
@@ -33,6 +36,8 @@ export const DomainCard = ({
   currentBidder,
   bidTimestamp,
   bidHistory = [],
+  buyNowPrice,
+  onBuyNow,
 }: DomainCardProps) => {
   const { user } = useUser();
   const [timeLeft, setTimeLeft] = useState("");
@@ -68,6 +73,17 @@ export const DomainCard = ({
     setBidAmount(bidAmount + 10);
   };
 
+  const handleBuyNow = () => {
+    if (!user) {
+      toast.error("Please login to purchase the domain");
+      return;
+    }
+    if (onBuyNow) {
+      onBuyNow();
+      toast.success("Domain purchased successfully!");
+    }
+  };
+
   const formatBidder = (username: string) => {
     return `@${username}`;
   };
@@ -95,6 +111,22 @@ export const DomainCard = ({
             bidTimestamp={bidTimestamp}
             formatBidder={formatBidder}
           />
+          
+          {buyNowPrice && (
+            <div className="flex justify-between items-center p-2 bg-green-50 rounded-lg">
+              <span className="text-sm text-green-700">Buy Now Price:</span>
+              <div className="flex gap-2 items-center">
+                <span className="font-semibold text-green-700">${buyNowPrice}</span>
+                <Button
+                  onClick={handleBuyNow}
+                  variant="outline"
+                  className="bg-green-100 hover:bg-green-200 text-green-700 border-green-200"
+                >
+                  Buy Now
+                </Button>
+              </div>
+            </div>
+          )}
           
           <BidInput
             bidAmount={bidAmount}

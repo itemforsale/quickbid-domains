@@ -7,6 +7,7 @@ import { DomainSubmissionForm } from "@/components/DomainSubmissionForm";
 import { UserProfile } from "@/components/UserProfile";
 import { useUser } from "@/contexts/UserContext";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 
 interface Bid {
   bidder: string;
@@ -86,6 +87,26 @@ const Index = () => {
           }
 
           return updatedDomain;
+        }
+        return domain;
+      })
+    );
+  };
+
+  const handleBuyNow = (domainId: number) => {
+    if (!user) return;
+
+    setDomains((prevDomains) =>
+      prevDomains.map((domain) => {
+        if (domain.id === domainId && domain.buyNowPrice) {
+          return {
+            ...domain,
+            status: 'sold',
+            currentBid: domain.buyNowPrice,
+            currentBidder: user.username,
+            finalPrice: domain.buyNowPrice,
+            purchaseDate: new Date(),
+          };
         }
         return domain;
       })
@@ -183,7 +204,9 @@ const Index = () => {
                   currentBidder={domain.currentBidder}
                   bidTimestamp={domain.bidTimestamp}
                   bidHistory={domain.bidHistory}
+                  buyNowPrice={domain.buyNowPrice}
                   onBid={(amount) => handleBid(domain.id, amount)}
+                  onBuyNow={() => handleBuyNow(domain.id)}
                 />
               ))}
             </div>
