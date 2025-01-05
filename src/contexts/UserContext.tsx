@@ -26,15 +26,57 @@ const USERS_STORAGE_KEY = 'quickbid_users';
 const ADMIN_USERNAME = '60dna';
 const ADMIN_PASSWORD = 'xMWR6IXrqPkXPbWg';
 
+// Initialize with default admin user
+const defaultUsers: User[] = [{
+  username: ADMIN_USERNAME,
+  name: 'Sam Charles',
+  email: 'sam@wizard.uk',
+  password: ADMIN_PASSWORD,
+  xUsername: 'samcharles',
+  isAdmin: true
+}];
+
 export function UserProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [users, setUsers] = useState<User[]>(() => {
-    const savedUsers = localStorage.getItem(USERS_STORAGE_KEY);
-    return savedUsers ? JSON.parse(savedUsers) : [];
+    try {
+      const savedUsers = localStorage.getItem(USERS_STORAGE_KEY);
+      const parsedUsers = savedUsers ? JSON.parse(savedUsers) : defaultUsers;
+      
+      // Ensure admin user is always present
+      if (!parsedUsers.some(u => u.username === ADMIN_USERNAME)) {
+        parsedUsers.push(defaultUsers[0]);
+      }
+      
+      return parsedUsers;
+    } catch (error) {
+      console.error('Error loading users:', error);
+      return defaultUsers;
+    }
   });
 
+  // Set up broadcast channel for cross-tab/browser synchronization
   useEffect(() => {
-    localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(users));
+    const channel = new BroadcastChannel('users_sync');
+    
+    channel.onmessage = (event) => {
+      if (event.data.type === 'USERS_UPDATE') {
+        setUsers(event.data.users);
+      }
+    };
+
+    return () => channel.close();
+  }, []);
+
+  // Sync users to localStorage and broadcast changes
+  useEffect(() => {
+    try {
+      localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(users));
+      const channel = new BroadcastChannel('users_sync');
+      channel.postMessage({ type: 'USERS_UPDATE', users });
+    } catch (error) {
+      console.error('Error saving users:', error);
+    }
   }, [users]);
 
   const register = (userData: User) => {
@@ -47,10 +89,10 @@ export function UserProvider({ children }: { children: ReactNode }) {
     const newUser = {
       ...userData,
       username: userData.username,
-      xUsername: userData.xUsername || userData.username // Default to username if xUsername not provided
+      xUsername: userData.xUsername || userData.username
     };
 
-    setUsers([...users, newUser]);
+    setUsers(prevUsers => [...prevUsers, newUser]);
     setUser(newUser);
     toast.success("Successfully registered!");
   };
@@ -58,20 +100,6 @@ export function UserProvider({ children }: { children: ReactNode }) {
   const login = (credentials: { username: string; password: string }) => {
     const inputUsername = credentials.username.toLowerCase();
     
-    if (inputUsername === ADMIN_USERNAME.toLowerCase() && credentials.password === ADMIN_PASSWORD) {
-      const adminUser: User = {
-        username: ADMIN_USERNAME,
-        name: 'Sam Charles',
-        email: 'sam@wizard.uk',
-        password: ADMIN_PASSWORD,
-        xUsername: 'samcharles',
-        isAdmin: true
-      };
-      setUser(adminUser);
-      toast.success("Successfully logged in as admin!");
-      return;
-    }
-
     const foundUser = users.find(u => u.username.toLowerCase() === inputUsername);
     
     if (!foundUser) {
@@ -94,7 +122,12 @@ export function UserProvider({ children }: { children: ReactNode }) {
   };
 
   const deleteUser = (username: string) => {
-    setUsers(users.filter(u => u.username.toLowerCase() !== username.toLowerCase()));
+    const normalizedUsername = username.toLowerCase();
+    if (normalizedUsername === ADMIN_USERNAME.toLowerCase()) {
+      toast.error("Cannot delete admin user");
+      return;
+    }
+    setUsers(prevUsers => prevUsers.filter(u => u.username.toLowerCase() !== normalizedUsername));
   };
 
   const updateUser = (updatedUser: User) => {
@@ -103,7 +136,6 @@ export function UserProvider({ children }: { children: ReactNode }) {
       u.username.toLowerCase() === normalizedUsername ? { ...u, ...updatedUser } : u
     ));
     
-    // Update current user if it's the same user
     if (user && user.username.toLowerCase() === normalizedUsername) {
       setUser(updatedUser);
     }
