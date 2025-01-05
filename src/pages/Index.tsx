@@ -5,6 +5,7 @@ import { Header } from "@/components/index/Header";
 import { UserSection } from "@/components/index/UserSection";
 import { ActiveAuctions } from "@/components/index/ActiveAuctions";
 import { SoldDomains } from "@/components/index/SoldDomains";
+import { RecentlyEndedDomains } from "@/components/index/RecentlyEndedDomains";
 import { AdminPanel } from "@/components/AdminPanel";
 import { PendingDomains } from "@/components/PendingDomains";
 import { Advertisement } from "@/components/Advertisement";
@@ -122,7 +123,14 @@ const Index = () => {
   };
 
   const pendingDomains = domains.filter(d => d.status === 'pending');
-  const activeDomains = domains.filter(d => d.status === 'active');
+  const activeDomains = domains.filter(d => {
+    const now = new Date();
+    return d.status === 'active' && d.endTime > now;
+  });
+  const endedDomains = domains.filter(d => {
+    const now = new Date();
+    return d.status === 'active' && d.endTime <= now;
+  });
   const soldDomains = domains.filter(d => d.status === 'sold');
   const userWonDomains = soldDomains
     .filter(d => d.currentBidder === user?.username)
@@ -176,6 +184,8 @@ const Index = () => {
             onBid={handleBid}
             onBuyNow={handleBuyNow}
           />
+
+          <RecentlyEndedDomains domains={endedDomains} />
 
           <SoldDomains domains={soldDomains} />
         </div>
