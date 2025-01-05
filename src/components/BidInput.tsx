@@ -28,7 +28,7 @@ export const BidInput = ({
           value={bidAmount}
           onChange={(e) => {
             const value = Number(e.target.value);
-            if (value >= minimumBid) {
+            if (!isNaN(value) && value >= minimumBid) {
               onBidAmountChange(value);
             }
           }}
