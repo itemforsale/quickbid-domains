@@ -1,62 +1,57 @@
 import { Domain } from "@/types/domain";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
+import { wsManager } from "./websocket/WebSocketManager";
+import { StorageManager } from "./storage/StorageManager";
 
 export const setupWebSocket = (onUpdate: (domains: Domain[]) => void) => {
-  const channel = supabase
-    .channel('schema-db-changes')
-    .on(
-      'postgres_changes',
-      {
-        event: '*',
-        schema: 'public',
-        table: 'domains'
-      },
-      async () => {
-        const domains = await getDomains();
-        onUpdate(domains);
-        toast.success("Domain listings updated!");
-      }
-    )
-    .subscribe();
+  const storageManager = StorageManager.getInstance();
+  
+  // Initial load from localStorage
+  const initialDomains = storageManager.getDomains();
+  if (initialDomains && initialDomains.length > 0) {
+    console.log('Loading initial domains from storage:', initialDomains);
+    onUpdate(initialDomains);
+  }
+
+  // Handle WebSocket messages
+  wsManager.connect((data) => {
+    if (data.type === 'domains_update' || data.type === 'initial_data') {
+      const domains = data.domains.map((domain: any) => ({
+        ...domain,
+        endTime: new Date(domain.endTime),
+        createdAt: new Date(domain.createdAt),
+        bidTimestamp: domain.bidTimestamp ? new Date(domain.bidTimestamp) : undefined,
+        purchaseDate: domain.purchaseDate ? new Date(domain.purchaseDate) : undefined,
+        bidHistory: (domain.bidHistory || []).map((bid: any) => ({
+          ...bid,
+          timestamp: new Date(bid.timestamp)
+        }))
+      }));
+      console.log('Received domains update:', domains);
+      onUpdate(domains);
+      storageManager.saveDomains(domains);
+    }
+  });
 
   return () => {
-    supabase.removeChannel(channel);
+    wsManager.disconnect();
+    storageManager.cleanup();
   };
 };
 
 export const getDomains = async (): Promise<Domain[]> => {
-  try {
-    const { data: domains, error } = await supabase
-      .from('domains')
-      .select('*')
-      .order('created_at', { ascending: false });
+  console.log('Getting domains...');
+  const storageManager = StorageManager.getInstance();
+  const domains = storageManager.getDomains();
+  console.log('Retrieved domains:', domains);
+  return domains || [];
+};
 
-    if (error) {
-      console.error('Error fetching domains:', error);
-      throw error;
-    }
-
-    if (!domains) return [];
-
-    return domains.map((domain): Domain => ({
-      id: parseInt(domain.id),
-      name: domain.name,
-      currentBid: domain.current_bid,
-      endTime: new Date(domain.end_time),
-      bidHistory: domain.bid_history || [],
-      status: domain.status,
-      currentBidder: domain.current_bidder || undefined,
-      bidTimestamp: domain.bid_timestamp ? new Date(domain.bid_timestamp) : undefined,
-      buyNowPrice: domain.buy_now_price || undefined,
-      finalPrice: domain.final_price || undefined,
-      purchaseDate: domain.purchase_date ? new Date(domain.purchase_date) : undefined,
-      featured: domain.featured,
-      createdAt: new Date(domain.created_at),
-      listedBy: domain.listed_by
-    }));
-  } catch (error) {
-    console.error('Error fetching domains:', error);
-    throw error;
-  }
+export const updateDomains = (domains: Domain[]) => {
+  console.log('Updating domains:', domains);
+  const storageManager = StorageManager.getInstance();
+  wsManager.sendMessage({ 
+    type: 'update_domains',
+    domains 
+  });
+  storageManager.saveDomains(domains);
 };
