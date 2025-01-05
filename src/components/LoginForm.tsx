@@ -39,8 +39,15 @@ export const LoginForm = ({ onSuccess }: LoginFormProps) => {
           .eq('username', formData.username)
           .single();
 
-        if (profileError || !profile?.email) {
+        if (profileError) {
           console.error('Profile lookup error:', profileError);
+          toast.error("User not found");
+          setIsLoading(false);
+          return;
+        }
+
+        if (!profile?.email) {
+          console.error('No email found for username:', formData.username);
           toast.error("User not found");
           setIsLoading(false);
           return;
@@ -49,7 +56,7 @@ export const LoginForm = ({ onSuccess }: LoginFormProps) => {
         email = profile.email;
       }
 
-      console.log('Attempting login with email:', email); // Debug log
+      console.log('Attempting login with email:', email);
 
       // Sign in with email and password
       const { data, error } = await supabase.auth.signInWithPassword({
@@ -59,7 +66,17 @@ export const LoginForm = ({ onSuccess }: LoginFormProps) => {
 
       if (error) {
         console.error('Login error:', error);
-        toast.error("Invalid credentials");
+        if (error.message.includes('Invalid login credentials')) {
+          toast.error("Invalid username or password");
+        } else {
+          toast.error("Failed to login. Please try again.");
+        }
+        return;
+      }
+
+      if (!data.user) {
+        console.error('No user data returned');
+        toast.error("Failed to login. Please try again.");
         return;
       }
 
