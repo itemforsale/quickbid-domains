@@ -1,4 +1,5 @@
 import { Card } from "@/components/ui/card";
+import { ExternalLink } from "lucide-react";
 
 interface Domain {
   id: number;
@@ -31,9 +32,19 @@ export const UserProfile = ({ username, wonDomains }: UserProfileProps) => {
                   <span className="font-medium">{domain.name}</span>
                   <span className="text-green-600">${domain.finalPrice}</span>
                 </div>
-                <p className="text-sm text-gray-500">
-                  Won on {domain.purchaseDate.toLocaleDateString()}
-                </p>
+                <div className="flex justify-between items-center mt-2">
+                  <p className="text-sm text-gray-500">
+                    Won on {domain.purchaseDate.toLocaleDateString()}
+                  </p>
+                  <a
+                    href={`https://x.com/${username}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800 transition-colors"
+                  >
+                    @{username} <ExternalLink size={14} />
+                  </a>
+                </div>
               </div>
             ))}
           </div>
