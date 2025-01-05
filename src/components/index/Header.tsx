@@ -40,7 +40,7 @@ export const Header = ({ onSearch }: HeaderProps) => {
         <span className="font-mono">{count}</span>dna.com
       </h1>
       <p className="text-lg text-foreground mb-8">
-        Exclusive domains available for auction
+        Only 60 minutes left to bid on a domain name
       </p>
       <div className="mt-8">
         <SearchBar onSearch={onSearch} />
