@@ -1,5 +1,3 @@
-import { StorageManager } from '../storage/StorageManager';
-
 const WS_URL = 'wss://api.60dna.com/ws';
 const MAX_RECONNECT_ATTEMPTS = 5;
 const RECONNECT_DELAY = 5000;
@@ -29,10 +27,23 @@ class WebSocketManager {
   connect(onMessage: (data: any) => void) {
     this.onMessageCallback = onMessage;
     this.initializeWebSocket();
+    
+    // Initial data load from localStorage
+    const storedData = localStorage.getItem('quickbid_domains');
+    if (storedData) {
+      try {
+        const parsedData = JSON.parse(storedData);
+        console.log('Loading initial data from localStorage:', parsedData);
+        onMessage({ type: 'initial_data', domains: parsedData });
+      } catch (error) {
+        console.error('Error parsing stored data:', error);
+      }
+    }
   }
 
   private initializeWebSocket() {
     try {
+      console.log('Initializing WebSocket connection...');
       this.ws = new WebSocket(WS_URL);
       
       this.ws.onopen = () => {
@@ -46,9 +57,14 @@ class WebSocketManager {
         this.lastMessageTime = Date.now();
         try {
           const data = JSON.parse(event.data);
+          console.log('Received WebSocket message:', data);
+          
           if (this.onMessageCallback) {
-            console.log('Received WebSocket message:', data);
             this.onMessageCallback(data);
+            // Store the latest data in localStorage
+            if (data.domains) {
+              localStorage.setItem('quickbid_domains', JSON.stringify(data.domains));
+            }
             // Broadcast the update to other tabs
             this.broadcastChannel.postMessage({
               type: 'auction_update',
@@ -61,7 +77,11 @@ class WebSocketManager {
         }
       };
 
-      this.ws.onerror = this.handleError.bind(this);
+      this.ws.onerror = (error) => {
+        console.error('WebSocket error:', error);
+        this.handleError(error);
+      };
+
       this.ws.onclose = () => {
         console.log('WebSocket connection closed');
         this.clearPingInterval();
@@ -76,11 +96,11 @@ class WebSocketManager {
   private setupPingInterval() {
     this.clearPingInterval();
     this.pingInterval = setInterval(() => {
-      if (Date.now() - this.lastMessageTime > 30000) { // 30 seconds
+      if (Date.now() - this.lastMessageTime > 30000) {
         console.log('No messages received recently, checking connection...');
         this.sendPing();
       }
-    }, 15000); // Check every 15 seconds
+    }, 15000);
   }
 
   private clearPingInterval() {
@@ -104,20 +124,20 @@ class WebSocketManager {
       }, RECONNECT_DELAY);
     } else {
       console.error('Max reconnection attempts reached');
-      // Attempt to fallback to localStorage data
-      this.fallbackToLocalStorage();
-    }
-  }
-
-  private fallbackToLocalStorage() {
-    const storageManager = StorageManager.getInstance();
-    const domains = storageManager.getDomains();
-    if (domains && this.onMessageCallback) {
-      console.log('Falling back to localStorage data');
-      this.onMessageCallback({
-        type: 'fallback_data',
-        domains: domains
-      });
+      // Load data from localStorage as fallback
+      const storedData = localStorage.getItem('quickbid_domains');
+      if (storedData && this.onMessageCallback) {
+        try {
+          const parsedData = JSON.parse(storedData);
+          console.log('Falling back to localStorage data:', parsedData);
+          this.onMessageCallback({
+            type: 'fallback_data',
+            domains: parsedData
+          });
+        } catch (error) {
+          console.error('Error parsing stored data:', error);
+        }
+      }
     }
   }
 
@@ -134,6 +154,10 @@ class WebSocketManager {
       this.ws.send(JSON.stringify(message));
     } else {
       console.warn('WebSocket is not open, message not sent:', message);
+      // Try to reconnect if the connection is closed
+      if (!this.ws || this.ws.readyState === WebSocket.CLOSED) {
+        this.initializeWebSocket();
+      }
     }
   }
 
