@@ -9,6 +9,9 @@ const RECONNECT_DELAY = 5000;
 // Create a shared channel for cross-window communication
 const broadcastChannel = new BroadcastChannel('domainUpdates');
 
+// Keep track of the last update timestamp
+let lastUpdateTimestamp = Date.now();
+
 const handleWebSocketError = (error: Event) => {
   console.error('WebSocket error:', error);
   if (reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
@@ -24,7 +27,15 @@ const handleWebSocketError = (error: Event) => {
 
 // Request initial data from other windows
 const requestInitialData = () => {
-  broadcastChannel.postMessage({ type: 'request_initial_data' });
+  broadcastChannel.postMessage({ 
+    type: 'request_initial_data',
+    timestamp: Date.now()
+  });
+};
+
+// Function to check if data is stale
+const isDataStale = (timestamp: number) => {
+  return Date.now() - timestamp > 5000; // Consider data stale after 5 seconds
 };
 
 export const setupWebSocket = (onUpdate: (domains: Domain[]) => void) => {
@@ -49,11 +60,21 @@ export const setupWebSocket = (onUpdate: (domains: Domain[]) => void) => {
           
           if (data.type === 'domains_update') {
             const domains = data.domains;
+            lastUpdateTimestamp = Date.now();
             onUpdate(domains);
-            // Broadcast to other windows
-            broadcastChannel.postMessage({ type: 'domains-update', domains });
-            // Update localStorage
-            localStorage.setItem('quickbid_domains', JSON.stringify(domains));
+            
+            // Broadcast to other windows with timestamp
+            broadcastChannel.postMessage({ 
+              type: 'domains-update', 
+              domains,
+              timestamp: lastUpdateTimestamp
+            });
+            
+            // Update localStorage with timestamp
+            localStorage.setItem('quickbid_domains', JSON.stringify({
+              domains,
+              timestamp: lastUpdateTimestamp
+            }));
           }
           
           if (data.type === 'heartbeat') {
@@ -73,16 +94,29 @@ export const setupWebSocket = (onUpdate: (domains: Domain[]) => void) => {
 
       // Enhanced BroadcastChannel message handling
       broadcastChannel.onmessage = (event) => {
-        if (event.data.type === 'domains-update') {
-          onUpdate(event.data.domains);
-        } else if (event.data.type === 'request_initial_data') {
-          // If this window has data, share it
-          const savedDomains = localStorage.getItem('quickbid_domains');
-          if (savedDomains) {
-            broadcastChannel.postMessage({
-              type: 'domains-update',
-              domains: JSON.parse(savedDomains)
-            });
+        const { type, domains, timestamp } = event.data;
+        
+        if (type === 'domains-update' && (!lastUpdateTimestamp || timestamp > lastUpdateTimestamp)) {
+          lastUpdateTimestamp = timestamp;
+          onUpdate(domains);
+          
+          // Update localStorage
+          localStorage.setItem('quickbid_domains', JSON.stringify({
+            domains,
+            timestamp
+          }));
+        } else if (type === 'request_initial_data') {
+          // If this window has newer data, share it
+          const savedData = localStorage.getItem('quickbid_domains');
+          if (savedData) {
+            const { domains, timestamp } = JSON.parse(savedData);
+            if (timestamp > event.data.timestamp) {
+              broadcastChannel.postMessage({
+                type: 'domains-update',
+                domains,
+                timestamp
+              });
+            }
           }
         }
       };
@@ -91,8 +125,11 @@ export const setupWebSocket = (onUpdate: (domains: Domain[]) => void) => {
       window.addEventListener('storage', (event) => {
         if (event.key === 'quickbid_domains' && event.newValue) {
           try {
-            const domains = JSON.parse(event.newValue);
-            onUpdate(domains);
+            const { domains, timestamp } = JSON.parse(event.newValue);
+            if (!lastUpdateTimestamp || timestamp > lastUpdateTimestamp) {
+              lastUpdateTimestamp = timestamp;
+              onUpdate(domains);
+            }
           } catch (error) {
             console.error('Error parsing domains from localStorage:', error);
           }
@@ -119,38 +156,53 @@ export const setupWebSocket = (onUpdate: (domains: Domain[]) => void) => {
 
 export const getDomains = async (): Promise<Domain[]> => {
   // First try to get data from localStorage
-  const savedDomains = localStorage.getItem('quickbid_domains');
-  if (savedDomains) {
-    const parsedDomains = JSON.parse(savedDomains);
-    return parsedDomains.map((domain: any) => ({
-      ...domain,
-      endTime: new Date(domain.endTime),
-      createdAt: domain.createdAt ? new Date(domain.createdAt) : new Date(),
-      bidTimestamp: domain.bidTimestamp ? new Date(domain.bidTimestamp) : undefined,
-      purchaseDate: domain.purchaseDate ? new Date(domain.purchaseDate) : undefined,
-      bidHistory: (domain.bidHistory || []).map((bid: any) => ({
-        ...bid,
-        timestamp: new Date(bid.timestamp)
-      })),
-      listedBy: domain.listedBy || 'Anonymous',
-    }));
+  const savedData = localStorage.getItem('quickbid_domains');
+  if (savedData) {
+    const { domains, timestamp } = JSON.parse(savedData);
+    
+    // Check if data is stale
+    if (!isDataStale(timestamp)) {
+      return domains.map((domain: any) => ({
+        ...domain,
+        endTime: new Date(domain.endTime),
+        createdAt: domain.createdAt ? new Date(domain.createdAt) : new Date(),
+        bidTimestamp: domain.bidTimestamp ? new Date(domain.bidTimestamp) : undefined,
+        purchaseDate: domain.purchaseDate ? new Date(domain.purchaseDate) : undefined,
+        bidHistory: (domain.bidHistory || []).map((bid: any) => ({
+          ...bid,
+          timestamp: new Date(bid.timestamp)
+        })),
+        listedBy: domain.listedBy || 'Anonymous',
+      }));
+    }
   }
 
-  // If no data in localStorage, request it from other windows
+  // If no data in localStorage or data is stale, request it from other windows
   requestInitialData();
   
-  // Return default domains while waiting for data
+  // Return empty array while waiting for data
   return [];
 };
 
 // Helper function to update domains
 export const updateDomains = (domains: Domain[]) => {
+  const timestamp = Date.now();
+  
   if (ws && ws.readyState === WebSocket.OPEN) {
     ws.send(JSON.stringify({ 
       type: 'update_domains',
       domains: domains 
     }));
   }
-  localStorage.setItem('quickbid_domains', JSON.stringify(domains));
-  broadcastChannel.postMessage({ type: 'domains-update', domains });
+  
+  localStorage.setItem('quickbid_domains', JSON.stringify({
+    domains,
+    timestamp
+  }));
+  
+  broadcastChannel.postMessage({ 
+    type: 'domains-update', 
+    domains,
+    timestamp
+  });
 };
