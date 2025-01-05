@@ -89,10 +89,18 @@ export const AdminPanel = ({
   const handleSaveEdit = (e: React.FormEvent) => {
     e.preventDefault();
     if (editingUser) {
-      updateUser(editingUser);
-      setIsEditDialogOpen(false);
-      setEditingUser(null);
-      toast.success("User updated successfully!");
+      // Find the original user to get their password
+      const originalUser = users.find(u => u.username === editingUser.username);
+      if (originalUser) {
+        // Preserve the password from the original user
+        updateUser({
+          ...editingUser,
+          password: originalUser.password
+        });
+        setIsEditDialogOpen(false);
+        setEditingUser(null);
+        toast.success("User updated successfully!");
+      }
     }
   };
 
