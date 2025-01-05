@@ -1,12 +1,5 @@
 import { Card } from "@/components/ui/card";
-
-interface Domain {
-  id: number;
-  name: string;
-  currentBid: number;
-  buyNowPrice?: number;
-  status: 'pending' | 'active' | 'sold' | 'featured';
-}
+import { Domain } from "@/types/domain";
 
 interface PendingDomainsProps {
   domains: Domain[];

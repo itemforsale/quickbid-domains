@@ -10,16 +10,7 @@ import { Label } from "./ui/label";
 import { Button } from "./ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "./ui/dialog";
 import { Input } from "./ui/input";
-
-interface Domain {
-  id: number;
-  name: string;
-  currentBid: number;
-  buyNowPrice?: number;
-  status: 'pending' | 'active' | 'sold' | 'featured';
-  featured?: boolean;
-  isFixedPrice?: boolean;
-}
+import { Domain } from "@/types/domain";
 
 interface User {
   name: string;

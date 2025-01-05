@@ -1,15 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Star, Trash2 } from "lucide-react";
-
-interface Domain {
-  id: number;
-  name: string;
-  currentBid: number;
-  buyNowPrice?: number;
-  status: 'pending' | 'active' | 'sold';
-  featured?: boolean;
-}
+import { Domain } from "@/types/domain";
 
 interface DomainCardProps {
   domain: Domain;
