@@ -1,5 +1,5 @@
 import { Card } from "@/components/ui/card";
-import { ExternalLink } from "lucide-react";
+import { ExternalLink, Mail } from "lucide-react";
 import { useUser } from "@/contexts/UserContext";
 
 interface Domain {
@@ -48,22 +48,8 @@ export const UserProfile = ({ username, wonDomains }: UserProfileProps) => {
                     <p className="text-sm text-gray-500">
                       Won on {domain.purchaseDate.toLocaleDateString()}
                     </p>
-                    {xUsername ? (
-                      <a
-                        href={`https://x.com/${xUsername}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800 transition-colors"
-                      >
-                        @{xUsername} <ExternalLink size={14} />
-                      </a>
-                    ) : (
-                      <span className="text-sm text-gray-500">
-                        @{username}
-                      </span>
-                    )}
                   </div>
-                  <div className="mt-2 pt-2 border-t border-gray-100">
+                  <div className="mt-2 pt-2 border-t border-gray-100 space-y-2">
                     <p className="text-sm text-gray-600">
                       Seller: {' '}
                       {sellerXUsername ? (
@@ -79,6 +65,17 @@ export const UserProfile = ({ username, wonDomains }: UserProfileProps) => {
                         <span>@{domain.listedBy}</span>
                       )}
                     </p>
+                    {sellerDetails?.email && (
+                      <p className="text-sm text-gray-600 flex items-center gap-2">
+                        <Mail size={14} className="text-gray-400" />
+                        <a
+                          href={`mailto:${sellerDetails.email}`}
+                          className="text-blue-600 hover:text-blue-800 transition-colors"
+                        >
+                          {sellerDetails.email}
+                        </a>
+                      </p>
+                    )}
                   </div>
                 </div>
               );
