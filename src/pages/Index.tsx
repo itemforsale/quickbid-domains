@@ -12,60 +12,33 @@ import { Advertisement } from "@/components/Advertisement";
 import { AboutBioBox } from "@/components/AboutBioBox";
 import { handleDomainBid, handleDomainBuyNow, createNewDomain } from "@/utils/domainUtils";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { getDomains, setupWebSocket } from "@/utils/domainUpdates";
+import { toast } from "sonner";
 
 const STORAGE_KEY = 'quickbid_domains';
 const REFRESH_INTERVAL = 10000; // Refresh every 10 seconds
-
-// Default domains data if API fails
-const DEFAULT_DOMAINS = [
-  {
-    id: 1,
-    name: "example.com",
-    currentBid: 100,
-    endTime: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours from now
-    status: "active",
-    bidHistory: [],
-    createdAt: new Date(),
-    listedBy: "System"
-  }
-];
 
 const Index = () => {
   const { user, logout } = useUser();
   const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState("");
 
+  // Set up WebSocket connection for real-time updates
+  useEffect(() => {
+    const cleanup = setupWebSocket((updatedDomains) => {
+      queryClient.setQueryData(['domains'], updatedDomains);
+      toast.success("Domain listings updated!");
+    });
+
+    return cleanup;
+  }, [queryClient]);
+
   // Use React Query for data fetching with automatic refresh
   const { data: domains = [] } = useQuery({
     queryKey: ['domains'],
-    queryFn: async () => {
-      try {
-        // First try to get data from localStorage
-        const savedDomains = localStorage.getItem(STORAGE_KEY);
-        if (savedDomains) {
-          const parsedDomains = JSON.parse(savedDomains);
-          return parsedDomains.map((domain: any) => ({
-            ...domain,
-            endTime: new Date(domain.endTime),
-            createdAt: domain.createdAt ? new Date(domain.createdAt) : new Date(),
-            bidTimestamp: domain.bidTimestamp ? new Date(domain.bidTimestamp) : undefined,
-            purchaseDate: domain.purchaseDate ? new Date(domain.purchaseDate) : undefined,
-            bidHistory: (domain.bidHistory || []).map((bid: any) => ({
-              ...bid,
-              timestamp: new Date(bid.timestamp)
-            })),
-            listedBy: domain.listedBy || 'Anonymous',
-          }));
-        }
-        
-        // If no data in localStorage, return default domains
-        return DEFAULT_DOMAINS;
-      } catch (error) {
-        console.error('Error loading domains:', error);
-        return DEFAULT_DOMAINS;
-      }
-    },
+    queryFn: getDomains,
     refetchInterval: REFRESH_INTERVAL,
+    staleTime: 5000, // Consider data stale after 5 seconds
   });
 
   // Save domains to localStorage whenever they change
