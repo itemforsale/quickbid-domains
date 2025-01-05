@@ -67,6 +67,7 @@ const Index = () => {
               status: 'sold',
               finalPrice: amount,
               purchaseDate: new Date(),
+              listedBy: domain.listedBy, // Ensure listedBy is preserved
             };
           }
 
@@ -90,6 +91,7 @@ const Index = () => {
             currentBidder: user.username,
             finalPrice: domain.buyNowPrice,
             purchaseDate: new Date(),
+            listedBy: domain.listedBy, // Ensure listedBy is preserved
           };
         }
         return domain;
@@ -109,7 +111,7 @@ const Index = () => {
       status: 'pending',
       buyNowPrice: buyNowPrice || undefined,
       createdAt: new Date(),
-      listedBy: user.username, // Ensure we're using the current user's username
+      listedBy: user.username,
     };
 
     setDomains((prevDomains) => [...prevDomains, newDomain]);
@@ -155,7 +157,7 @@ const Index = () => {
       name: d.name,
       finalPrice: d.finalPrice!,
       purchaseDate: d.purchaseDate!,
-      listedBy: d.listedBy,  // Added this field
+      listedBy: d.listedBy,
     }));
 
   const filteredActiveDomains = activeDomains.filter((domain) =>
