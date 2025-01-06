@@ -93,6 +93,7 @@ const Index = () => {
     userWonDomains
   } = categorizeDomains(domains, now, user?.username);
 
+  // Filter active domains based on search query
   const filteredActiveDomains = activeDomains.filter(domain =>
     domain.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
