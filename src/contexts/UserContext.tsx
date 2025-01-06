@@ -23,10 +23,10 @@ interface UserContextType {
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
 const USERS_STORAGE_KEY = 'quickbid_users';
+const CURRENT_USER_KEY = 'quickbid_current_user';
 const ADMIN_USERNAME = '60dna';
 const ADMIN_PASSWORD = 'xMWR6IXrqPkXPbWg';
 
-// Initialize with default admin user
 const defaultUsers: User[] = [{
   username: ADMIN_USERNAME,
   name: 'Sam Charles',
@@ -37,20 +37,24 @@ const defaultUsers: User[] = [{
 }];
 
 export function UserProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<User | null>(() => {
+    try {
+      const savedUser = localStorage.getItem(CURRENT_USER_KEY);
+      return savedUser ? JSON.parse(savedUser) : null;
+    } catch (error) {
+      console.error('Error loading current user:', error);
+      return null;
+    }
+  });
+
   const [users, setUsers] = useState<User[]>(() => {
     try {
       const savedUsers = localStorage.getItem(USERS_STORAGE_KEY);
       const parsedUsers = savedUsers ? JSON.parse(savedUsers) : defaultUsers;
       
-      // Ensure admin user is always present
       if (!parsedUsers.some(u => u.username === ADMIN_USERNAME)) {
         parsedUsers.push(defaultUsers[0]);
       }
-      
-      // Broadcast initial state to other tabs/windows
-      const channel = new BroadcastChannel('users_sync');
-      channel.postMessage({ type: 'USERS_UPDATE', users: parsedUsers });
       
       return parsedUsers;
     } catch (error) {
@@ -59,32 +63,6 @@ export function UserProvider({ children }: { children: ReactNode }) {
     }
   });
 
-  // Set up broadcast channel for cross-tab/browser synchronization
-  useEffect(() => {
-    const channel = new BroadcastChannel('users_sync');
-    
-    // Listen for updates from other tabs/windows
-    channel.onmessage = (event) => {
-      if (event.data.type === 'USERS_UPDATE') {
-        console.log('Received users update:', event.data.users);
-        setUsers(event.data.users);
-        
-        // Update localStorage when receiving updates
-        try {
-          localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(event.data.users));
-        } catch (error) {
-          console.error('Error saving received users:', error);
-        }
-      }
-    };
-
-    // Request current state from other tabs when initializing
-    channel.postMessage({ type: 'REQUEST_USERS' });
-
-    return () => channel.close();
-  }, []);
-
-  // Sync users to localStorage and broadcast changes
   useEffect(() => {
     try {
       localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(users));
@@ -95,6 +73,18 @@ export function UserProvider({ children }: { children: ReactNode }) {
       console.error('Error saving users:', error);
     }
   }, [users]);
+
+  useEffect(() => {
+    try {
+      if (user) {
+        localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
+      } else {
+        localStorage.removeItem(CURRENT_USER_KEY);
+      }
+    } catch (error) {
+      console.error('Error saving current user:', error);
+    }
+  }, [user]);
 
   const register = (userData: User) => {
     const normalizedUsername = userData.username.toLowerCase();
@@ -116,7 +106,6 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
   const login = (credentials: { username: string; password: string }) => {
     const inputUsername = credentials.username.toLowerCase();
-    
     const foundUser = users.find(u => u.username.toLowerCase() === inputUsername);
     
     if (!foundUser) {
@@ -135,6 +124,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
   const logout = () => {
     setUser(null);
+    localStorage.removeItem(CURRENT_USER_KEY);
     toast.success("Successfully logged out!");
   };
 
