@@ -1,72 +1,74 @@
 import { supabase } from "@/integrations/supabase/client";
 import { Domain } from "@/types/domain";
-import { SupabaseDomain, mapSupabaseToDomain, mapDomainToSupabase } from "@/types/supabase";
+import { SupabaseDomain, mapDomainToSupabase, mapSupabaseToDomain } from "@/types/supabase";
 
-export const setupWebSocket = (onUpdate: (domains: Domain[]) => void) => {
-  const channel = supabase
-    .channel('public:domains')
-    .on('postgres_changes', 
-      { 
-        event: '*', 
-        schema: 'public', 
-        table: 'domains' 
-      }, 
-      (payload) => {
-        console.log('Received realtime update:', payload);
-        getDomains().then(domains => {
-          if (domains) onUpdate(domains);
-        });
+export class StorageManager {
+  private static instance: StorageManager;
+  private constructor() {}
+
+  static getInstance(): StorageManager {
+    if (!StorageManager.instance) {
+      StorageManager.instance = new StorageManager();
+    }
+    return StorageManager.instance;
+  }
+
+  async getDomains(): Promise<Domain[]> {
+    try {
+      const { data, error } = await supabase
+        .from('domains')
+        .select('*');
+
+      if (error) {
+        console.error('Error fetching domains:', error);
+        return [];
       }
-    )
-    .subscribe();
 
-  getDomains().then(domains => {
-    if (domains) onUpdate(domains);
-  });
+      return (data as SupabaseDomain[]).map(mapSupabaseToDomain);
+    } catch (error) {
+      console.error('Error loading domains:', error);
+      return [];
+    }
+  }
 
-  return () => {
-    supabase.removeChannel(channel);
-  };
-};
+  async saveDomains(domains: Domain[]): Promise<void> {
+    try {
+      const supabaseDomains = domains.map(mapDomainToSupabase);
+      
+      const { error } = await supabase
+        .from('domains')
+        .upsert(supabaseDomains);
 
-export const getDomains = async (): Promise<Domain[]> => {
-  try {
-    const { data, error } = await supabase
-      .from('domains')
+      if (error) {
+        console.error('Error saving domains:', error);
+      }
+    } catch (error) {
+      console.error('Error saving domains:', error);
+    }
+  }
+
+  async getUsers(): Promise<any[]> {
+    const { data: profiles, error } = await supabase
+      .from('profiles')
       .select('*');
 
     if (error) {
-      console.error('Error fetching domains:', error);
+      console.error('Error fetching users:', error);
       return [];
     }
 
-    console.log('Retrieved domains:', data);
-    return (data as SupabaseDomain[]).map(mapSupabaseToDomain);
-  } catch (error) {
-    console.error('Error loading domains:', error);
-    return [];
+    return profiles || [];
   }
-};
 
-export const updateDomains = async (domains: Domain[]) => {
-  try {
-    console.log('Updating domains:', domains);
-    const supabaseDomains = domains.map(domain => ({
-      ...mapDomainToSupabase(domain),
-      current_bid: domain.currentBid,
-      end_time: domain.endTime.toISOString(),
-      listed_by: domain.listedBy,
-      name: domain.name
-    }));
-
+  async saveUsers(users: any[]): Promise<void> {
     const { error } = await supabase
-      .from('domains')
-      .upsert(supabaseDomains);
+      .from('profiles')
+      .upsert(users);
 
     if (error) {
-      console.error('Error updating domains:', error);
+      console.error('Error saving users:', error);
     }
-  } catch (error) {
-    console.error('Error saving domains:', error);
   }
-};
+}
+
+export default StorageManager;

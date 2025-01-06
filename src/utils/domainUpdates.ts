@@ -40,7 +40,6 @@ export const getDomains = async (): Promise<Domain[]> => {
       return [];
     }
 
-    console.log('Retrieved domains:', data);
     return (data as SupabaseDomain[]).map(mapSupabaseToDomain);
   } catch (error) {
     console.error('Error loading domains:', error);
@@ -50,15 +49,8 @@ export const getDomains = async (): Promise<Domain[]> => {
 
 export const updateDomains = async (domains: Domain[]) => {
   try {
-    console.log('Updating domains:', domains);
-    const supabaseDomains = domains.map(domain => ({
-      ...mapDomainToSupabase(domain),
-      current_bid: domain.currentBid,
-      end_time: domain.endTime.toISOString(),
-      listed_by: domain.listedBy,
-      name: domain.name
-    }));
-
+    const supabaseDomains = domains.map(domain => mapDomainToSupabase(domain));
+    
     const { error } = await supabase
       .from('domains')
       .upsert(supabaseDomains);

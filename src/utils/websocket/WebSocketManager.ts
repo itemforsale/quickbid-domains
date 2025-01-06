@@ -2,7 +2,7 @@ import { WebSocketConnection } from './WebSocketConnection';
 import { VisibilityManager } from './VisibilityManager';
 import { MessageHandler } from './MessageHandler';
 import { Domain } from '@/types/domain';
-import { StorageManager } from '../storage/StorageManager';
+import StorageManager from '../storage/StorageManager';
 import { WebSocketMessage } from '../types/websocket';
 
 class WebSocketManager {

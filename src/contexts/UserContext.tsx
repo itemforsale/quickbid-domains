@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { StorageManager } from "@/utils/storage/StorageManager";
+import StorageManager from "@/utils/storage/StorageManager";
 import { toast } from "sonner";
 
 interface User {
