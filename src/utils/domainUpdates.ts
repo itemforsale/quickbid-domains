@@ -33,8 +33,7 @@ export const getDomains = async (): Promise<Domain[]> => {
   try {
     const { data, error } = await supabase
       .from('domains')
-      .select('*')
-      .order('created_at', { ascending: false });
+      .select('*');
 
     if (error) {
       console.error('Error fetching domains:', error);
@@ -52,9 +51,17 @@ export const getDomains = async (): Promise<Domain[]> => {
 export const updateDomains = async (domains: Domain[]) => {
   try {
     console.log('Updating domains:', domains);
+    const supabaseDomains = domains.map(domain => ({
+      ...mapDomainToSupabase(domain),
+      current_bid: domain.currentBid,
+      end_time: domain.endTime.toISOString(),
+      listed_by: domain.listedBy,
+      name: domain.name
+    }));
+
     const { error } = await supabase
       .from('domains')
-      .upsert(domains.map(domain => mapDomainToSupabase(domain)));
+      .upsert(supabaseDomains);
 
     if (error) {
       console.error('Error updating domains:', error);
