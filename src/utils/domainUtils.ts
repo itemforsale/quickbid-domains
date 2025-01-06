@@ -1,6 +1,41 @@
-import { Domain, BidHistoryItem } from "@/types/domain";
+import { Domain, BidHistoryItem, DomainDB } from "@/types/domain";
 import { supabase } from "@/integrations/supabase/client";
 import { toISOString } from "@/types/dates";
+
+const transformDomainToDb = (domain: Domain): Partial<DomainDB> => ({
+  name: domain.name,
+  current_bid: domain.currentBid,
+  end_time: domain.endTime,
+  bid_history: domain.bidHistory,
+  status: domain.status,
+  current_bidder: domain.currentBidder,
+  bid_timestamp: domain.bidTimestamp,
+  buy_now_price: domain.buyNowPrice,
+  final_price: domain.finalPrice,
+  purchase_date: domain.purchaseDate,
+  featured: domain.featured,
+  created_at: domain.createdAt,
+  listed_by: domain.listedBy,
+  is_fixed_price: domain.isFixedPrice
+});
+
+const transformDbToDomain = (dbDomain: DomainDB): Domain => ({
+  id: dbDomain.id,
+  name: dbDomain.name,
+  currentBid: dbDomain.current_bid,
+  endTime: dbDomain.end_time,
+  bidHistory: dbDomain.bid_history || [],
+  status: dbDomain.status,
+  currentBidder: dbDomain.current_bidder,
+  bidTimestamp: dbDomain.bid_timestamp,
+  buyNowPrice: dbDomain.buy_now_price,
+  finalPrice: dbDomain.final_price,
+  purchaseDate: dbDomain.purchase_date,
+  featured: dbDomain.featured,
+  createdAt: dbDomain.created_at,
+  listedBy: dbDomain.listed_by,
+  isFixedPrice: dbDomain.is_fixed_price
+});
 
 export const handleDomainBid = async (
   domains: Domain[],
@@ -39,13 +74,7 @@ export const handleDomainBid = async (
 
   if (updateError) throw updateError;
 
-  return domains.map(d => d.id === domainId ? {
-    ...d,
-    currentBid: amount,
-    currentBidder: username,
-    bidHistory: updatedBidHistory,
-    bidTimestamp: toISOString(new Date())
-  } : d);
+  return domains.map(d => d.id === domainId ? transformDbToDomain(updatedDomain) : d);
 };
 
 export const handleDomainBuyNow = async (

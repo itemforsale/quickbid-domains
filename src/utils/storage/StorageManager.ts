@@ -1,5 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
-import { Domain, BidHistoryItem, BidHistoryJson } from "@/types/domain";
+import { Domain, DomainDB } from "@/types/domain";
 import { toISOString } from "@/types/dates";
 
 export class StorageManager {
@@ -21,24 +21,20 @@ export class StorageManager {
 
       if (error) throw error;
 
-      return data.map(d => ({
+      return data.map((d: DomainDB) => ({
         id: d.id,
         name: d.name,
         currentBid: d.current_bid,
-        endTime: toISOString(d.end_time),
-        bidHistory: Array.isArray(d.bid_history) ? d.bid_history.map((bid: any) => ({
-          bidder: String(bid.bidder),
-          amount: Number(bid.amount),
-          timestamp: String(bid.timestamp)
-        })) : [],
+        endTime: d.end_time,
+        bidHistory: d.bid_history || [],
         status: d.status,
         currentBidder: d.current_bidder,
-        bidTimestamp: d.bid_timestamp ? toISOString(d.bid_timestamp) : undefined,
+        bidTimestamp: d.bid_timestamp,
         buyNowPrice: d.buy_now_price,
         finalPrice: d.final_price,
-        purchaseDate: d.purchase_date ? toISOString(d.purchase_date) : undefined,
+        purchaseDate: d.purchase_date,
         featured: d.featured,
-        createdAt: d.created_at ? toISOString(d.created_at) : undefined,
+        createdAt: d.created_at,
         listedBy: d.listed_by,
         isFixedPrice: d.is_fixed_price
       }));
@@ -58,11 +54,7 @@ export class StorageManager {
             name: d.name,
             current_bid: d.currentBid,
             end_time: d.endTime,
-            bid_history: d.bidHistory.map(bid => ({
-              bidder: bid.bidder,
-              amount: bid.amount,
-              timestamp: bid.timestamp
-            })),
+            bid_history: d.bidHistory,
             status: d.status,
             current_bidder: d.currentBidder,
             bid_timestamp: d.bidTimestamp,
@@ -79,6 +71,7 @@ export class StorageManager {
       if (error) throw error;
     } catch (error) {
       console.error('Error saving domains:', error);
+      throw error;
     }
   }
 
