@@ -15,10 +15,13 @@ export const handleDomainBid = async (domains: Domain[], domainId: number, amoun
 
   if (fetchError) throw fetchError;
 
-  const updatedBidHistory = [
-    ...(domain.bid_history || []),
-    { bidder: username, amount, timestamp: new Date().toISOString() }
-  ];
+  const newBidHistory: BidHistoryItem = {
+    bidder: username,
+    amount,
+    timestamp: new Date().toISOString()
+  };
+
+  const updatedBidHistory = [...(domain.bid_history || []), newBidHistory];
 
   const { data: updatedDomain, error: updateError } = await supabase
     .from('domains')

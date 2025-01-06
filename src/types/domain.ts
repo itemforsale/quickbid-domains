@@ -8,7 +8,7 @@ export interface Domain {
   id: number;
   name: string;
   currentBid: number;
-  endTime: Date;
+  endTime: string;
   bidHistory: BidHistoryItem[];
   status: 'pending' | 'active' | 'featured' | 'sold';
   currentBidder?: string;
@@ -26,7 +26,7 @@ export interface User {
   id: string;
   username: string;
   email: string;
+  name: string;
   xUsername?: string;
   isAdmin?: boolean;
-  name?: string;
 }

@@ -1,6 +1,5 @@
 import { DomainCard } from "@/components/DomainCard";
 import { Domain } from "@/types/domain";
-import { formatDate } from "@/utils/domainUtils";
 
 interface ActiveAuctionsProps {
   domains: Domain[];
@@ -11,7 +10,6 @@ interface ActiveAuctionsProps {
 export const ActiveAuctions = ({ domains, onBid, onBuyNow }: ActiveAuctionsProps) => {
   if (domains.length === 0) return null;
   
-  // First, separate featured fixed-price domains and regular domains
   const featuredFixedPriceDomains = domains.filter(d => d.isFixedPrice && d.featured);
   const regularDomains = domains.filter(d => !d.isFixedPrice)
     .sort((a, b) => {
@@ -31,19 +29,16 @@ export const ActiveAuctions = ({ domains, onBid, onBuyNow }: ActiveAuctionsProps
                 key={domain.id}
                 domain={domain.name}
                 initialPrice={domain.currentBid}
-                endTime={formatDate(domain.endTime)}
+                endTime={domain.endTime}
                 currentBid={domain.currentBid}
                 currentBidder={domain.currentBidder}
                 bidTimestamp={domain.bidTimestamp}
-                bidHistory={domain.bidHistory.map(bid => ({
-                  ...bid,
-                  timestamp: new Date(bid.timestamp)
-                }))}
+                bidHistory={domain.bidHistory}
                 buyNowPrice={domain.buyNowPrice}
                 onBid={(amount) => onBid(domain.id, amount)}
                 onBuyNow={() => onBuyNow(domain.id)}
                 featured={domain.featured}
-                createdAt={domain.createdAt ? new Date(domain.createdAt) : undefined}
+                createdAt={domain.createdAt}
                 listedBy={domain.listedBy}
               />
             ))}
@@ -60,19 +55,16 @@ export const ActiveAuctions = ({ domains, onBid, onBuyNow }: ActiveAuctionsProps
                 key={domain.id}
                 domain={domain.name}
                 initialPrice={domain.currentBid}
-                endTime={formatDate(domain.endTime)}
+                endTime={domain.endTime}
                 currentBid={domain.currentBid}
                 currentBidder={domain.currentBidder}
                 bidTimestamp={domain.bidTimestamp}
-                bidHistory={domain.bidHistory.map(bid => ({
-                  ...bid,
-                  timestamp: new Date(bid.timestamp)
-                }))}
+                bidHistory={domain.bidHistory}
                 buyNowPrice={domain.buyNowPrice}
                 onBid={(amount) => onBid(domain.id, amount)}
                 onBuyNow={() => onBuyNow(domain.id)}
                 featured={domain.featured}
-                createdAt={domain.createdAt ? new Date(domain.createdAt) : undefined}
+                createdAt={domain.createdAt}
                 listedBy={domain.listedBy}
               />
             ))}
