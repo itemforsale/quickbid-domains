@@ -49,7 +49,16 @@ export const getDomains = async (): Promise<Domain[]> => {
 
 export const updateDomains = async (domains: Domain[]) => {
   try {
-    const supabaseDomains = domains.map(domain => mapDomainToSupabase(domain));
+    const supabaseDomains = domains.map(domain => {
+      const mappedDomain = mapDomainToSupabase(domain);
+      return {
+        current_bid: mappedDomain.current_bid,
+        end_time: mappedDomain.end_time,
+        listed_by: mappedDomain.listed_by,
+        name: mappedDomain.name,
+        ...mappedDomain
+      };
+    });
     
     const { error } = await supabase
       .from('domains')

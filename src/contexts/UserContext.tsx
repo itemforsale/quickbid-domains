@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
-import StorageManager from "@/utils/storage/StorageManager";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 interface User {
@@ -35,19 +35,26 @@ interface UserContextType {
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
-const storageManager = StorageManager.getInstance();
 
 export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [users, setUsers] = useState<User[]>(storageManager.getUsers());
+  const [users, setUsers] = useState<User[]>([]);
 
   useEffect(() => {
-    const handleUsersUpdate = () => {
-      setUsers(storageManager.getUsers());
+    const fetchUsers = async () => {
+      const { data: profiles, error } = await supabase
+        .from('profiles')
+        .select('*');
+
+      if (error) {
+        console.error('Error fetching users:', error);
+        return;
+      }
+
+      setUsers(profiles || []);
     };
 
-    window.addEventListener('users_updated', handleUsersUpdate);
-    return () => window.removeEventListener('users_updated', handleUsersUpdate);
+    fetchUsers();
   }, []);
 
   const login = (data: LoginData) => {
@@ -64,7 +71,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  const register = (data: RegisterData) => {
+  const register = async (data: RegisterData) => {
     const newUser: User = {
       username: data.username,
       name: data.name,
@@ -74,23 +81,48 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       isAdmin: false
     };
 
-    const updatedUsers = [...users, newUser];
-    storageManager.saveUsers(updatedUsers);
-    setUsers(updatedUsers);
+    const { error } = await supabase
+      .from('profiles')
+      .insert([newUser]);
+
+    if (error) {
+      toast.error("Registration failed");
+      return;
+    }
+
+    setUsers([...users, newUser]);
     toast.success("Registration successful!");
   };
 
-  const deleteUser = (username: string) => {
+  const deleteUser = async (username: string) => {
+    const { error } = await supabase
+      .from('profiles')
+      .delete()
+      .eq('username', username);
+
+    if (error) {
+      toast.error("Failed to delete user");
+      return;
+    }
+
     const updatedUsers = users.filter(u => u.username !== username);
-    storageManager.saveUsers(updatedUsers);
     setUsers(updatedUsers);
   };
 
-  const updateUser = (updatedUser: User) => {
+  const updateUser = async (updatedUser: User) => {
+    const { error } = await supabase
+      .from('profiles')
+      .update(updatedUser)
+      .eq('username', updatedUser.username);
+
+    if (error) {
+      toast.error("Failed to update user");
+      return;
+    }
+
     const updatedUsers = users.map(u => 
       u.username === updatedUser.username ? updatedUser : u
     );
-    storageManager.saveUsers(updatedUsers);
     setUsers(updatedUsers);
   };
 
