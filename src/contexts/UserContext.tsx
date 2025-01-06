@@ -20,28 +20,74 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
-    const fetchUsers = async () => {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*');
-
-      if (error) {
-        toast.error("Failed to fetch users");
-        return;
+    // Check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        fetchUserProfile(session.user.id);
       }
+    });
 
-      if (data) {
-        setUsers(data.map(user => ({
-          id: user.id,
-          username: user.username,
-          email: user.email,
-          name: user.username, // Use username as name for now
-          xUsername: user.x_username,
-          isAdmin: user.is_admin
-        })));
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        fetchUserProfile(session.user.id);
+      } else {
+        setUser(null);
       }
+    });
+
+    return () => {
+      subscription.unsubscribe();
     };
+  }, []);
 
+  const fetchUserProfile = async (userId: string) => {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', userId)
+      .single();
+
+    if (error) {
+      console.error('Error fetching user profile:', error);
+      return;
+    }
+
+    if (data) {
+      setUser({
+        id: data.id,
+        username: data.username,
+        email: data.email,
+        name: data.username,
+        xUsername: data.x_username,
+        isAdmin: data.is_admin
+      });
+    }
+  };
+
+  const fetchUsers = async () => {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*');
+
+    if (error) {
+      toast.error("Failed to fetch users");
+      return;
+    }
+
+    if (data) {
+      setUsers(data.map(user => ({
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        name: user.username,
+        xUsername: user.x_username,
+        isAdmin: user.is_admin
+      })));
+    }
+  };
+
+  useEffect(() => {
     fetchUsers();
   }, []);
 
@@ -66,7 +112,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
 
   const register = async (data: { username: string; email: string; password: string; xUsername?: string }) => {
     try {
-      const { error } = await supabase.auth.signUp({
+      const { error: signUpError } = await supabase.auth.signUp({
         email: data.email,
         password: data.password,
         options: {
@@ -77,7 +123,21 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         },
       });
 
-      if (error) throw error;
+      if (signUpError) throw signUpError;
+
+      // Create profile after successful signup
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .insert([
+          {
+            username: data.username,
+            email: data.email,
+            x_username: data.xUsername,
+          }
+        ]);
+
+      if (profileError) throw profileError;
+      
       toast.success("Registered successfully!");
     } catch (error) {
       toast.error("Failed to register");

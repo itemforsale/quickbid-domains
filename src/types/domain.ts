@@ -7,6 +7,15 @@ export interface BidHistoryItem {
   timestamp: ISODateString;
 }
 
+export interface User {
+  id: string;
+  username: string;
+  email: string;
+  name: string;
+  xUsername?: string;
+  isAdmin?: boolean;
+}
+
 // Helper type to ensure BidHistoryItem can be stored as Json
 export type BidHistoryJson = {
   bidder: string;

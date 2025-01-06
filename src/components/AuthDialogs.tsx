@@ -7,10 +7,14 @@ import {
 } from "@/components/ui/dialog";
 import { LoginForm } from "@/components/LoginForm";
 import { RegisterForm } from "@/components/RegisterForm";
+import { useUser } from "@/contexts/UserContext";
 
 export const AuthDialogs = () => {
   const [showLogin, setShowLogin] = useState(true);
   const [isOpen, setIsOpen] = useState(false);
+  const { user } = useUser();
+
+  if (user) return null;
 
   return (
     <div className="fixed top-4 right-4 sm:right-20 flex justify-center gap-2 sm:gap-4 z-50">
