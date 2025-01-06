@@ -22,10 +22,8 @@ const Index = () => {
   const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState("");
 
-  // Set up real-time updates
   useAuctionUpdates();
 
-  // Use React Query for data fetching with automatic refresh
   const { data: domains = [], isLoading, error } = useQuery({
     queryKey: ['domains'],
     queryFn: getDomains,
@@ -79,6 +77,15 @@ const Index = () => {
     domain.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  // Convert Domain[] to the expected type for UserSection
+  const userWonDomainsFormatted = userWonDomains.map(domain => ({
+    id: domain.id,
+    name: domain.name,
+    finalPrice: domain.finalPrice || domain.currentBid,
+    purchaseDate: domain.purchaseDate || new Date(),
+    listedBy: domain.listedBy
+  }));
+
   return (
     <div className="min-h-screen bg-background text-foreground px-2 sm:px-4 lg:px-8 py-4 sm:py-8">
       <div className="max-w-7xl mx-auto space-y-8">
@@ -89,7 +96,7 @@ const Index = () => {
         <UserSection
           user={user}
           domains={domains}
-          wonDomains={userWonDomains}
+          wonDomains={userWonDomainsFormatted}
           onLogout={logout}
           onDomainSubmit={handleDomainSubmission}
         />

@@ -9,7 +9,87 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      domains: {
+        Row: {
+          bid_history: Json | null
+          bid_timestamp: string | null
+          buy_now_price: number | null
+          created_at: string | null
+          current_bid: number
+          current_bidder: string | null
+          end_time: string
+          featured: boolean | null
+          final_price: number | null
+          id: number
+          is_fixed_price: boolean | null
+          listed_by: string
+          name: string
+          purchase_date: string | null
+          status: Database["public"]["Enums"]["domain_status"] | null
+        }
+        Insert: {
+          bid_history?: Json | null
+          bid_timestamp?: string | null
+          buy_now_price?: number | null
+          created_at?: string | null
+          current_bid: number
+          current_bidder?: string | null
+          end_time: string
+          featured?: boolean | null
+          final_price?: number | null
+          id?: never
+          is_fixed_price?: boolean | null
+          listed_by: string
+          name: string
+          purchase_date?: string | null
+          status?: Database["public"]["Enums"]["domain_status"] | null
+        }
+        Update: {
+          bid_history?: Json | null
+          bid_timestamp?: string | null
+          buy_now_price?: number | null
+          created_at?: string | null
+          current_bid?: number
+          current_bidder?: string | null
+          end_time?: string
+          featured?: boolean | null
+          final_price?: number | null
+          id?: never
+          is_fixed_price?: boolean | null
+          listed_by?: string
+          name?: string
+          purchase_date?: string | null
+          status?: Database["public"]["Enums"]["domain_status"] | null
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string | null
+          email: string | null
+          id: string
+          is_admin: boolean | null
+          username: string
+          x_username: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email?: string | null
+          id: string
+          is_admin?: boolean | null
+          username: string
+          x_username?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          is_admin?: boolean | null
+          username?: string
+          x_username?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -18,7 +98,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      domain_status: "pending" | "active" | "sold" | "featured"
     }
     CompositeTypes: {
       [_ in never]: never

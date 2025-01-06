@@ -1,14 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { ExternalLink, Mail } from "lucide-react";
 import { useUser } from "@/contexts/UserContext";
-
-interface Domain {
-  id: number;
-  name: string;
-  finalPrice: number;
-  purchaseDate: Date;
-  listedBy: string;
-}
+import { Domain } from "@/types/domain";
 
 interface UserProfileProps {
   username: string;
@@ -18,7 +11,6 @@ interface UserProfileProps {
 export const UserProfile = ({ username, wonDomains }: UserProfileProps) => {
   const { users } = useUser();
   
-  // Find user's X.com username if available
   const userDetails = users.find(u => u.username === username);
   const xUsername = userDetails?.xUsername;
 
@@ -42,16 +34,18 @@ export const UserProfile = ({ username, wonDomains }: UserProfileProps) => {
                 >
                   <div className="flex justify-between items-center">
                     <span className="font-medium">{domain.name}</span>
-                    <span className="text-green-600">${domain.finalPrice}</span>
+                    <span className="text-green-600">
+                      ${domain.finalPrice || domain.currentBid}
+                    </span>
                   </div>
                   <div className="flex justify-between items-center mt-2">
                     <p className="text-sm text-gray-500">
-                      Won on {domain.purchaseDate.toLocaleDateString()}
+                      Won on {domain.purchaseDate?.toLocaleDateString() || 'Pending'}
                     </p>
                   </div>
                   <div className="mt-2 pt-2 border-t border-gray-100 space-y-2">
                     <p className="text-sm text-gray-600">
-                      Seller: {' '}
+                      Listed by:{" "}
                       {sellerXUsername ? (
                         <a
                           href={`https://x.com/${sellerXUsername}`}
