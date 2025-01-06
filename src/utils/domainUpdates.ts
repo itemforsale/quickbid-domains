@@ -14,21 +14,10 @@ export const setupWebSocket = (onUpdate: (domains: Domain[]) => void) => {
   }
 
   // Handle WebSocket messages
-  wsManager.connect((data: Domain[]) => {
-    const domains = data.map((domain: any) => ({
-      ...domain,
-      endTime: new Date(domain.endTime),
-      createdAt: new Date(domain.createdAt),
-      bidTimestamp: domain.bidTimestamp ? new Date(domain.bidTimestamp) : undefined,
-      purchaseDate: domain.purchaseDate ? new Date(domain.purchaseDate) : undefined,
-      bidHistory: (domain.bidHistory || []).map((bid: any) => ({
-        ...bid,
-        timestamp: new Date(bid.timestamp)
-      }))
-    }));
+  wsManager.connect((domains: Domain[]) => {
     console.log('Received domains update:', domains);
-    onUpdate(domains);
     storageManager.saveDomains(domains);
+    onUpdate(domains);
   });
 
   return () => {
@@ -48,9 +37,9 @@ export const getDomains = async (): Promise<Domain[]> => {
 export const updateDomains = (domains: Domain[]) => {
   console.log('Updating domains:', domains);
   const storageManager = StorageManager.getInstance();
+  storageManager.saveDomains(domains);
   wsManager.sendMessage({ 
     type: 'update_domains',
     domains 
   });
-  storageManager.saveDomains(domains);
 };

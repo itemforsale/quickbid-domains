@@ -6,10 +6,12 @@ const LAST_UPDATE_KEY = 'quickbid_last_update';
 export class StorageManager {
   private static instance: StorageManager;
   private broadcastChannel: BroadcastChannel;
+  private domains: Domain[] = [];
 
   private constructor() {
     this.broadcastChannel = new BroadcastChannel('auctionUpdates');
     this.setupBroadcastChannel();
+    this.loadInitialData();
   }
 
   private setupBroadcastChannel() {
@@ -21,6 +23,18 @@ export class StorageManager {
     };
   }
 
+  private loadInitialData() {
+    try {
+      const savedData = localStorage.getItem(STORAGE_KEY);
+      if (savedData) {
+        this.domains = JSON.parse(savedData).map(this.parseDomainDates);
+        console.log('Loaded initial domains from storage:', this.domains);
+      }
+    } catch (error) {
+      console.error('Error loading initial data:', error);
+    }
+  }
+
   static getInstance(): StorageManager {
     if (!StorageManager.instance) {
       StorageManager.instance = new StorageManager();
@@ -29,6 +43,7 @@ export class StorageManager {
   }
 
   saveDomains(domains: Domain[]) {
+    this.domains = domains;
     this.saveDomainsWithoutBroadcast(domains);
     const timestamp = Date.now();
     localStorage.setItem(LAST_UPDATE_KEY, timestamp.toString());
@@ -57,29 +72,14 @@ export class StorageManager {
       
       console.log('Saving domains to localStorage:', serializedDomains);
       localStorage.setItem(STORAGE_KEY, JSON.stringify(serializedDomains));
+      this.domains = domains;
     } catch (error) {
       console.error('Error saving domains:', error);
     }
   }
 
   getDomains(): Domain[] {
-    try {
-      const savedDomains = localStorage.getItem(STORAGE_KEY);
-      if (!savedDomains) {
-        console.log('No domains found in localStorage');
-        return [];
-      }
-
-      const parsedDomains = JSON.parse(savedDomains);
-      console.log('Retrieved raw domains from localStorage:', parsedDomains);
-      
-      const domains = parsedDomains.map(this.parseDomainDates);
-      console.log('Parsed domains with dates:', domains);
-      return domains;
-    } catch (error) {
-      console.error('Error reading domains:', error);
-      return [];
-    }
+    return this.domains;
   }
 
   private parseDomainDates(domain: any): Domain {
