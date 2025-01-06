@@ -2,17 +2,25 @@ import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { EditUserDialog } from "./EditUserDialog";
 import { UserCard } from "./UserCard";
-import { User } from "@/types/user";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
+interface Profile {
+  id: string;
+  username: string;
+  email: string;
+  xUsername?: string;
+  isAdmin?: boolean;
+  name?: string;
+}
+
 interface UserManagementSectionProps {
-  onUpdateUser: (user: User) => void;
+  onUpdateUser: (user: Profile) => void;
 }
 
 export const UserManagementSection = ({ onUpdateUser }: UserManagementSectionProps) => {
-  const [users, setUsers] = useState<User[]>([]);
-  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [users, setUsers] = useState<Profile[]>([]);
+  const [selectedUser, setSelectedUser] = useState<Profile | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const fetchUsers = async () => {
@@ -31,16 +39,16 @@ export const UserManagementSection = ({ onUpdateUser }: UserManagementSectionPro
       email: profile.email,
       xUsername: profile.x_username,
       isAdmin: profile.is_admin,
-      createdAt: profile.created_at
+      name: profile.username // Using username as name for now
     })));
   };
 
-  const handleEditUser = (user: User) => {
+  const handleEditUser = (user: Profile) => {
     setSelectedUser(user);
     setIsDialogOpen(true);
   };
 
-  const handleUpdateUser = async (updatedUser: User) => {
+  const handleUpdateUser = async (updatedUser: Profile) => {
     const { error } = await supabase
       .from('profiles')
       .update({
@@ -72,16 +80,23 @@ export const UserManagementSection = ({ onUpdateUser }: UserManagementSectionPro
               key={user.id}
               user={user}
               onEdit={() => handleEditUser(user)}
+              onDelete={() => {}} // Not implementing delete for now
             />
           ))}
         </div>
       </Card>
 
       <EditUserDialog
-        user={selectedUser}
-        open={isDialogOpen}
+        isOpen={isDialogOpen}
         onOpenChange={setIsDialogOpen}
-        onSubmit={handleUpdateUser}
+        editingUser={selectedUser}
+        onUserChange={setSelectedUser}
+        onSave={(e) => {
+          e.preventDefault();
+          if (selectedUser) {
+            handleUpdateUser(selectedUser);
+          }
+        }}
       />
     </div>
   );
