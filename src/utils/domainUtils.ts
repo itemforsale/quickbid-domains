@@ -17,7 +17,7 @@ export const handleDomainBid = async (domains: Domain[], domainId: number, amoun
   const supabaseDomain = domain as SupabaseDomain;
   const updatedBidHistory = [
     ...(Array.isArray(supabaseDomain.bid_history) ? supabaseDomain.bid_history : []),
-    { bidder: username, amount, timestamp: new Date() }
+    { bidder: username, amount, timestamp: new Date().toISOString() }
   ];
 
   const { data: updatedDomain, error: updateError } = await supabase

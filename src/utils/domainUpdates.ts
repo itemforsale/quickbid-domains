@@ -1,6 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { Domain } from "@/types/domain";
-import { SupabaseDomain, mapSupabaseToDomain } from "@/types/supabase";
+import { SupabaseDomain, mapSupabaseToDomain, mapDomainToSupabase } from "@/types/supabase";
 
 export const setupWebSocket = (onUpdate: (domains: Domain[]) => void) => {
   const channel = supabase
@@ -54,7 +54,7 @@ export const updateDomains = async (domains: Domain[]) => {
     console.log('Updating domains:', domains);
     const { error } = await supabase
       .from('domains')
-      .upsert(domains.map(mapDomainToSupabase));
+      .upsert(domains.map(domain => mapDomainToSupabase(domain)));
 
     if (error) {
       console.error('Error updating domains:', error);

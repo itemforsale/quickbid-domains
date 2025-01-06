@@ -1,11 +1,18 @@
 import { Json } from "@/integrations/supabase/types";
+import { Domain } from "./domain";
+
+export type BidHistoryItem = {
+  bidder: string;
+  amount: number;
+  timestamp: string;
+};
 
 export type SupabaseDomain = {
   id: number;
   name: string;
   current_bid: number;
   end_time: string;
-  bid_history: Json;
+  bid_history: BidHistoryItem[];
   status: 'pending' | 'active' | 'sold' | 'featured';
   current_bidder?: string;
   bid_timestamp?: string;
@@ -18,13 +25,16 @@ export type SupabaseDomain = {
   is_fixed_price?: boolean;
 };
 
-export const mapSupabaseToDomain = (domain: SupabaseDomain) => {
+export const mapSupabaseToDomain = (domain: SupabaseDomain): Domain => {
   return {
     id: domain.id,
     name: domain.name,
     currentBid: domain.current_bid,
     endTime: new Date(domain.end_time),
-    bidHistory: Array.isArray(domain.bid_history) ? domain.bid_history : [],
+    bidHistory: domain.bid_history?.map(bid => ({
+      ...bid,
+      timestamp: new Date(bid.timestamp)
+    })) || [],
     status: domain.status,
     currentBidder: domain.current_bidder,
     bidTimestamp: domain.bid_timestamp ? new Date(domain.bid_timestamp) : undefined,
@@ -38,12 +48,18 @@ export const mapSupabaseToDomain = (domain: SupabaseDomain) => {
   };
 };
 
-export const mapDomainToSupabase = (domain: Partial<Domain>) => {
+export const mapDomainToSupabase = (domain: Partial<Domain>): Partial<SupabaseDomain> => {
+  const bidHistory = domain.bidHistory?.map(bid => ({
+    bidder: bid.bidder,
+    amount: bid.amount,
+    timestamp: bid.timestamp.toISOString()
+  }));
+
   return {
     name: domain.name,
     current_bid: domain.currentBid,
     end_time: domain.endTime?.toISOString(),
-    bid_history: domain.bidHistory || [],
+    bid_history: bidHistory,
     status: domain.status,
     current_bidder: domain.currentBidder,
     bid_timestamp: domain.bidTimestamp?.toISOString(),
