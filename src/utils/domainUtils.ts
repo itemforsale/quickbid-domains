@@ -1,26 +1,13 @@
-import { Domain, BidHistoryItem, BidHistoryJson } from "@/types/domain";
+import { Domain, BidHistoryItem } from "@/types/domain";
 import { supabase } from "@/integrations/supabase/client";
 import { toISOString } from "@/types/dates";
-import { Json } from "@/integrations/supabase/types";
 
-const parseBidHistory = (bidHistory: Json | null): BidHistoryItem[] => {
-  if (!bidHistory || !Array.isArray(bidHistory)) return [];
-  return bidHistory.map(bid => ({
-    bidder: String(bid.bidder),
-    amount: Number(bid.amount),
-    timestamp: String(bid.timestamp)
-  }));
-};
-
-const serializeBidHistory = (bidHistory: BidHistoryItem[]): BidHistoryJson => {
-  return bidHistory.map(bid => ({
-    bidder: bid.bidder,
-    amount: bid.amount,
-    timestamp: bid.timestamp
-  }));
-};
-
-export const handleDomainBid = async (domains: Domain[], domainId: number, amount: number, username: string): Promise<Domain[]> => {
+export const handleDomainBid = async (
+  domains: Domain[],
+  domainId: number,
+  amount: number,
+  username: string
+): Promise<Domain[]> => {
   const { data: domain, error: fetchError } = await supabase
     .from('domains')
     .select('*')
@@ -35,7 +22,7 @@ export const handleDomainBid = async (domains: Domain[], domainId: number, amoun
     timestamp: toISOString(new Date())
   };
 
-  const currentBidHistory = parseBidHistory(domain.bid_history);
+  const currentBidHistory: BidHistoryItem[] = domain.bid_history || [];
   const updatedBidHistory = [...currentBidHistory, newBid];
 
   const { data: updatedDomain, error: updateError } = await supabase
@@ -43,7 +30,7 @@ export const handleDomainBid = async (domains: Domain[], domainId: number, amoun
     .update({
       current_bid: amount,
       current_bidder: username,
-      bid_history: serializeBidHistory(updatedBidHistory),
+      bid_history: updatedBidHistory,
       bid_timestamp: toISOString(new Date())
     })
     .eq('id', domainId)
@@ -61,7 +48,11 @@ export const handleDomainBid = async (domains: Domain[], domainId: number, amoun
   } : d);
 };
 
-export const handleDomainBuyNow = async (domains: Domain[], domainId: number, username: string): Promise<Domain[]> => {
+export const handleDomainBuyNow = async (
+  domains: Domain[],
+  domainId: number,
+  username: string
+): Promise<Domain[]> => {
   const { data: domain, error: fetchError } = await supabase
     .from('domains')
     .select('*')

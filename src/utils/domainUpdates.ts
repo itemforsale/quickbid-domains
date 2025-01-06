@@ -1,6 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { Domain, BidHistoryItem } from "@/types/domain";
-import { toISOString, parseDate } from "@/types/dates";
+import { toISOString } from "@/types/dates";
 
 export const setupWebSocket = (onUpdate: (domains: Domain[]) => void) => {
   const channel = supabase
