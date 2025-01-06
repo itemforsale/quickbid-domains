@@ -1,23 +1,20 @@
-export interface BidHistoryItem {
-  bidder: string;
-  amount: number;
-  timestamp: string;
-}
+import { ISODateString } from "./dates";
+import { BidHistoryItem } from "./bid";
 
 export interface Domain {
   id: number;
   name: string;
   currentBid: number;
-  endTime: string;
+  endTime: ISODateString;
   bidHistory: BidHistoryItem[];
   status: 'pending' | 'active' | 'featured' | 'sold';
   currentBidder?: string;
-  bidTimestamp?: string;
+  bidTimestamp?: ISODateString;
   buyNowPrice?: number;
   finalPrice?: number;
-  purchaseDate?: string;
+  purchaseDate?: ISODateString;
   featured?: boolean;
-  createdAt?: string;
+  createdAt?: ISODateString;
   listedBy: string;
   isFixedPrice?: boolean;
 }

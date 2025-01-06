@@ -16,6 +16,7 @@ import { useAuctionUpdates } from "@/hooks/useAuctionUpdates";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { ErrorMessage } from "@/components/ErrorMessage";
 import { toast } from "sonner";
+import { toISOString } from "@/types/dates";
 
 const Index = () => {
   const { user, logout } = useUser();
@@ -101,7 +102,7 @@ const Index = () => {
     id: domain.id,
     name: domain.name,
     finalPrice: domain.finalPrice || domain.currentBid,
-    purchaseDate: domain.purchaseDate || new Date(),
+    purchaseDate: domain.purchaseDate || toISOString(new Date()),
     listedBy: domain.listedBy
   }));
 

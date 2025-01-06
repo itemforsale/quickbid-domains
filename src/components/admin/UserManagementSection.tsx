@@ -46,7 +46,7 @@ export const UserManagementSection = () => {
           <UserCard
             key={user.username}
             user={user}
-            onEdit={() => handleEditUser(user)}
+            onEdit={handleEditUser}
             onDelete={handleDeleteUser}
           />
         ))}
