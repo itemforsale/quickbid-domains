@@ -2,6 +2,11 @@ import { Domain } from "@/types/domain";
 import { wsManager } from "./websocket/WebSocketManager";
 import { StorageManager } from "./storage/StorageManager";
 
+interface WebSocketMessage {
+  type: 'domains_update' | 'initial_data';
+  domains: Domain[];
+}
+
 export const setupWebSocket = (onUpdate: (domains: Domain[]) => void) => {
   const storageManager = StorageManager.getInstance();
   
@@ -13,7 +18,7 @@ export const setupWebSocket = (onUpdate: (domains: Domain[]) => void) => {
   }
 
   // Handle WebSocket messages
-  wsManager.connect((data) => {
+  wsManager.connect((data: WebSocketMessage) => {
     if (data.type === 'domains_update' || data.type === 'initial_data') {
       const domains = data.domains.map((domain: any) => ({
         ...domain,
