@@ -1,6 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
-import { Domain } from "@/types/domain";
-import { toISOString } from "@/types/dates";
+import { Domain, BidHistoryItem } from "@/types/domain";
+import { toISOString, parseDate } from "@/types/dates";
 
 export const setupWebSocket = (onUpdate: (domains: Domain[]) => void) => {
   const channel = supabase
@@ -38,16 +38,20 @@ export const getDomains = async (): Promise<Domain[]> => {
       id: d.id,
       name: d.name,
       currentBid: d.current_bid,
-      endTime: d.end_time,
-      bidHistory: d.bid_history || [],
+      endTime: toISOString(d.end_time),
+      bidHistory: Array.isArray(d.bid_history) ? d.bid_history.map((bid: any) => ({
+        bidder: String(bid.bidder),
+        amount: Number(bid.amount),
+        timestamp: String(bid.timestamp)
+      })) : [],
       status: d.status,
       currentBidder: d.current_bidder,
-      bidTimestamp: d.bid_timestamp,
+      bidTimestamp: d.bid_timestamp ? toISOString(d.bid_timestamp) : undefined,
       buyNowPrice: d.buy_now_price,
       finalPrice: d.final_price,
-      purchaseDate: d.purchase_date,
+      purchaseDate: d.purchase_date ? toISOString(d.purchase_date) : undefined,
       featured: d.featured,
-      createdAt: d.created_at,
+      createdAt: d.created_at ? toISOString(d.created_at) : undefined,
       listedBy: d.listed_by,
       isFixedPrice: d.is_fixed_price
     }));

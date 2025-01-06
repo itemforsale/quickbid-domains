@@ -1,10 +1,18 @@
 import { ISODateString } from "./dates";
+import { Json } from "@/integrations/supabase/types";
 
 export interface BidHistoryItem {
   bidder: string;
   amount: number;
   timestamp: ISODateString;
 }
+
+// Helper type to ensure BidHistoryItem can be stored as Json
+export type BidHistoryJson = {
+  bidder: string;
+  amount: number;
+  timestamp: string;
+}[];
 
 export interface Domain {
   id: number;
@@ -22,13 +30,4 @@ export interface Domain {
   createdAt?: ISODateString;
   listedBy: string;
   isFixedPrice?: boolean;
-}
-
-export interface User {
-  id: string;
-  username: string;
-  email: string;
-  name: string;
-  xUsername?: string;
-  isAdmin?: boolean;
 }

@@ -103,7 +103,7 @@ const Index = () => {
     id: domain.id,
     name: domain.name,
     finalPrice: domain.finalPrice || domain.currentBid,
-    purchaseDate: domain.purchaseDate || toISOString(new Date()),
+    purchaseDate: toISOString(domain.purchaseDate || new Date()),
     listedBy: domain.listedBy
   }));
 

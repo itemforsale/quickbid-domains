@@ -1,6 +1,24 @@
-import { Domain, BidHistoryItem } from "@/types/domain";
+import { Domain, BidHistoryItem, BidHistoryJson } from "@/types/domain";
 import { supabase } from "@/integrations/supabase/client";
 import { toISOString } from "@/types/dates";
+import { Json } from "@/integrations/supabase/types";
+
+const parseBidHistory = (bidHistory: Json | null): BidHistoryItem[] => {
+  if (!bidHistory || !Array.isArray(bidHistory)) return [];
+  return bidHistory.map(bid => ({
+    bidder: String(bid.bidder),
+    amount: Number(bid.amount),
+    timestamp: String(bid.timestamp)
+  }));
+};
+
+const serializeBidHistory = (bidHistory: BidHistoryItem[]): BidHistoryJson => {
+  return bidHistory.map(bid => ({
+    bidder: bid.bidder,
+    amount: bid.amount,
+    timestamp: bid.timestamp
+  }));
+};
 
 export const handleDomainBid = async (domains: Domain[], domainId: number, amount: number, username: string): Promise<Domain[]> => {
   const { data: domain, error: fetchError } = await supabase
@@ -11,20 +29,21 @@ export const handleDomainBid = async (domains: Domain[], domainId: number, amoun
 
   if (fetchError) throw fetchError;
 
-  const newBidHistory: BidHistoryItem = {
+  const newBid: BidHistoryItem = {
     bidder: username,
     amount,
     timestamp: toISOString(new Date())
   };
 
-  const updatedBidHistory = [...(domain.bid_history || []), newBidHistory];
+  const currentBidHistory = parseBidHistory(domain.bid_history);
+  const updatedBidHistory = [...currentBidHistory, newBid];
 
   const { data: updatedDomain, error: updateError } = await supabase
     .from('domains')
     .update({
       current_bid: amount,
       current_bidder: username,
-      bid_history: updatedBidHistory,
+      bid_history: serializeBidHistory(updatedBidHistory),
       bid_timestamp: toISOString(new Date())
     })
     .eq('id', domainId)
