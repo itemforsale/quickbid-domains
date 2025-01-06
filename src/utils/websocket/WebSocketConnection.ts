@@ -1,3 +1,5 @@
+import { WebSocketMessage } from '../types/websocket';
+
 export class WebSocketConnection {
   private ws: WebSocket | null = null;
   private url: string;
@@ -9,7 +11,7 @@ export class WebSocketConnection {
     this.url = url;
   }
 
-  connect(onMessage: (data: any) => void): void {
+  connect(onMessage: (data: WebSocketMessage) => void): void {
     if (this.ws?.readyState === WebSocket.OPEN) return;
 
     this.ws = new WebSocket(this.url);
@@ -38,7 +40,7 @@ export class WebSocketConnection {
     };
   }
 
-  private handleReconnect(onMessage: (data: any) => void): void {
+  private handleReconnect(onMessage: (data: WebSocketMessage) => void): void {
     if (this.reconnectAttempts >= this.maxReconnectAttempts) {
       console.error('Max reconnection attempts reached');
       return;

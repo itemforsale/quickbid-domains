@@ -1,9 +1,7 @@
 import { Domain } from "@/types/domain";
 
-type MessageType = 'domains_update' | 'initial_data' | 'error';
-
 interface WebSocketMessage {
-  type: MessageType;
+  type: 'domains_update' | 'initial_data' | 'error';
   domains?: Domain[];
   error?: string;
 }

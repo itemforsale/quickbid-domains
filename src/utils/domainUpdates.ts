@@ -1,11 +1,7 @@
 import { Domain } from "@/types/domain";
 import { wsManager } from "./websocket/WebSocketManager";
 import { StorageManager } from "./storage/StorageManager";
-
-interface WebSocketMessage {
-  type: 'domains_update' | 'initial_data';
-  domains: Domain[];
-}
+import { WebSocketMessage } from "./types/websocket";
 
 export const setupWebSocket = (onUpdate: (domains: Domain[]) => void) => {
   const storageManager = StorageManager.getInstance();
@@ -18,23 +14,21 @@ export const setupWebSocket = (onUpdate: (domains: Domain[]) => void) => {
   }
 
   // Handle WebSocket messages
-  wsManager.connect((data: WebSocketMessage) => {
-    if (data.type === 'domains_update' || data.type === 'initial_data') {
-      const domains = data.domains.map((domain: any) => ({
-        ...domain,
-        endTime: new Date(domain.endTime),
-        createdAt: new Date(domain.createdAt),
-        bidTimestamp: domain.bidTimestamp ? new Date(domain.bidTimestamp) : undefined,
-        purchaseDate: domain.purchaseDate ? new Date(domain.purchaseDate) : undefined,
-        bidHistory: (domain.bidHistory || []).map((bid: any) => ({
-          ...bid,
-          timestamp: new Date(bid.timestamp)
-        }))
-      }));
-      console.log('Received domains update:', domains);
-      onUpdate(domains);
-      storageManager.saveDomains(domains);
-    }
+  wsManager.connect((data: Domain[]) => {
+    const domains = data.map((domain: any) => ({
+      ...domain,
+      endTime: new Date(domain.endTime),
+      createdAt: new Date(domain.createdAt),
+      bidTimestamp: domain.bidTimestamp ? new Date(domain.bidTimestamp) : undefined,
+      purchaseDate: domain.purchaseDate ? new Date(domain.purchaseDate) : undefined,
+      bidHistory: (domain.bidHistory || []).map((bid: any) => ({
+        ...bid,
+        timestamp: new Date(bid.timestamp)
+      }))
+    }));
+    console.log('Received domains update:', domains);
+    onUpdate(domains);
+    storageManager.saveDomains(domains);
   });
 
   return () => {

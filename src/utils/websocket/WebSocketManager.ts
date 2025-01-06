@@ -3,6 +3,11 @@ import { VisibilityManager } from './VisibilityManager';
 import { MessageHandler } from './MessageHandler';
 import { Domain } from '@/types/domain';
 
+interface WebSocketMessage {
+  type: 'domains_update' | 'initial_data';
+  domains: Domain[];
+}
+
 class WebSocketManager {
   private connection: WebSocketConnection;
   private visibilityManager: VisibilityManager;
@@ -34,7 +39,7 @@ class WebSocketManager {
 
   connect(callback: (domains: Domain[]) => void): void {
     this.currentCallback = callback;
-    this.connection.connect((message) => {
+    this.connection.connect((message: WebSocketMessage) => {
       MessageHandler.handleIncoming(message, callback);
     });
   }
