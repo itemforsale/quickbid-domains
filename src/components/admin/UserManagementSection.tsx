@@ -3,14 +3,7 @@ import { useUser } from "@/contexts/UserContext";
 import { useState } from "react";
 import { UserCard } from "./UserCard";
 import { EditUserDialog } from "./EditUserDialog";
-
-interface User {
-  id: string;
-  username: string;
-  email: string;
-  xUsername?: string;
-  isAdmin?: boolean;
-}
+import { User } from "@/types/domain";
 
 export const UserManagementSection = () => {
   const { users, deleteUser, updateUser } = useUser();
@@ -53,7 +46,7 @@ export const UserManagementSection = () => {
           <UserCard
             key={user.username}
             user={user}
-            onEdit={handleEditUser}
+            onEdit={() => handleEditUser(user)}
             onDelete={handleDeleteUser}
           />
         ))}

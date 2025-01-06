@@ -1,5 +1,10 @@
-import { Domain } from "@/types/domain";
+import { Domain, BidHistoryItem } from "@/types/domain";
 import { supabase } from "@/integrations/supabase/client";
+import { Json } from "@/integrations/supabase/types";
+
+export const formatDate = (date: string | Date): Date => {
+  return date instanceof Date ? date : new Date(date);
+};
 
 export const handleDomainBid = async (domains: Domain[], domainId: number, amount: number, username: string): Promise<Domain[]> => {
   const { data: domain, error: fetchError } = await supabase
@@ -112,7 +117,7 @@ export const categorizeDomains = (domains: Domain[], now: Date, username?: strin
   return {
     pendingDomains: domains.filter(d => d.status === 'pending'),
     activeDomains: domains.filter(d => d.status === 'active'),
-    endedDomains: domains.filter(d => new Date(d.endTime) < now && d.status !== 'sold'),
+    endedDomains: domains.filter(d => formatDate(d.endTime) < now && d.status !== 'sold'),
     soldDomains: domains.filter(d => d.status === 'sold'),
     userWonDomains: domains.filter(d => d.currentBidder === username)
   };

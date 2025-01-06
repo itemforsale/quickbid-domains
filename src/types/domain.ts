@@ -21,3 +21,12 @@ export interface Domain {
   listedBy: string;
   isFixedPrice?: boolean;
 }
+
+export interface User {
+  id: string;
+  username: string;
+  email: string;
+  xUsername?: string;
+  isAdmin?: boolean;
+  name?: string;
+}
