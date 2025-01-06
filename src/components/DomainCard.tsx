@@ -1,34 +1,13 @@
-import { useState, useEffect } from "react";
-import { toast } from "sonner";
 import { Card } from "@/components/ui/card";
 import { useUser } from "@/contexts/UserContext";
-import { BidHistory } from "./BidHistory";
-import { BidInput } from "./BidInput";
-import { CurrentBid } from "./CurrentBid";
 import { DomainHeader } from "./domain/DomainHeader";
-import { AuctionTimer } from "./domain/AuctionTimer";
-import { BidCount } from "./domain/BidCount";
-import { BuyNowSection } from "./domain/BuyNowSection";
 import { cn } from "@/lib/utils";
-
-interface Bid {
-  bidder: string;
-  amount: number;
-  proxyAmount?: number;
-  timestamp: Date;
-}
+import { toast } from "sonner";
 
 interface DomainCardProps {
   domain: string;
-  initialPrice: number;
-  endTime: Date;
-  onBid: (amount: number, proxyAmount?: number) => void;
-  currentBid: number;
-  currentBidder?: string;
-  bidTimestamp?: Date;
-  bidHistory?: Bid[];
-  buyNowPrice?: number;
-  onBuyNow?: () => void;
+  price: number;
+  onPurchase: () => void;
   featured?: boolean;
   createdAt?: Date;
   listedBy?: string;
@@ -36,67 +15,15 @@ interface DomainCardProps {
 
 export const DomainCard = ({
   domain,
-  initialPrice,
-  endTime,
-  onBid,
-  currentBid,
-  currentBidder,
-  bidTimestamp,
-  bidHistory = [],
-  buyNowPrice,
-  onBuyNow,
+  price,
+  onPurchase,
   featured,
   createdAt,
   listedBy = 'Anonymous',
 }: DomainCardProps) => {
   const { user } = useUser();
-  const [isEnded, setIsEnded] = useState(false);
-  const [bidAmount, setBidAmount] = useState(currentBid + 1);
-  const [isNew, setIsNew] = useState(false);
 
-  useEffect(() => {
-    if (createdAt && createdAt instanceof Date) {
-      const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
-      setIsNew(createdAt > fiveMinutesAgo);
-
-      const timeUntilNotNew = createdAt.getTime() + 5 * 60 * 1000 - Date.now();
-      if (timeUntilNotNew > 0) {
-        const timer = setTimeout(() => setIsNew(false), timeUntilNotNew);
-        return () => clearTimeout(timer);
-      }
-    }
-  }, [createdAt]);
-
-  const handleBid = () => {
-    if (isEnded) {
-      toast.error("This auction has ended");
-      return;
-    }
-    if (!user) {
-      toast.error("Please login to place a bid");
-      return;
-    }
-    if (user.username === listedBy) {
-      toast.error("You cannot bid on your own domain listing");
-      return;
-    }
-    if (bidAmount <= currentBid) {
-      toast.error("Bid must be higher than current bid");
-      return;
-    }
-
-    // Place the actual bid at current + 1, but store the maximum bid amount
-    const actualBidAmount = currentBid + 1;
-    onBid(actualBidAmount, bidAmount);
-    toast.success("Bid placed successfully!");
-    setBidAmount(actualBidAmount + 1);
-  };
-
-  const handleBuyNow = () => {
-    if (isEnded) {
-      toast.error("This auction has ended");
-      return;
-    }
+  const handlePurchase = () => {
     if (!user) {
       toast.error("Please login to purchase the domain");
       return;
@@ -105,14 +32,7 @@ export const DomainCard = ({
       toast.error("You cannot buy your own domain listing");
       return;
     }
-    if (onBuyNow) {
-      onBuyNow();
-      toast.success("Domain purchased successfully!");
-    }
-  };
-
-  const formatBidder = (username: string) => {
-    return `@${username}`;
+    onPurchase();
   };
 
   return (
@@ -124,47 +44,24 @@ export const DomainCard = ({
     )}>
       <div className="relative p-4 sm:p-6">
         <div className="flex flex-col gap-3 sm:gap-4">
-          <div className="flex flex-col sm:flex-row justify-between items-start gap-2 sm:gap-4">
-            <DomainHeader
-              domain={domain}
-              isNew={isNew}
-              featured={featured}
-              isEnded={isEnded}
-              listedBy={listedBy}
-            />
-            <AuctionTimer 
-              endTime={endTime}
-              onEnd={() => setIsEnded(true)}
-            />
-          </div>
+          <DomainHeader
+            domain={domain}
+            isNew={false}
+            featured={featured}
+            listedBy={listedBy}
+          />
           
-          <BidCount count={bidHistory.length} />
-
-          <div className="flex flex-col gap-2 sm:gap-3">
-            <CurrentBid
-              currentBid={currentBid}
-              currentBidder={currentBidder}
-              bidTimestamp={bidTimestamp}
-              formatBidder={formatBidder}
-            />
-            
-            {!isEnded && buyNowPrice && (
-              <BuyNowSection
-                price={buyNowPrice}
-                onBuyNow={handleBuyNow}
-              />
-            )}
-            
-            {!isEnded && (
-              <BidInput
-                bidAmount={bidAmount}
-                onBidAmountChange={setBidAmount}
-                onBid={handleBid}
-                currentBid={currentBid}
-              />
-            )}
-
-            <BidHistory bids={bidHistory} formatBidder={formatBidder} />
+          <div className="flex justify-between items-center">
+            <div>
+              <p className="text-sm text-gray-500">Price</p>
+              <p className="text-lg font-bold text-gray-900">$ {price.toLocaleString()}</p>
+            </div>
+            <button
+              onClick={handlePurchase}
+              className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
+            >
+              Purchase
+            </button>
           </div>
         </div>
       </div>

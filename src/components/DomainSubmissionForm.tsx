@@ -1,20 +1,19 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { Card } from "@/components/ui/card";
-import { DollarSign, Rocket } from "lucide-react";
+import { DollarSign } from "lucide-react";
 import { FormHeader } from "./domain-submission/FormHeader";
 import { DomainInput } from "./domain-submission/DomainInput";
 import { PriceInput } from "./domain-submission/PriceInput";
 import { SubmitButton } from "./domain-submission/SubmitButton";
 
 interface DomainSubmissionFormProps {
-  onSubmit: (domain: string, startingPrice: number, buyNowPrice: number | null) => void;
+  onSubmit: (domain: string, price: number) => void;
 }
 
 export const DomainSubmissionForm = ({ onSubmit }: DomainSubmissionFormProps) => {
   const [domainName, setDomainName] = useState("");
-  const [startingPrice, setStartingPrice] = useState("");
-  const [buyNowPrice, setBuyNowPrice] = useState("");
+  const [price, setPrice] = useState("");
 
   const formatPrice = (value: string) => {
     const digits = value.replace(/\D/g, '');
@@ -23,14 +22,9 @@ export const DomainSubmissionForm = ({ onSubmit }: DomainSubmissionFormProps) =>
     return number.toLocaleString('en-US');
   };
 
-  const handleStartingPriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const formatted = formatPrice(e.target.value);
-    setStartingPrice(formatted);
-  };
-
-  const handleBuyNowPriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const formatted = formatPrice(e.target.value);
-    setBuyNowPrice(formatted);
+    setPrice(formatted);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -41,20 +35,13 @@ export const DomainSubmissionForm = ({ onSubmit }: DomainSubmissionFormProps) =>
       return;
     }
 
-    const startingPriceNum = parseFloat(startingPrice.replace(/,/g, ''));
-    const buyNowPriceNum = buyNowPrice ? parseFloat(buyNowPrice.replace(/,/g, '')) : null;
+    const priceNum = parseFloat(price.replace(/,/g, ''));
 
-    if (isNaN(startingPriceNum) || startingPriceNum <= 0) {
-      toast.error("Please enter a valid starting price");
+    if (isNaN(priceNum) || priceNum <= 0) {
+      toast.error("Please enter a valid price");
       return;
     }
 
-    if (buyNowPrice && (isNaN(buyNowPriceNum!) || buyNowPriceNum! <= startingPriceNum)) {
-      toast.error("Buy now price must be higher than starting price");
-      return;
-    }
-
-    // Updated domain validation to support web3 domains
     const traditionalDomainRegex = /^[a-zA-Z0-9][a-zA-Z0-9-]{1,61}[a-zA-Z0-9]\.[a-zA-Z]{2,}$/;
     const web3DomainRegex = /^[a-zA-Z0-9][a-zA-Z0-9-]{1,61}[a-zA-Z0-9]\.(eth|crypto|nft|blockchain|dao|x|888|wallet|bitcoin|coin|zil|luxe)$/;
 
@@ -63,11 +50,10 @@ export const DomainSubmissionForm = ({ onSubmit }: DomainSubmissionFormProps) =>
       return;
     }
 
-    onSubmit(domainName, startingPriceNum, buyNowPriceNum);
+    onSubmit(domainName, priceNum);
     setDomainName("");
-    setStartingPrice("");
-    setBuyNowPrice("");
-    toast.success("Domain submitted for auction!");
+    setPrice("");
+    toast.success("Domain submitted for listing!");
   };
 
   return (
@@ -83,16 +69,10 @@ export const DomainSubmissionForm = ({ onSubmit }: DomainSubmissionFormProps) =>
             onChange={(e) => setDomainName(e.target.value)}
           />
           <PriceInput
-            value={startingPrice}
-            onChange={handleStartingPriceChange}
-            placeholder="Starting price"
+            value={price}
+            onChange={handlePriceChange}
+            placeholder="Price"
             icon={DollarSign}
-          />
-          <PriceInput
-            value={buyNowPrice}
-            onChange={handleBuyNowPriceChange}
-            placeholder="Buy now price (optional)"
-            icon={Rocket}
           />
           <SubmitButton />
         </div>
