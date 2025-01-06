@@ -1,66 +1,55 @@
 import { Domain } from "@/types/domain";
 
-export const handleDomainBid = (domains: Domain[], domainId: number, amount: number, username: string): Domain[] => {
-  return domains.map(domain => {
-    if (domain.id === domainId) {
-      return {
-        ...domain,
-        currentBid: amount,
-        currentBidder: username,
-        bidTimestamp: new Date(),
-        bidHistory: [
-          ...domain.bidHistory,
-          {
-            bidder: username,
-            amount: amount,
-            timestamp: new Date()
-          }
-        ]
-      };
+const DOMAINS_STORAGE_KEY = 'quickbid_domains';
+
+export const setupWebSocket = (onUpdate: (domains: Domain[]) => void) => {
+  // Initial load from localStorage
+  const initialDomains = getDomains();
+  if (initialDomains && initialDomains.length > 0) {
+    console.log('Loading initial domains from storage:', initialDomains);
+    onUpdate(initialDomains);
+  }
+
+  // Handle WebSocket messages
+  wsManager.connect((message: WebSocketMessage) => {
+    if (message.type === 'domains_update' && Array.isArray(message.domains)) {
+      console.log('Received domains update:', message.domains);
+      localStorage.setItem(DOMAINS_STORAGE_KEY, JSON.stringify(message.domains));
+      onUpdate(message.domains);
     }
-    return domain;
   });
-};
 
-export const handleDomainBuyNow = (domains: Domain[], domainId: number, username: string): Domain[] => {
-  return domains.map(domain => {
-    if (domain.id === domainId) {
-      return {
-        ...domain,
-        status: 'sold',
-        currentBidder: username,
-        purchaseDate: new Date(),
-        finalPrice: domain.buyNowPrice || domain.currentBid
-      };
-    }
-    return domain;
-  });
-};
-
-export const createNewDomain = (
-  id: number,
-  name: string,
-  startingPrice: number,
-  buyNowPrice: number | null,
-  listedBy: string
-): Domain => {
-  const now = new Date();
-  const endTime = new Date(now.getTime() + 60 * 60 * 1000); // 1 hour from now
-
-  return {
-    id,
-    name,
-    currentBid: startingPrice,
-    endTime,
-    bidHistory: [],
-    status: 'pending',
-    buyNowPrice: buyNowPrice || undefined,
-    createdAt: now,
-    listedBy
+  return () => {
+    wsManager.disconnect();
   };
 };
 
-const getDateFromComplexStructure = (dateValue: Date | string | { value: { iso: string } }): Date => {
+export const getDomains = (): Domain[] => {
+  try {
+    const savedDomains = localStorage.getItem(DOMAINS_STORAGE_KEY);
+    const domains = savedDomains ? JSON.parse(savedDomains) : [];
+    console.log('Retrieved domains:', domains);
+    return domains;
+  } catch (error) {
+    console.error('Error loading domains:', error);
+    return [];
+  }
+};
+
+export const updateDomains = (domains: Domain[]) => {
+  try {
+    console.log('Updating domains:', domains);
+    localStorage.setItem(DOMAINS_STORAGE_KEY, JSON.stringify(domains));
+    wsManager.sendMessage({ 
+      type: 'domains_update',
+      domains 
+    });
+  } catch (error) {
+    console.error('Error saving domains:', error);
+  }
+}
+
+export const getDateFromComplexStructure = (dateValue: Date | string | { value: { iso: string } }): Date => {
   if (dateValue instanceof Date) {
     return dateValue;
   }
@@ -71,55 +60,4 @@ const getDateFromComplexStructure = (dateValue: Date | string | { value: { iso: 
     return new Date(dateValue.value.iso);
   }
   return new Date();
-};
-
-export const categorizeDomains = (
-  domains: Domain[],
-  currentTime: Date,
-  currentUsername?: string
-) => {
-  const pendingDomains: Domain[] = [];
-  const activeDomains: Domain[] = [];
-  const endedDomains: Domain[] = [];
-  const soldDomains: Domain[] = [];
-  const userWonDomains: { 
-    id: number;
-    name: string;
-    finalPrice: number;
-    purchaseDate: Date;
-    listedBy: string;
-  }[] = [];
-
-  domains.forEach(domain => {
-    if (domain.status === 'pending') {
-      pendingDomains.push(domain);
-    } else if (domain.status === 'sold') {
-      soldDomains.push(domain);
-      if (currentUsername && domain.currentBidder === currentUsername) {
-        userWonDomains.push({
-          id: domain.id,
-          name: domain.name,
-          finalPrice: domain.finalPrice || domain.currentBid,
-          purchaseDate: domain.purchaseDate || new Date(),
-          listedBy: domain.listedBy
-        });
-      }
-    } else {
-      const endTime = getDateFromComplexStructure(domain.endTime);
-      
-      if (endTime > currentTime) {
-        activeDomains.push(domain);
-      } else {
-        endedDomains.push(domain);
-      }
-    }
-  });
-
-  return {
-    pendingDomains,
-    activeDomains,
-    endedDomains,
-    soldDomains,
-    userWonDomains
-  };
 };

@@ -2,6 +2,7 @@ import { Domain } from "@/types/domain";
 
 const STORAGE_KEY = 'quickbid_domains';
 const LAST_UPDATE_KEY = 'quickbid_last_update';
+const USERS_KEY = 'quickbid_users';
 
 export class StorageManager {
   private static instance: StorageManager;
@@ -11,6 +12,7 @@ export class StorageManager {
   private constructor() {
     this.broadcastChannel = new BroadcastChannel('auctionUpdates');
     this.setupBroadcastChannel();
+    this.setupStorageListener();
     this.loadInitialData();
   }
 
@@ -19,8 +21,24 @@ export class StorageManager {
       if (event.data.type === 'storage_update') {
         console.log('Received storage update broadcast:', event.data);
         this.saveDomainsWithoutBroadcast(event.data.domains);
+      } else if (event.data.type === 'users_update') {
+        console.log('Received users update broadcast:', event.data);
+        localStorage.setItem(USERS_KEY, JSON.stringify(event.data.users));
+        window.dispatchEvent(new Event('users_updated'));
       }
     };
+  }
+
+  private setupStorageListener() {
+    window.addEventListener('storage', (event) => {
+      if (event.key === STORAGE_KEY) {
+        const newDomains = event.newValue ? JSON.parse(event.newValue) : [];
+        this.domains = newDomains.map(this.parseDomainDates);
+        window.dispatchEvent(new Event('domains_updated'));
+      } else if (event.key === USERS_KEY) {
+        window.dispatchEvent(new Event('users_updated'));
+      }
+    });
   }
 
   private loadInitialData() {
@@ -56,11 +74,22 @@ export class StorageManager {
     });
   }
 
+  saveUsers(users: any[]) {
+    localStorage.setItem(USERS_KEY, JSON.stringify(users));
+    this.broadcastChannel.postMessage({
+      type: 'users_update',
+      users,
+      timestamp: Date.now()
+    });
+  }
+
   private saveDomainsWithoutBroadcast(domains: Domain[]) {
     try {
       const serializedDomains = domains.map(domain => ({
         ...domain,
-        endTime: domain.endTime instanceof Date ? domain.endTime.toISOString() : domain.endTime,
+        endTime: domain.endTime instanceof Date ? domain.endTime.toISOString() : 
+                typeof domain.endTime === 'string' ? domain.endTime :
+                domain.endTime?.value?.iso || new Date().toISOString(),
         createdAt: domain.createdAt instanceof Date ? domain.createdAt.toISOString() : domain.createdAt,
         bidTimestamp: domain.bidTimestamp instanceof Date ? domain.bidTimestamp.toISOString() : domain.bidTimestamp,
         purchaseDate: domain.purchaseDate instanceof Date ? domain.purchaseDate.toISOString() : domain.purchaseDate,
@@ -82,10 +111,17 @@ export class StorageManager {
     return this.domains;
   }
 
+  getUsers(): any[] {
+    const usersData = localStorage.getItem(USERS_KEY);
+    return usersData ? JSON.parse(usersData) : [];
+  }
+
   private parseDomainDates(domain: any): Domain {
     return {
       ...domain,
-      endTime: new Date(domain.endTime),
+      endTime: domain.endTime instanceof Date ? domain.endTime : 
+               typeof domain.endTime === 'string' ? new Date(domain.endTime) :
+               domain.endTime?.value?.iso ? new Date(domain.endTime.value.iso) : new Date(),
       createdAt: new Date(domain.createdAt),
       bidTimestamp: domain.bidTimestamp ? new Date(domain.bidTimestamp) : undefined,
       purchaseDate: domain.purchaseDate ? new Date(domain.purchaseDate) : undefined,

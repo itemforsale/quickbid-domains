@@ -1,4 +1,5 @@
 import { Domain } from "@/types/domain";
+import { getDateFromComplexStructure } from "@/utils/domainUtils";
 
 interface WebSocketMessage {
   type: 'domains_update' | 'initial_data' | 'error';
@@ -29,8 +30,8 @@ export class MessageHandler {
   private static processDomains(domains: Domain[]): Domain[] {
     return domains.map(domain => ({
       ...domain,
-      endTime: new Date(domain.endTime),
-      createdAt: new Date(domain.createdAt),
+      endTime: getDateFromComplexStructure(domain.endTime),
+      createdAt: domain.createdAt instanceof Date ? domain.createdAt : new Date(domain.createdAt),
       bidTimestamp: domain.bidTimestamp ? new Date(domain.bidTimestamp) : undefined,
       purchaseDate: domain.purchaseDate ? new Date(domain.purchaseDate) : undefined,
       bidHistory: (domain.bidHistory || []).map(bid => ({

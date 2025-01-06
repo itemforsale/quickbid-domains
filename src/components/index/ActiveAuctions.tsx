@@ -1,5 +1,6 @@
 import { DomainCard } from "@/components/DomainCard";
 import { Domain } from "@/types/domain";
+import { getDateFromComplexStructure } from "@/utils/domainUtils";
 
 interface ActiveAuctionsProps {
   domains: Domain[];
@@ -30,7 +31,7 @@ export const ActiveAuctions = ({ domains, onBid, onBuyNow }: ActiveAuctionsProps
                 key={domain.id}
                 domain={domain.name}
                 initialPrice={domain.currentBid}
-                endTime={domain.endTime}
+                endTime={getDateFromComplexStructure(domain.endTime)}
                 currentBid={domain.currentBid}
                 currentBidder={domain.currentBidder}
                 bidTimestamp={domain.bidTimestamp}
@@ -56,7 +57,7 @@ export const ActiveAuctions = ({ domains, onBid, onBuyNow }: ActiveAuctionsProps
                 key={domain.id}
                 domain={domain.name}
                 initialPrice={domain.currentBid}
-                endTime={domain.endTime}
+                endTime={getDateFromComplexStructure(domain.endTime)}
                 currentBid={domain.currentBid}
                 currentBidder={domain.currentBidder}
                 bidTimestamp={domain.bidTimestamp}
