@@ -1,8 +1,9 @@
+import { Json } from "@/integrations/supabase/types";
+
 export interface BidHistoryItem {
   bidder: string;
   amount: number;
-  proxyAmount?: number;
-  timestamp: Date;
+  timestamp: string;
 }
 
 export interface Domain {

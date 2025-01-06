@@ -13,11 +13,11 @@ interface User {
 interface UserContextType {
   users: User[];
   user: User | null;
-  login: (credentials: { username: string; password: string }) => void;
-  register: (data: { username: string; email: string; password: string; xUsername?: string }) => void;
-  logout: () => void;
-  deleteUser: (username: string) => void;
-  updateUser: (user: User) => void;
+  login: (credentials: { username: string; password: string }) => Promise<void>;
+  register: (data: { username: string; email: string; password: string; xUsername?: string }) => Promise<void>;
+  logout: () => Promise<void>;
+  deleteUser: (username: string) => Promise<void>;
+  updateUser: (user: User) => Promise<void>;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -38,13 +38,14 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       }
 
       if (data) {
-        setUsers(data.map(user => ({
+        const mappedUsers = data.map(user => ({
           id: user.id,
           username: user.username,
           email: user.email,
           xUsername: user.x_username,
           isAdmin: user.is_admin
-        })));
+        }));
+        setUsers(mappedUsers);
       }
     };
 
@@ -62,6 +63,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       toast.success("Logged in successfully!");
     } catch (error) {
       toast.error("Failed to login");
+      throw error;
     }
   };
 
@@ -82,6 +84,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       toast.success("Registered successfully!");
     } catch (error) {
       toast.error("Failed to register");
+      throw error;
     }
   };
 
@@ -93,6 +96,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       toast.success("Logged out successfully!");
     } catch (error) {
       toast.error("Failed to logout");
+      throw error;
     }
   };
 
@@ -108,6 +112,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       toast.success("User deleted successfully!");
     } catch (error) {
       toast.error("Failed to delete user");
+      throw error;
     }
   };
 
@@ -128,11 +133,22 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       toast.success("User updated successfully!");
     } catch (error) {
       toast.error("Failed to update user");
+      throw error;
     }
   };
 
+  const value = {
+    users,
+    user,
+    login,
+    register,
+    logout,
+    deleteUser,
+    updateUser
+  };
+
   return (
-    <UserContext.Provider value={{ users, user, login, register, logout, deleteUser, updateUser }}>
+    <UserContext.Provider value={value}>
       {children}
     </UserContext.Provider>
   );

@@ -5,12 +5,11 @@ import { UserCard } from "./UserCard";
 import { EditUserDialog } from "./EditUserDialog";
 
 interface User {
-  name: string;
-  email: string;
+  id: string;
   username: string;
+  email: string;
   xUsername?: string;
   isAdmin?: boolean;
-  password?: string;
 }
 
 export const UserManagementSection = () => {
@@ -18,9 +17,13 @@ export const UserManagementSection = () => {
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
-  const handleDeleteUser = (username: string) => {
-    deleteUser(username);
-    toast.success("User deleted successfully!");
+  const handleDeleteUser = async (username: string) => {
+    try {
+      await deleteUser(username);
+      toast.success("User deleted successfully!");
+    } catch (error) {
+      toast.error("Failed to delete user");
+    }
   };
 
   const handleEditUser = (user: User) => {
@@ -28,18 +31,16 @@ export const UserManagementSection = () => {
     setIsEditDialogOpen(true);
   };
 
-  const handleSaveEdit = (e: React.FormEvent) => {
+  const handleSaveEdit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (editingUser) {
-      const originalUser = users.find(u => u.username === editingUser.username);
-      if (originalUser) {
-        updateUser({
-          ...editingUser,
-          password: originalUser.password
-        });
+      try {
+        await updateUser(editingUser);
         setIsEditDialogOpen(false);
         setEditingUser(null);
         toast.success("User updated successfully!");
+      } catch (error) {
+        toast.error("Failed to update user");
       }
     }
   };

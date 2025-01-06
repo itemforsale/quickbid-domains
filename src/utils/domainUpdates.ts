@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
-import { Domain, SupabaseDomain } from "@/types/domain";
+import { Domain, SupabaseDomain, BidHistoryItem } from "@/types/domain";
+import { Json } from "@/integrations/supabase/types";
 
 export const mapSupabaseToDomain = (domain: SupabaseDomain): Domain => ({
   id: domain.id,
@@ -19,8 +20,7 @@ export const mapSupabaseToDomain = (domain: SupabaseDomain): Domain => ({
   isFixedPrice: domain.is_fixed_price
 });
 
-export const mapDomainToSupabase = (domain: Domain): SupabaseDomain => ({
-  id: domain.id,
+export const mapDomainToSupabase = (domain: Domain): Omit<SupabaseDomain, 'id'> => ({
   name: domain.name,
   current_bid: domain.currentBid,
   end_time: domain.endTime.toISOString(),
@@ -69,27 +69,28 @@ export const getDomains = async (): Promise<Domain[]> => {
       return [];
     }
 
-    return data.map(mapSupabaseToDomain);
+    return (data as SupabaseDomain[]).map(mapSupabaseToDomain);
   } catch (error) {
     console.error('Error loading domains:', error);
     return [];
   }
 };
 
-export const updateDomains = async (domains: Domain[]) => {
+export const updateDomains = async (domain: Domain) => {
   try {
-    const supabaseDomains = domains.map(mapDomainToSupabase);
+    const supabaseDomain = mapDomainToSupabase(domain);
     
-    for (const domain of supabaseDomains) {
-      const { error } = await supabase
-        .from('domains')
-        .upsert(domain);
+    const { error } = await supabase
+      .from('domains')
+      .upsert({
+        ...supabaseDomain,
+        id: domain.id
+      });
 
-      if (error) {
-        console.error('Error updating domain:', error);
-      }
+    if (error) {
+      console.error('Error updating domain:', error);
     }
   } catch (error) {
-    console.error('Error saving domains:', error);
+    console.error('Error saving domain:', error);
   }
 };
