@@ -3,33 +3,16 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 interface User {
+  id: string;
   username: string;
-  name: string;
-  email: string;
+  email: string | null;
   xUsername?: string;
   isAdmin?: boolean;
-  password?: string;
-}
-
-interface LoginData {
-  username: string;
-  password: string;
-}
-
-interface RegisterData {
-  name: string;
-  email: string;
-  username: string;
-  password: string;
-  xUsername?: string;
+  createdAt?: string;
 }
 
 interface UserContextType {
-  user: User | null;
   users: User[];
-  login: (data: LoginData) => void;
-  logout: () => void;
-  register: (data: RegisterData) => void;
   deleteUser: (username: string) => void;
   updateUser: (user: User) => void;
 }
@@ -37,62 +20,34 @@ interface UserContextType {
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
 export const UserProvider = ({ children }: { children: React.ReactNode }) => {
-  const [user, setUser] = useState<User | null>(null);
   const [users, setUsers] = useState<User[]>([]);
 
   useEffect(() => {
     const fetchUsers = async () => {
-      const { data: profiles, error } = await supabase
+      const { data, error } = await supabase
         .from('profiles')
         .select('*');
 
       if (error) {
-        console.error('Error fetching users:', error);
+        toast.error("Failed to fetch users");
         return;
       }
 
-      setUsers(profiles || []);
+      if (data) {
+        const mappedUsers: User[] = data.map(user => ({
+          id: user.id,
+          username: user.username,
+          email: user.email,
+          xUsername: user.x_username,
+          isAdmin: user.is_admin,
+          createdAt: user.created_at
+        }));
+        setUsers(mappedUsers);
+      }
     };
 
     fetchUsers();
   }, []);
-
-  const login = (data: LoginData) => {
-    const foundUser = users.find(
-      (u) => u.username.toLowerCase() === data.username.toLowerCase() && u.password === data.password
-    );
-
-    if (foundUser) {
-      const { password: _, ...userWithoutPassword } = foundUser;
-      setUser(userWithoutPassword);
-      toast.success("Successfully logged in!");
-    } else {
-      toast.error("Invalid credentials");
-    }
-  };
-
-  const register = async (data: RegisterData) => {
-    const newUser: User = {
-      username: data.username,
-      name: data.name,
-      email: data.email,
-      password: data.password,
-      xUsername: data.xUsername,
-      isAdmin: false
-    };
-
-    const { error } = await supabase
-      .from('profiles')
-      .insert([newUser]);
-
-    if (error) {
-      toast.error("Registration failed");
-      return;
-    }
-
-    setUsers([...users, newUser]);
-    toast.success("Registration successful!");
-  };
 
   const deleteUser = async (username: string) => {
     const { error } = await supabase
@@ -105,42 +60,34 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       return;
     }
 
-    const updatedUsers = users.filter(u => u.username !== username);
-    setUsers(updatedUsers);
+    setUsers(users.filter(user => user.username !== username));
+    toast.success("User deleted successfully");
   };
 
   const updateUser = async (updatedUser: User) => {
     const { error } = await supabase
       .from('profiles')
-      .update(updatedUser)
-      .eq('username', updatedUser.username);
+      .update({
+        username: updatedUser.username,
+        email: updatedUser.email,
+        x_username: updatedUser.xUsername,
+        is_admin: updatedUser.isAdmin
+      })
+      .eq('id', updatedUser.id);
 
     if (error) {
       toast.error("Failed to update user");
       return;
     }
 
-    const updatedUsers = users.map(u => 
-      u.username === updatedUser.username ? updatedUser : u
-    );
-    setUsers(updatedUsers);
-  };
-
-  const logout = () => {
-    setUser(null);
-    toast.success("Successfully logged out!");
+    setUsers(users.map(user => 
+      user.id === updatedUser.id ? updatedUser : user
+    ));
+    toast.success("User updated successfully");
   };
 
   return (
-    <UserContext.Provider value={{ 
-      user, 
-      users, 
-      login, 
-      logout,
-      register,
-      deleteUser,
-      updateUser
-    }}>
+    <UserContext.Provider value={{ users, deleteUser, updateUser }}>
       {children}
     </UserContext.Provider>
   );

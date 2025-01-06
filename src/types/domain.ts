@@ -1,13 +1,11 @@
+import { Json } from "@/integrations/supabase/types";
+
 export interface Domain {
   id: number;
   name: string;
   currentBid: number;
   endTime: Date;
-  bidHistory: {
-    bidder: string;
-    amount: number;
-    timestamp: Date;
-  }[];
+  bidHistory: BidHistoryItem[];
   status: 'pending' | 'active' | 'sold' | 'featured';
   currentBidder?: string;
   bidTimestamp?: Date;
@@ -18,4 +16,10 @@ export interface Domain {
   createdAt: Date;
   listedBy: string;
   isFixedPrice?: boolean;
+}
+
+export interface BidHistoryItem {
+  bidder: string;
+  amount: number;
+  timestamp: Date;
 }

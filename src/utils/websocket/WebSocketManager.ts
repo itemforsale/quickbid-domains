@@ -4,6 +4,7 @@ import { MessageHandler } from './MessageHandler';
 import { Domain } from '@/types/domain';
 import { supabase } from '@/integrations/supabase/client';
 import { WebSocketMessage } from '../types/websocket';
+import { mapSupabaseToDomain } from '@/types/supabase';
 
 class WebSocketManager {
   private connection: WebSocketConnection;
@@ -33,10 +34,11 @@ class WebSocketManager {
           .from('domains')
           .select('*');
 
-        if (domains && domains.length > 0) {
+        if (domains) {
+          const mappedDomains = domains.map(mapSupabaseToDomain);
           this.currentCallback({
             type: 'domains_update',
-            domains
+            domains: mappedDomains
           });
         }
       }
@@ -50,10 +52,11 @@ class WebSocketManager {
       .from('domains')
       .select('*');
 
-    if (domains && domains.length > 0) {
+    if (domains) {
+      const mappedDomains = domains.map(mapSupabaseToDomain);
       callback({
         type: 'domains_update',
-        domains
+        domains: mappedDomains
       });
     }
 

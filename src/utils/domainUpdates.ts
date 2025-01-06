@@ -1,6 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { Domain } from "@/types/domain";
-import { SupabaseDomain, mapSupabaseToDomain, mapDomainToSupabase } from "@/types/supabase";
+import { mapSupabaseToDomain, mapDomainToSupabase } from "@/types/supabase";
 
 export const setupWebSocket = (onUpdate: (domains: Domain[]) => void) => {
   const channel = supabase
@@ -40,7 +40,7 @@ export const getDomains = async (): Promise<Domain[]> => {
       return [];
     }
 
-    return (data as SupabaseDomain[]).map(mapSupabaseToDomain);
+    return data.map(mapSupabaseToDomain);
   } catch (error) {
     console.error('Error loading domains:', error);
     return [];
@@ -49,23 +49,22 @@ export const getDomains = async (): Promise<Domain[]> => {
 
 export const updateDomains = async (domains: Domain[]) => {
   try {
-    const supabaseDomains = domains.map(domain => {
-      const mappedDomain = mapDomainToSupabase(domain);
-      return {
-        current_bid: mappedDomain.current_bid,
-        end_time: mappedDomain.end_time,
-        listed_by: mappedDomain.listed_by,
-        name: mappedDomain.name,
-        ...mappedDomain
-      };
-    });
+    const supabaseDomains = domains.map(mapDomainToSupabase);
     
-    const { error } = await supabase
-      .from('domains')
-      .upsert(supabaseDomains);
+    for (const domain of supabaseDomains) {
+      const { error } = await supabase
+        .from('domains')
+        .upsert({
+          ...domain,
+          current_bid: domain.current_bid,
+          end_time: domain.end_time,
+          listed_by: domain.listed_by,
+          name: domain.name
+        });
 
-    if (error) {
-      console.error('Error updating domains:', error);
+      if (error) {
+        console.error('Error updating domain:', error);
+      }
     }
   } catch (error) {
     console.error('Error saving domains:', error);
