@@ -24,6 +24,10 @@ export const UserManagementSection = () => {
     setIsEditDialogOpen(true);
   };
 
+  const handleUserChange = (user: User | null) => {
+    setEditingUser(user);
+  };
+
   const handleSaveEdit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (editingUser) {
@@ -56,7 +60,7 @@ export const UserManagementSection = () => {
         isOpen={isEditDialogOpen}
         onOpenChange={setIsEditDialogOpen}
         editingUser={editingUser}
-        onUserChange={setEditingUser}
+        onUserChange={handleUserChange}
         onSave={handleSaveEdit}
       />
     </div>

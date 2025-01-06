@@ -94,10 +94,6 @@ const Index = () => {
     userWonDomains
   } = categorizeDomains(domains, now, user?.username);
 
-  const filteredActiveDomains = activeDomains.filter(domain =>
-    domain.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
   const userWonDomainsFormatted = userWonDomains.map(domain => ({
     id: domain.id,
     name: domain.name,

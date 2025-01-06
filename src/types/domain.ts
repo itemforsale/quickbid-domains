@@ -1,5 +1,10 @@
 import { ISODateString } from "./dates";
-import { BidHistoryItem } from "./bid";
+
+export interface BidHistoryItem {
+  bidder: string;
+  amount: number;
+  timestamp: ISODateString;
+}
 
 export interface Domain {
   id: number;
