@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { Domain } from "@/types/domain";
+import { parseDate } from "@/utils/dateUtils";
 
 interface UseNotificationsProps {
   username: string;
@@ -35,15 +36,15 @@ export const useNotifications = ({ username, domains }: UseNotificationsProps) =
         // Check for auction wins
         if (domain.status === 'sold' && 
             domain.currentBidder === username && 
-            new Date() > domain.endTime && 
+            parseDate(domain.endTime) < new Date() && 
             !shownNotifications.has(wonId) &&
             domain.purchaseDate && 
-            domain.purchaseDate > lastCheckTime) {
+            parseDate(domain.purchaseDate) > lastCheckTime) {
           const message = `🎉 Congratulations! You've won the auction for ${domain.name}!`;
           setNotifications(prev => [...prev, { id: wonId, message }]);
           
           toast.success(message, {
-            duration: Infinity, // Keep until manually dismissed
+            duration: Infinity,
             action: {
               label: "View Details",
               onClick: () => {
@@ -67,12 +68,12 @@ export const useNotifications = ({ username, domains }: UseNotificationsProps) =
             domain.currentBidder === username && 
             !shownNotifications.has(buyNowId) &&
             domain.purchaseDate && 
-            domain.purchaseDate > lastCheckTime) {
+            parseDate(domain.purchaseDate) > lastCheckTime) {
           const message = `🎉 Success! You've purchased ${domain.name} using Buy Now!`;
           setNotifications(prev => [...prev, { id: buyNowId, message }]);
           
           toast.success(message, {
-            duration: Infinity, // Keep until manually dismissed
+            duration: Infinity,
             action: {
               label: "View Details",
               onClick: () => {

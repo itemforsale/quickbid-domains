@@ -1,14 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-
-interface User {
-  id: string;
-  username: string;
-  email: string;
-  xUsername?: string;
-  isAdmin?: boolean;
-}
+import { User } from "@/types/domain";
 
 interface UserContextType {
   users: User[];
@@ -38,14 +31,14 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       }
 
       if (data) {
-        const mappedUsers = data.map(user => ({
+        setUsers(data.map(user => ({
           id: user.id,
           username: user.username,
           email: user.email,
+          name: user.username, // Use username as name for now
           xUsername: user.x_username,
           isAdmin: user.is_admin
-        }));
-        setUsers(mappedUsers);
+        })));
       }
     };
 
@@ -59,11 +52,15 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         password: credentials.password,
       });
 
-      if (error) throw error;
+      if (error) {
+        toast.error(error.message);
+        return;
+      }
+      
       toast.success("Logged in successfully!");
     } catch (error) {
+      console.error('Login error:', error);
       toast.error("Failed to login");
-      throw error;
     }
   };
 
