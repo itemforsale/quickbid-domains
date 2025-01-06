@@ -5,19 +5,26 @@ interface RecentlyEndedDomainsProps {
   domains: Domain[];
 }
 
+// Define the structure of the complex date object
+interface ComplexDateObject {
+  value: {
+    iso: string;
+  };
+}
+
 export const RecentlyEndedDomains = ({ domains }: RecentlyEndedDomainsProps) => {
   if (domains.length === 0) return null;
 
-  const formatDate = (date: Date | string | undefined) => {
+  const formatDate = (date: Date | string | ComplexDateObject | undefined) => {
     if (!date) return "N/A";
     try {
       // Handle the complex object structure from localStorage
       if (typeof date === 'object' && 'value' in date && typeof date.value === 'object' && 'iso' in date.value) {
-        return new Date(date.value.iso).toLocaleDateString();
+        return new Date((date as ComplexDateObject).value.iso).toLocaleDateString();
       }
       // Handle regular Date objects or ISO strings
       const dateObj = typeof date === 'string' ? new Date(date) : date;
-      return dateObj.toLocaleDateString();
+      return dateObj instanceof Date ? dateObj.toLocaleDateString() : "Invalid Date";
     } catch (error) {
       console.error('Error formatting date:', error);
       return "Invalid Date";
