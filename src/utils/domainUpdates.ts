@@ -1,7 +1,7 @@
 import { Domain } from "@/types/domain";
+import { WebSocketMessage } from "./types/websocket";
 import { wsManager } from "./websocket/WebSocketManager";
 import { StorageManager } from "./storage/StorageManager";
-import { WebSocketMessage } from "./types/websocket";
 
 const DOMAINS_STORAGE_KEY = 'quickbid_domains';
 
@@ -17,7 +17,7 @@ export const setupWebSocket = (onUpdate: (domains: Domain[]) => void) => {
 
   // Handle WebSocket messages
   wsManager.connect((message: WebSocketMessage) => {
-    if (message.type === 'update_domains' && Array.isArray(message.domains)) {
+    if (message.type === 'domains_update' && Array.isArray(message.domains)) {
       console.log('Received domains update:', message.domains);
       localStorage.setItem(DOMAINS_STORAGE_KEY, JSON.stringify(message.domains));
       onUpdate(message.domains);
@@ -46,7 +46,7 @@ export const updateDomains = (domains: Domain[]) => {
     console.log('Updating domains:', domains);
     localStorage.setItem(DOMAINS_STORAGE_KEY, JSON.stringify(domains));
     wsManager.sendMessage({ 
-      type: 'update_domains',
+      type: 'domains_update',
       domains 
     });
   } catch (error) {

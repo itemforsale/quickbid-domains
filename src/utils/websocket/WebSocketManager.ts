@@ -3,17 +3,13 @@ import { VisibilityManager } from './VisibilityManager';
 import { MessageHandler } from './MessageHandler';
 import { Domain } from '@/types/domain';
 import { StorageManager } from '../storage/StorageManager';
-
-interface WebSocketMessage {
-  type: 'domains_update' | 'initial_data';
-  domains: Domain[];
-}
+import { WebSocketMessage } from '../types/websocket';
 
 class WebSocketManager {
   private connection: WebSocketConnection;
   private visibilityManager: VisibilityManager;
   private static instance: WebSocketManager;
-  private currentCallback: ((domains: Domain[]) => void) | null = null;
+  private currentCallback: ((message: WebSocketMessage) => void) | null = null;
   private storageManager: StorageManager;
 
   private constructor() {
@@ -35,30 +31,35 @@ class WebSocketManager {
   private setupVisibilityHandler(): void {
     this.visibilityManager.onVisible(() => {
       if (this.currentCallback) {
-        // Load from storage when tab becomes visible
         const storedDomains = this.storageManager.getDomains();
         if (storedDomains.length > 0) {
-          this.currentCallback(storedDomains);
+          this.currentCallback({
+            type: 'domains_update',
+            domains: storedDomains
+          });
         }
-        this.connect(this.currentCallback);
       }
     });
   }
 
-  connect(callback: (domains: Domain[]) => void): void {
+  connect(callback: (message: WebSocketMessage) => void): void {
     this.currentCallback = callback;
     
-    // First load from storage
     const storedDomains = this.storageManager.getDomains();
     if (storedDomains.length > 0) {
-      callback(storedDomains);
+      callback({
+        type: 'domains_update',
+        domains: storedDomains
+      });
     }
 
-    // Then connect to WebSocket for live updates
     this.connection.connect((message: WebSocketMessage) => {
       MessageHandler.handleIncoming(message, (domains) => {
         this.storageManager.saveDomains(domains);
-        callback(domains);
+        callback({
+          type: 'domains_update',
+          domains
+        });
       });
     });
   }
@@ -68,7 +69,7 @@ class WebSocketManager {
     this.visibilityManager.cleanup();
   }
 
-  sendMessage(message: any): void {
+  sendMessage(message: WebSocketMessage): void {
     if (MessageHandler.canBroadcast()) {
       this.connection.send(message);
     }
