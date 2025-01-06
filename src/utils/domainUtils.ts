@@ -1,5 +1,6 @@
 import { Domain } from "@/types/domain";
 import { supabase } from "@/integrations/supabase/client";
+import { SupabaseDomain, mapSupabaseToDomain, mapDomainToSupabase } from "@/types/supabase";
 
 export const handleDomainBid = async (domains: Domain[], domainId: number, amount: number, username: string): Promise<Domain[]> => {
   const { data: domain, error: fetchError } = await supabase
@@ -13,8 +14,9 @@ export const handleDomainBid = async (domains: Domain[], domainId: number, amoun
     return domains;
   }
 
+  const supabaseDomain = domain as SupabaseDomain;
   const updatedBidHistory = [
-    ...(domain.bid_history || []),
+    ...(Array.isArray(supabaseDomain.bid_history) ? supabaseDomain.bid_history : []),
     { bidder: username, amount, timestamp: new Date() }
   ];
 
@@ -35,7 +37,7 @@ export const handleDomainBid = async (domains: Domain[], domainId: number, amoun
     return domains;
   }
 
-  return domains.map(d => d.id === domainId ? updatedDomain : d);
+  return domains.map(d => d.id === domainId ? mapSupabaseToDomain(updatedDomain as SupabaseDomain) : d);
 };
 
 export const handleDomainBuyNow = async (domains: Domain[], domainId: number, username: string): Promise<Domain[]> => {
@@ -67,7 +69,7 @@ export const handleDomainBuyNow = async (domains: Domain[], domainId: number, us
     return domains;
   }
 
-  return domains.map(d => d.id === domainId ? updatedDomain : d);
+  return domains.map(d => d.id === domainId ? mapSupabaseToDomain(updatedDomain as SupabaseDomain) : d);
 };
 
 export const createNewDomain = async (
@@ -96,7 +98,7 @@ export const createNewDomain = async (
     return null;
   }
 
-  return newDomain;
+  return mapSupabaseToDomain(newDomain as SupabaseDomain);
 };
 
 export const categorizeDomains = (domains: Domain[], now: Date, username?: string) => {

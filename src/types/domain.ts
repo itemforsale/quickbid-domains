@@ -1,14 +1,8 @@
-interface ComplexDate {
-  value: {
-    iso: string;
-  };
-}
-
 export interface Domain {
   id: number;
   name: string;
   currentBid: number;
-  endTime: Date | string | ComplexDate;
+  endTime: Date;
   bidHistory: {
     bidder: string;
     amount: number;

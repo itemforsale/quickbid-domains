@@ -1,8 +1,8 @@
-import { Domain } from "@/types/domain";
 import { supabase } from "@/integrations/supabase/client";
+import { Domain } from "@/types/domain";
+import { SupabaseDomain, mapSupabaseToDomain } from "@/types/supabase";
 
 export const setupWebSocket = (onUpdate: (domains: Domain[]) => void) => {
-  // Subscribe to realtime updates
   const channel = supabase
     .channel('public:domains')
     .on('postgres_changes', 
@@ -20,7 +20,6 @@ export const setupWebSocket = (onUpdate: (domains: Domain[]) => void) => {
     )
     .subscribe();
 
-  // Initial load
   getDomains().then(domains => {
     if (domains) onUpdate(domains);
   });
@@ -43,7 +42,7 @@ export const getDomains = async (): Promise<Domain[]> => {
     }
 
     console.log('Retrieved domains:', data);
-    return data || [];
+    return (data as SupabaseDomain[]).map(mapSupabaseToDomain);
   } catch (error) {
     console.error('Error loading domains:', error);
     return [];
@@ -55,7 +54,7 @@ export const updateDomains = async (domains: Domain[]) => {
     console.log('Updating domains:', domains);
     const { error } = await supabase
       .from('domains')
-      .upsert(domains);
+      .upsert(domains.map(mapDomainToSupabase));
 
     if (error) {
       console.error('Error updating domains:', error);
