@@ -12,10 +12,10 @@ import { AboutBioBox } from "@/components/AboutBioBox";
 import { handleDomainBid, handleDomainBuyNow, createNewDomain, categorizeDomains } from "@/utils/domainUtils";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getDomains } from "@/utils/domainUpdates";
-import { broadcastManager } from "@/utils/broadcastManager";
 import { useAuctionUpdates } from "@/hooks/useAuctionUpdates";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { ErrorMessage } from "@/components/ErrorMessage";
+import { toast } from "sonner";
 
 const Index = () => {
   const { user, logout } = useUser();
@@ -31,34 +31,54 @@ const Index = () => {
     staleTime: 5000,
   });
 
-  const handleBid = (domainId: number, amount: number) => {
-    if (!user) return;
-    const updatedDomains = handleDomainBid(domains, domainId, amount, user.username);
-    queryClient.setQueryData(['domains'], updatedDomains);
-    broadcastManager.broadcast('domains_updated', updatedDomains);
-  };
-
-  const handleBuyNow = (domainId: number) => {
-    if (!user) return;
-    const updatedDomains = handleDomainBuyNow(domains, domainId, user.username);
-    queryClient.setQueryData(['domains'], updatedDomains);
-    broadcastManager.broadcast('domains_updated', updatedDomains);
-  };
-
-  const handleDomainSubmission = (name: string, startingPrice: number, buyNowPrice: number | null) => {
-    if (!user) return;
+  const handleBid = async (domainId: number, amount: number) => {
+    if (!user) {
+      toast.error("Please login to place a bid");
+      return;
+    }
     
-    const newDomain = createNewDomain(
-      domains.length + 1,
-      name,
-      startingPrice,
-      buyNowPrice,
-      user.username
-    );
+    try {
+      const updatedDomains = await handleDomainBid(domains, domainId, amount, user.username);
+      queryClient.setQueryData(['domains'], updatedDomains);
+      toast.success("Bid placed successfully!");
+    } catch (error) {
+      console.error('Error placing bid:', error);
+      toast.error("Failed to place bid. Please try again.");
+    }
+  };
 
-    const updatedDomains = [...domains, newDomain];
-    queryClient.setQueryData(['domains'], updatedDomains);
-    broadcastManager.broadcast('domains_updated', updatedDomains);
+  const handleBuyNow = async (domainId: number) => {
+    if (!user) {
+      toast.error("Please login to purchase the domain");
+      return;
+    }
+    
+    try {
+      const updatedDomains = await handleDomainBuyNow(domains, domainId, user.username);
+      queryClient.setQueryData(['domains'], updatedDomains);
+      toast.success("Domain purchased successfully!");
+    } catch (error) {
+      console.error('Error purchasing domain:', error);
+      toast.error("Failed to purchase domain. Please try again.");
+    }
+  };
+
+  const handleDomainSubmission = async (name: string, startingPrice: number, buyNowPrice: number | null) => {
+    if (!user) {
+      toast.error("Please login to list a domain");
+      return;
+    }
+    
+    try {
+      const newDomain = await createNewDomain(name, startingPrice, buyNowPrice, user.username);
+      if (newDomain) {
+        queryClient.setQueryData(['domains'], [...domains, newDomain]);
+        toast.success("Domain submitted for auction!");
+      }
+    } catch (error) {
+      console.error('Error submitting domain:', error);
+      toast.error("Failed to submit domain. Please try again.");
+    }
   };
 
   if (isLoading) return <LoadingSpinner />;
@@ -77,7 +97,6 @@ const Index = () => {
     domain.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // Convert Domain[] to the expected type for UserSection
   const userWonDomainsFormatted = userWonDomains.map(domain => ({
     id: domain.id,
     name: domain.name,

@@ -1,54 +1,65 @@
 import { Domain } from "@/types/domain";
-import { WebSocketMessage } from "./types/websocket";
-import { wsManager } from "./websocket/WebSocketManager";
-import { StorageManager } from "./storage/StorageManager";
-
-const DOMAINS_STORAGE_KEY = 'quickbid_domains';
+import { supabase } from "@/integrations/supabase/client";
 
 export const setupWebSocket = (onUpdate: (domains: Domain[]) => void) => {
-  const storageManager = StorageManager.getInstance();
-  
-  // Initial load from localStorage
-  const initialDomains = getDomains();
-  if (initialDomains && initialDomains.length > 0) {
-    console.log('Loading initial domains from storage:', initialDomains);
-    onUpdate(initialDomains);
-  }
+  // Subscribe to realtime updates
+  const channel = supabase
+    .channel('public:domains')
+    .on('postgres_changes', 
+      { 
+        event: '*', 
+        schema: 'public', 
+        table: 'domains' 
+      }, 
+      (payload) => {
+        console.log('Received realtime update:', payload);
+        getDomains().then(domains => {
+          if (domains) onUpdate(domains);
+        });
+      }
+    )
+    .subscribe();
 
-  // Handle WebSocket messages
-  wsManager.connect((message: WebSocketMessage) => {
-    if (message.type === 'domains_update' && Array.isArray(message.domains)) {
-      console.log('Received domains update:', message.domains);
-      localStorage.setItem(DOMAINS_STORAGE_KEY, JSON.stringify(message.domains));
-      onUpdate(message.domains);
-    }
+  // Initial load
+  getDomains().then(domains => {
+    if (domains) onUpdate(domains);
   });
 
   return () => {
-    wsManager.disconnect();
+    supabase.removeChannel(channel);
   };
 };
 
-export const getDomains = (): Domain[] => {
+export const getDomains = async (): Promise<Domain[]> => {
   try {
-    const savedDomains = localStorage.getItem(DOMAINS_STORAGE_KEY);
-    const domains = savedDomains ? JSON.parse(savedDomains) : [];
-    console.log('Retrieved domains:', domains);
-    return domains;
+    const { data, error } = await supabase
+      .from('domains')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching domains:', error);
+      return [];
+    }
+
+    console.log('Retrieved domains:', data);
+    return data || [];
   } catch (error) {
     console.error('Error loading domains:', error);
     return [];
   }
 };
 
-export const updateDomains = (domains: Domain[]) => {
+export const updateDomains = async (domains: Domain[]) => {
   try {
     console.log('Updating domains:', domains);
-    localStorage.setItem(DOMAINS_STORAGE_KEY, JSON.stringify(domains));
-    wsManager.sendMessage({ 
-      type: 'domains_update',
-      domains 
-    });
+    const { error } = await supabase
+      .from('domains')
+      .upsert(domains);
+
+    if (error) {
+      console.error('Error updating domains:', error);
+    }
   } catch (error) {
     console.error('Error saving domains:', error);
   }

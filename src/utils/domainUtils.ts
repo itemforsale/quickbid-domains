@@ -1,59 +1,102 @@
 import { Domain } from "@/types/domain";
-import { broadcastManager } from "./broadcastManager";
+import { supabase } from "@/integrations/supabase/client";
 
-const DOMAINS_STORAGE_KEY = 'quickbid_domains';
+export const handleDomainBid = async (domains: Domain[], domainId: number, amount: number, username: string): Promise<Domain[]> => {
+  const { data: domain, error: fetchError } = await supabase
+    .from('domains')
+    .select('*')
+    .eq('id', domainId)
+    .single();
 
-export const handleDomainBid = (domains: Domain[], domainId: number, amount: number, username: string): Domain[] => {
-  return domains.map(domain => {
-    if (domain.id === domainId) {
-      return {
-        ...domain,
-        currentBid: amount,
-        currentBidder: username,
-        bidHistory: [
-          ...domain.bidHistory,
-          { bidder: username, amount, timestamp: new Date() }
-        ]
-      };
-    }
-    return domain;
-  });
+  if (fetchError) {
+    console.error('Error fetching domain:', fetchError);
+    return domains;
+  }
+
+  const updatedBidHistory = [
+    ...(domain.bid_history || []),
+    { bidder: username, amount, timestamp: new Date() }
+  ];
+
+  const { data: updatedDomain, error: updateError } = await supabase
+    .from('domains')
+    .update({
+      current_bid: amount,
+      current_bidder: username,
+      bid_history: updatedBidHistory,
+      bid_timestamp: new Date().toISOString()
+    })
+    .eq('id', domainId)
+    .select()
+    .single();
+
+  if (updateError) {
+    console.error('Error updating domain:', updateError);
+    return domains;
+  }
+
+  return domains.map(d => d.id === domainId ? updatedDomain : d);
 };
 
-export const handleDomainBuyNow = (domains: Domain[], domainId: number, username: string): Domain[] => {
-  return domains.map(domain => {
-    if (domain.id === domainId && domain.buyNowPrice) {
-      return {
-        ...domain,
-        status: 'sold',
-        currentBidder: username,
-        finalPrice: domain.buyNowPrice,
-        purchaseDate: new Date()
-      };
-    }
-    return domain;
-  });
+export const handleDomainBuyNow = async (domains: Domain[], domainId: number, username: string): Promise<Domain[]> => {
+  const { data: domain, error: fetchError } = await supabase
+    .from('domains')
+    .select('*')
+    .eq('id', domainId)
+    .single();
+
+  if (fetchError || !domain.buy_now_price) {
+    console.error('Error fetching domain:', fetchError);
+    return domains;
+  }
+
+  const { data: updatedDomain, error: updateError } = await supabase
+    .from('domains')
+    .update({
+      status: 'sold',
+      current_bidder: username,
+      final_price: domain.buy_now_price,
+      purchase_date: new Date().toISOString()
+    })
+    .eq('id', domainId)
+    .select()
+    .single();
+
+  if (updateError) {
+    console.error('Error updating domain:', updateError);
+    return domains;
+  }
+
+  return domains.map(d => d.id === domainId ? updatedDomain : d);
 };
 
-export const createNewDomain = (
-  id: number,
+export const createNewDomain = async (
   name: string,
   startingPrice: number,
   buyNowPrice: number | null,
   listedBy: string
-): Domain => {
-  return {
-    id,
-    name,
-    currentBid: startingPrice,
-    endTime: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours from now
-    bidHistory: [],
-    status: 'pending',
-    buyNowPrice: buyNowPrice || undefined,
-    createdAt: new Date(),
-    listedBy,
-    featured: false
-  };
+): Promise<Domain | null> => {
+  const { data: newDomain, error } = await supabase
+    .from('domains')
+    .insert({
+      name,
+      current_bid: startingPrice,
+      end_time: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+      bid_history: [],
+      status: 'pending',
+      buy_now_price: buyNowPrice,
+      listed_by: listedBy,
+      featured: false
+    })
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error creating domain:', error);
+    return null;
+  }
+
+  return newDomain;
 };
 
 export const categorizeDomains = (domains: Domain[], now: Date, username?: string) => {
@@ -80,26 +123,4 @@ export const getDateFromComplexStructure = (dateValue: Date | string | { value: 
     return new Date(dateValue.value.iso);
   }
   return new Date();
-};
-
-export const getDomains = (): Domain[] => {
-  try {
-    const savedDomains = localStorage.getItem(DOMAINS_STORAGE_KEY);
-    const domains = savedDomains ? JSON.parse(savedDomains) : [];
-    console.log('Retrieved domains:', domains);
-    return domains;
-  } catch (error) {
-    console.error('Error loading domains:', error);
-    return [];
-  }
-};
-
-export const updateDomains = (domains: Domain[]) => {
-  try {
-    console.log('Updating domains:', domains);
-    localStorage.setItem(DOMAINS_STORAGE_KEY, JSON.stringify(domains));
-    broadcastManager.broadcast('domains_update', { domains });
-  } catch (error) {
-    console.error('Error saving domains:', error);
-  }
 };
