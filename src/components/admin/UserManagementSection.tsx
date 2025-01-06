@@ -1,23 +1,18 @@
-import { toast } from "sonner";
-import { useUser } from "@/contexts/UserContext";
 import { useState } from "react";
-import { UserCard } from "./UserCard";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { EditUserDialog } from "./EditUserDialog";
+import { UserCard } from "./UserCard";
 import { User } from "@/types/domain";
 
-export const UserManagementSection = () => {
-  const { users, deleteUser, updateUser } = useUser();
-  const [editingUser, setEditingUser] = useState<User | null>(null);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+interface UserManagementSectionProps {
+  users: User[];
+  onUpdateUser: (user: User) => void;
+}
 
-  const handleDeleteUser = async (username: string) => {
-    try {
-      await deleteUser(username);
-      toast.success("User deleted successfully!");
-    } catch (error) {
-      toast.error("Failed to delete user");
-    }
-  };
+export const UserManagementSection = ({ users, onUpdateUser }: UserManagementSectionProps) => {
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [editingUser, setEditingUser] = useState<User | null>(null);
 
   const handleEditUser = (user: User) => {
     setEditingUser(user);
@@ -32,26 +27,24 @@ export const UserManagementSection = () => {
     e.preventDefault();
     if (editingUser) {
       try {
-        await updateUser(editingUser);
+        onUpdateUser(editingUser);
         setIsEditDialogOpen(false);
         setEditingUser(null);
-        toast.success("User updated successfully!");
       } catch (error) {
-        toast.error("Failed to update user");
+        console.error('Error updating user:', error);
       }
     }
   };
 
   return (
     <div className="space-y-4">
-      <h2 className="text-2xl font-semibold mb-4">User Management</h2>
+      <h2 className="text-xl font-semibold">User Management</h2>
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {users?.map((user) => (
+        {users.map((user) => (
           <UserCard
-            key={user.username}
+            key={user.id}
             user={user}
-            onEdit={handleEditUser}
-            onDelete={handleDeleteUser}
+            onEdit={() => handleEditUser(user)}
           />
         ))}
       </div>

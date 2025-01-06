@@ -16,7 +16,6 @@ import { useAuctionUpdates } from "@/hooks/useAuctionUpdates";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { ErrorMessage } from "@/components/ErrorMessage";
 import { toast } from "sonner";
-import { toISOString } from "@/types/dates";
 
 const Index = () => {
   const { user, logout } = useUser();
@@ -94,11 +93,15 @@ const Index = () => {
     userWonDomains
   } = categorizeDomains(domains, now, user?.username);
 
+  const filteredActiveDomains = activeDomains.filter(domain =>
+    domain.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   const userWonDomainsFormatted = userWonDomains.map(domain => ({
     id: domain.id,
     name: domain.name,
     finalPrice: domain.finalPrice || domain.currentBid,
-    purchaseDate: domain.purchaseDate || toISOString(new Date()),
+    purchaseDate: domain.purchaseDate || new Date().toISOString(),
     listedBy: domain.listedBy
   }));
 

@@ -1,6 +1,6 @@
 import { Json } from "@/integrations/supabase/types";
 import { Domain } from "./domain";
-import { BidHistoryItem } from "./bid";
+import { BidHistoryItem } from "./domain";
 import { toISOString } from "./dates";
 
 export interface SupabaseDomain {
