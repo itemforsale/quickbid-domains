@@ -1,6 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
 import { Domain } from "@/types/domain";
-import { SupabaseDomain, mapDomainToSupabase, mapSupabaseToDomain } from "@/types/supabase";
 
 export class StorageManager {
   private static instance: StorageManager;
@@ -19,12 +18,25 @@ export class StorageManager {
         .from('domains')
         .select('*');
 
-      if (error) {
-        console.error('Error fetching domains:', error);
-        return [];
-      }
+      if (error) throw error;
 
-      return (data as SupabaseDomain[]).map(mapSupabaseToDomain);
+      return data.map(d => ({
+        id: d.id,
+        name: d.name,
+        currentBid: d.current_bid,
+        endTime: new Date(d.end_time),
+        bidHistory: d.bid_history || [],
+        status: d.status,
+        currentBidder: d.current_bidder,
+        bidTimestamp: d.bid_timestamp,
+        buyNowPrice: d.buy_now_price,
+        finalPrice: d.final_price,
+        purchaseDate: d.purchase_date,
+        featured: d.featured,
+        createdAt: d.created_at,
+        listedBy: d.listed_by,
+        isFixedPrice: d.is_fixed_price
+      }));
     } catch (error) {
       console.error('Error loading domains:', error);
       return [];
@@ -33,15 +45,29 @@ export class StorageManager {
 
   async saveDomains(domains: Domain[]): Promise<void> {
     try {
-      const supabaseDomains = domains.map(mapDomainToSupabase);
-      
       const { error } = await supabase
         .from('domains')
-        .upsert(supabaseDomains);
+        .upsert(
+          domains.map(d => ({
+            id: d.id,
+            name: d.name,
+            current_bid: d.currentBid,
+            end_time: d.endTime.toISOString(),
+            bid_history: d.bidHistory,
+            status: d.status,
+            current_bidder: d.currentBidder,
+            bid_timestamp: d.bidTimestamp,
+            buy_now_price: d.buyNowPrice,
+            final_price: d.finalPrice,
+            purchase_date: d.purchaseDate,
+            featured: d.featured,
+            created_at: d.createdAt,
+            listed_by: d.listedBy,
+            is_fixed_price: d.isFixedPrice
+          }))
+        );
 
-      if (error) {
-        console.error('Error saving domains:', error);
-      }
+      if (error) throw error;
     } catch (error) {
       console.error('Error saving domains:', error);
     }
@@ -52,11 +78,7 @@ export class StorageManager {
       .from('profiles')
       .select('*');
 
-    if (error) {
-      console.error('Error fetching users:', error);
-      return [];
-    }
-
+    if (error) throw error;
     return profiles || [];
   }
 
@@ -65,9 +87,7 @@ export class StorageManager {
       .from('profiles')
       .upsert(users);
 
-    if (error) {
-      console.error('Error saving users:', error);
-    }
+    if (error) throw error;
   }
 }
 

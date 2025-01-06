@@ -1,6 +1,5 @@
 import { Domain } from "@/types/domain";
 import { supabase } from "@/integrations/supabase/client";
-import { SupabaseDomain, mapSupabaseToDomain, mapDomainToSupabase } from "@/types/supabase";
 
 export const handleDomainBid = async (domains: Domain[], domainId: number, amount: number, username: string): Promise<Domain[]> => {
   const { data: domain, error: fetchError } = await supabase
@@ -9,14 +8,10 @@ export const handleDomainBid = async (domains: Domain[], domainId: number, amoun
     .eq('id', domainId)
     .single();
 
-  if (fetchError) {
-    console.error('Error fetching domain:', fetchError);
-    return domains;
-  }
+  if (fetchError) throw fetchError;
 
-  const supabaseDomain = domain as SupabaseDomain;
   const updatedBidHistory = [
-    ...(Array.isArray(supabaseDomain.bid_history) ? supabaseDomain.bid_history : []),
+    ...(domain.bid_history || []),
     { bidder: username, amount, timestamp: new Date().toISOString() }
   ];
 
@@ -32,12 +27,15 @@ export const handleDomainBid = async (domains: Domain[], domainId: number, amoun
     .select()
     .single();
 
-  if (updateError) {
-    console.error('Error updating domain:', updateError);
-    return domains;
-  }
+  if (updateError) throw updateError;
 
-  return domains.map(d => d.id === domainId ? mapSupabaseToDomain(updatedDomain as SupabaseDomain) : d);
+  return domains.map(d => d.id === domainId ? {
+    ...d,
+    currentBid: amount,
+    currentBidder: username,
+    bidHistory: updatedBidHistory,
+    bidTimestamp: new Date().toISOString()
+  } : d);
 };
 
 export const handleDomainBuyNow = async (domains: Domain[], domainId: number, username: string): Promise<Domain[]> => {
@@ -47,10 +45,7 @@ export const handleDomainBuyNow = async (domains: Domain[], domainId: number, us
     .eq('id', domainId)
     .single();
 
-  if (fetchError || !domain.buy_now_price) {
-    console.error('Error fetching domain:', fetchError);
-    return domains;
-  }
+  if (fetchError || !domain.buy_now_price) throw fetchError;
 
   const { data: updatedDomain, error: updateError } = await supabase
     .from('domains')
@@ -64,12 +59,15 @@ export const handleDomainBuyNow = async (domains: Domain[], domainId: number, us
     .select()
     .single();
 
-  if (updateError) {
-    console.error('Error updating domain:', updateError);
-    return domains;
-  }
+  if (updateError) throw updateError;
 
-  return domains.map(d => d.id === domainId ? mapSupabaseToDomain(updatedDomain as SupabaseDomain) : d);
+  return domains.map(d => d.id === domainId ? {
+    ...d,
+    status: 'sold',
+    currentBidder: username,
+    finalPrice: domain.buy_now_price,
+    purchaseDate: new Date().toISOString()
+  } : d);
 };
 
 export const createNewDomain = async (
@@ -93,36 +91,29 @@ export const createNewDomain = async (
     .select()
     .single();
 
-  if (error) {
-    console.error('Error creating domain:', error);
-    return null;
-  }
+  if (error) throw error;
 
-  return mapSupabaseToDomain(newDomain as SupabaseDomain);
+  return newDomain ? {
+    id: newDomain.id,
+    name: newDomain.name,
+    currentBid: newDomain.current_bid,
+    endTime: new Date(newDomain.end_time),
+    bidHistory: newDomain.bid_history || [],
+    status: newDomain.status,
+    buyNowPrice: newDomain.buy_now_price,
+    listedBy: newDomain.listed_by,
+    featured: newDomain.featured,
+    createdAt: newDomain.created_at,
+    isFixedPrice: newDomain.is_fixed_price
+  } : null;
 };
 
 export const categorizeDomains = (domains: Domain[], now: Date, username?: string) => {
   return {
     pendingDomains: domains.filter(d => d.status === 'pending'),
     activeDomains: domains.filter(d => d.status === 'active'),
-    endedDomains: domains.filter(d => {
-      const endTime = getDateFromComplexStructure(d.endTime);
-      return endTime < now && d.status !== 'sold';
-    }),
+    endedDomains: domains.filter(d => new Date(d.endTime) < now && d.status !== 'sold'),
     soldDomains: domains.filter(d => d.status === 'sold'),
     userWonDomains: domains.filter(d => d.currentBidder === username)
   };
-};
-
-export const getDateFromComplexStructure = (dateValue: Date | string | { value: { iso: string } }): Date => {
-  if (dateValue instanceof Date) {
-    return dateValue;
-  }
-  if (typeof dateValue === 'string') {
-    return new Date(dateValue);
-  }
-  if (dateValue && typeof dateValue === 'object' && 'value' in dateValue && dateValue.value && 'iso' in dateValue.value) {
-    return new Date(dateValue.value.iso);
-  }
-  return new Date();
 };

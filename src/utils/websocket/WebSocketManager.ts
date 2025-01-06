@@ -1,49 +1,85 @@
 import { Domain } from "@/types/domain";
-import { getDomains } from "@/utils/domainUpdates";
-import { setupWebSocket } from "@/utils/domainUpdates";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 export class WebSocketManager {
-  private domains: Domain[] = [];
-  private onUpdateCallback: ((domains: Domain[]) => void) | null = null;
-  private cleanup: (() => void) | null = null;
+  private static instance: WebSocketManager;
+  private subscribers: ((domains: Domain[]) => void)[] = [];
+  private channel: any;
 
-  constructor() {
-    this.initialize();
+  private constructor() {
+    this.setupRealtimeSubscription();
   }
 
-  private async initialize() {
+  static getInstance(): WebSocketManager {
+    if (!WebSocketManager.instance) {
+      WebSocketManager.instance = new WebSocketManager();
+    }
+    return WebSocketManager.instance;
+  }
+
+  private setupRealtimeSubscription() {
+    this.channel = supabase
+      .channel('public:domains')
+      .on('postgres_changes', 
+        { 
+          event: '*', 
+          schema: 'public', 
+          table: 'domains' 
+        }, 
+        async () => {
+          await this.fetchAndNotifySubscribers();
+        }
+      )
+      .subscribe();
+  }
+
+  private async fetchAndNotifySubscribers() {
     try {
-      const initialDomains = await getDomains();
-      this.domains = initialDomains;
-      this.notifyUpdate();
+      const { data, error } = await supabase
+        .from('domains')
+        .select('*');
+
+      if (error) throw error;
+
+      const domains = data.map(d => ({
+        id: d.id,
+        name: d.name,
+        currentBid: d.current_bid,
+        endTime: new Date(d.end_time),
+        bidHistory: d.bid_history || [],
+        status: d.status,
+        currentBidder: d.current_bidder,
+        bidTimestamp: d.bid_timestamp,
+        buyNowPrice: d.buy_now_price,
+        finalPrice: d.final_price,
+        purchaseDate: d.purchase_date,
+        featured: d.featured,
+        createdAt: d.created_at,
+        listedBy: d.listed_by,
+        isFixedPrice: d.is_fixed_price
+      }));
+
+      this.subscribers.forEach(callback => callback(domains));
     } catch (error) {
-      console.error('Error initializing WebSocketManager:', error);
+      console.error('Error fetching domains:', error);
+      toast.error('Failed to fetch latest domain updates');
     }
   }
 
-  public subscribe(callback: (domains: Domain[]) => void) {
-    this.onUpdateCallback = callback;
-    this.notifyUpdate();
-
-    if (!this.cleanup) {
-      this.cleanup = setupWebSocket(async (domains) => {
-        this.domains = domains;
-        this.notifyUpdate();
-      });
-    }
-
+  subscribe(callback: (domains: Domain[]) => void): () => void {
+    this.subscribers.push(callback);
     return () => {
-      if (this.cleanup) {
-        this.cleanup();
-        this.cleanup = null;
-      }
-      this.onUpdateCallback = null;
+      this.subscribers = this.subscribers.filter(cb => cb !== callback);
     };
   }
 
-  private notifyUpdate() {
-    if (this.onUpdateCallback) {
-      this.onUpdateCallback(this.domains);
+  cleanup() {
+    if (this.channel) {
+      supabase.removeChannel(this.channel);
     }
+    this.subscribers = [];
   }
 }
+
+export default WebSocketManager;
