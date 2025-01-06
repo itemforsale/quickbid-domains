@@ -53,11 +53,24 @@ export const createNewDomain = (
     currentBid: startingPrice,
     endTime,
     bidHistory: [],
-    status: 'pending', // Changed from 'active' to 'pending' for new domains
+    status: 'pending',
     buyNowPrice: buyNowPrice || undefined,
     createdAt: now,
     listedBy
   };
+};
+
+const getDateFromComplexStructure = (dateValue: Date | string | { value: { iso: string } }): Date => {
+  if (dateValue instanceof Date) {
+    return dateValue;
+  }
+  if (typeof dateValue === 'string') {
+    return new Date(dateValue);
+  }
+  if (dateValue && typeof dateValue === 'object' && 'value' in dateValue && dateValue.value && 'iso' in dateValue.value) {
+    return new Date(dateValue.value.iso);
+  }
+  return new Date();
 };
 
 export const categorizeDomains = (
@@ -92,11 +105,7 @@ export const categorizeDomains = (
         });
       }
     } else {
-      const endTime = domain.endTime instanceof Date 
-        ? domain.endTime 
-        : new Date(typeof domain.endTime === 'string' 
-          ? domain.endTime 
-          : domain.endTime?.value?.iso || domain.endTime);
+      const endTime = getDateFromComplexStructure(domain.endTime);
       
       if (endTime > currentTime) {
         activeDomains.push(domain);
