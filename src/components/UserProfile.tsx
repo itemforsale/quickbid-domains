@@ -34,7 +34,7 @@ export const UserProfile = ({ username, wonDomains }: UserProfileProps) => {
                 </div>
                 <div className="flex justify-between items-center mt-2">
                   <p className="text-sm text-gray-500">
-                    Won on {domain.purchaseDate ? formatDate(domain.purchaseDate).toLocaleDateString() : 'Pending'}
+                    Won on {domain.purchaseDate ? formatDate(domain.purchaseDate) : 'Pending'}
                   </p>
                 </div>
                 <div className="mt-2 pt-2 border-t border-gray-100 space-y-2">

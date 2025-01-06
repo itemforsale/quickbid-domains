@@ -6,7 +6,7 @@ export interface BidHistoryItem {
   timestamp: string;
 }
 
-export type DomainStatus = 'pending' | 'active' | 'featured' | 'sold';
+export type DomainStatus = "pending" | "active" | "featured" | "sold";
 
 export interface Domain {
   id: number;

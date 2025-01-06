@@ -9,8 +9,8 @@ export const toISOString = (date: Date | string): string => {
   return new Date(date).toISOString();
 };
 
-export const parseDate = (date: string | Date | undefined): Date => {
-  if (!date) return new Date();
-  if (date instanceof Date) return date;
-  return new Date(date);
+export const parseDate = (date: string | Date | undefined): string => {
+  if (!date) return new Date().toISOString();
+  if (date instanceof Date) return date.toISOString();
+  return date;
 };

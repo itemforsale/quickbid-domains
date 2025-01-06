@@ -21,8 +21,6 @@ export interface RegisterData {
 
 export interface UserContextType {
   user: User | null;
-  users: User[];
-  updateUser: (user: User) => Promise<void>;
   login: (credentials: LoginCredentials) => Promise<void>;
   register: (data: RegisterData) => Promise<void>;
   logout: () => Promise<void>;

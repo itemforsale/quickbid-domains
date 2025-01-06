@@ -7,71 +7,81 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
 interface UserManagementSectionProps {
-  users: User[];
   onUpdateUser: (user: User) => void;
 }
 
-export const UserManagementSection = ({ users, onUpdateUser }: UserManagementSectionProps) => {
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [editingUser, setEditingUser] = useState<User | null>(null);
+export const UserManagementSection = ({ onUpdateUser }: UserManagementSectionProps) => {
+  const [users, setUsers] = useState<User[]>([]);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+
+  const fetchUsers = async () => {
+    const { data: profiles, error } = await supabase
+      .from('profiles')
+      .select('*');
+
+    if (error) {
+      toast.error('Failed to load users');
+      return;
+    }
+
+    setUsers(profiles.map(profile => ({
+      id: profile.id,
+      username: profile.username,
+      email: profile.email,
+      xUsername: profile.x_username,
+      isAdmin: profile.is_admin,
+      createdAt: profile.created_at
+    })));
+  };
 
   const handleEditUser = (user: User) => {
-    setEditingUser(user);
-    setIsEditDialogOpen(true);
+    setSelectedUser(user);
+    setIsDialogOpen(true);
   };
 
-  const handleUserChange = (user: User | null) => {
-    setEditingUser(user);
-  };
+  const handleUpdateUser = async (updatedUser: User) => {
+    const { error } = await supabase
+      .from('profiles')
+      .update({
+        username: updatedUser.username,
+        email: updatedUser.email,
+        x_username: updatedUser.xUsername,
+        is_admin: updatedUser.isAdmin
+      })
+      .eq('id', updatedUser.id);
 
-  const handleDeleteUser = async (userId: string) => {
-    try {
-      const { error } = await supabase
-        .from('profiles')
-        .delete()
-        .eq('id', userId);
-
-      if (error) throw error;
-      toast.success("User deleted successfully");
-    } catch (error) {
-      console.error('Error deleting user:', error);
-      toast.error("Failed to delete user");
+    if (error) {
+      toast.error('Failed to update user');
+      return;
     }
-  };
 
-  const handleSaveEdit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (editingUser) {
-      try {
-        onUpdateUser(editingUser);
-        setIsEditDialogOpen(false);
-        setEditingUser(null);
-      } catch (error) {
-        console.error('Error updating user:', error);
-      }
-    }
+    setUsers(users.map(u => u.id === updatedUser.id ? updatedUser : u));
+    onUpdateUser(updatedUser);
+    setIsDialogOpen(false);
+    toast.success('User updated successfully');
   };
 
   return (
     <div className="space-y-4">
-      <h2 className="text-xl font-semibold">User Management</h2>
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {users.map((user) => (
-          <UserCard
-            key={user.id}
-            user={user}
-            onEdit={() => handleEditUser(user)}
-            onDelete={() => handleDeleteUser(user.id)}
-          />
-        ))}
-      </div>
+      <Card className="p-6">
+        <h2 className="text-xl font-semibold mb-4">User Management</h2>
+        <div className="grid gap-4">
+          {users.map((user) => (
+            <UserCard
+              key={user.id}
+              user={user}
+              onEdit={() => handleEditUser(user)}
+            />
+          ))}
+        </div>
+      </Card>
 
       <EditUserDialog
-        isOpen={isEditDialogOpen}
-        onOpenChange={setIsEditDialogOpen}
-        editingUser={editingUser}
-        onUserChange={handleUserChange}
-        onSave={handleSaveEdit}
+        user={selectedUser}
+        open={isDialogOpen}
+        onOpenChange={setIsDialogOpen}
+        onSubmit={handleUpdateUser}
       />
     </div>
   );
