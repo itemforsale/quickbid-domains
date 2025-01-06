@@ -3,6 +3,7 @@ import { useUser } from "@/contexts/UserContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+import { RegisterData } from "@/types/user";
 
 interface RegisterFormProps {
   onSuccess?: () => void;
@@ -10,31 +11,26 @@ interface RegisterFormProps {
 
 export const RegisterForm = ({ onSuccess }: RegisterFormProps) => {
   const { register } = useUser();
-  const [formData, setFormData] = useState({
-    name: "",
+  const [formData, setFormData] = useState<RegisterData>({
     email: "",
-    username: "",
     password: "",
+    username: "",
+    xUsername: "",
   });
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.name || !formData.email || !formData.username || !formData.password) {
-      toast.error("Please fill in all fields");
+    if (!formData.email || !formData.password || !formData.username) {
+      toast.error("Please fill in all required fields");
       return;
     }
 
     setIsLoading(true);
     try {
-      await register({
-        name: formData.name,
-        email: formData.email,
-        username: formData.username,
-        password: formData.password,
-        xUsername: formData.username
-      });
+      await register(formData);
       onSuccess?.();
+      toast.success("Registered successfully!");
     } catch (error) {
       console.error('Registration error:', error);
     } finally {
@@ -48,11 +44,12 @@ export const RegisterForm = ({ onSuccess }: RegisterFormProps) => {
       <div>
         <Input
           type="text"
-          placeholder="Name"
-          value={formData.name}
-          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+          placeholder="Username"
+          value={formData.username}
+          onChange={(e) => setFormData({ ...formData, username: e.target.value })}
           className="w-full"
           disabled={isLoading}
+          required
         />
       </div>
       <div>
@@ -63,14 +60,15 @@ export const RegisterForm = ({ onSuccess }: RegisterFormProps) => {
           onChange={(e) => setFormData({ ...formData, email: e.target.value })}
           className="w-full"
           disabled={isLoading}
+          required
         />
       </div>
       <div>
         <Input
           type="text"
-          placeholder="Username"
-          value={formData.username}
-          onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+          placeholder="X.com Username (optional)"
+          value={formData.xUsername}
+          onChange={(e) => setFormData({ ...formData, xUsername: e.target.value })}
           className="w-full"
           disabled={isLoading}
         />
@@ -83,6 +81,7 @@ export const RegisterForm = ({ onSuccess }: RegisterFormProps) => {
           onChange={(e) => setFormData({ ...formData, password: e.target.value })}
           className="w-full"
           disabled={isLoading}
+          required
         />
       </div>
       <Button type="submit" className="w-full" disabled={isLoading}>

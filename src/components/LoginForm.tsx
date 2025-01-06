@@ -3,6 +3,7 @@ import { useUser } from "@/contexts/UserContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+import { LoginCredentials } from "@/types/user";
 
 interface LoginFormProps {
   onSuccess?: () => void;
@@ -10,15 +11,15 @@ interface LoginFormProps {
 
 export const LoginForm = ({ onSuccess }: LoginFormProps) => {
   const { login } = useUser();
-  const [formData, setFormData] = useState({
-    username: "",
+  const [formData, setFormData] = useState<LoginCredentials>({
+    email: "",
     password: "",
   });
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.username || !formData.password) {
+    if (!formData.email || !formData.password) {
       toast.error("Please fill in all fields");
       return;
     }
@@ -27,6 +28,7 @@ export const LoginForm = ({ onSuccess }: LoginFormProps) => {
     try {
       await login(formData);
       onSuccess?.();
+      toast.success("Logged in successfully!");
     } catch (error) {
       console.error('Login error:', error);
     } finally {
@@ -41,8 +43,8 @@ export const LoginForm = ({ onSuccess }: LoginFormProps) => {
         <Input
           type="email"
           placeholder="Email"
-          value={formData.username}
-          onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+          value={formData.email}
+          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
           className="w-full"
           disabled={isLoading}
         />
