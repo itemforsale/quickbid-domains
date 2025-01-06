@@ -1,4 +1,4 @@
-import { ISODateString } from "./dates";
+import { Json } from "@/integrations/supabase/types";
 
 export interface BidHistoryItem {
   bidder: string;
@@ -31,7 +31,7 @@ export interface DomainDB {
   name: string;
   current_bid: number;
   end_time: string;
-  bid_history: BidHistoryItem[];
+  bid_history: Json;
   status: DomainStatus;
   current_bidder?: string;
   bid_timestamp?: string;

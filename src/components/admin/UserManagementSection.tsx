@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { EditUserDialog } from "./EditUserDialog";
 import { UserCard } from "./UserCard";
-import { User } from "@/types/domain";
+import { User } from "@/types/user";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 interface UserManagementSectionProps {
   users: User[];

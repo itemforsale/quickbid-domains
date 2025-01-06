@@ -21,12 +21,16 @@ export class StorageManager {
 
       if (error) throw error;
 
-      return data.map((d: DomainDB) => ({
+      return (data as DomainDB[]).map(d => ({
         id: d.id,
         name: d.name,
         currentBid: d.current_bid,
         endTime: d.end_time,
-        bidHistory: d.bid_history || [],
+        bidHistory: (d.bid_history as unknown as any[])?.map(bid => ({
+          bidder: String(bid.bidder),
+          amount: Number(bid.amount),
+          timestamp: String(bid.timestamp)
+        })) || [],
         status: d.status,
         currentBidder: d.current_bidder,
         bidTimestamp: d.bid_timestamp,

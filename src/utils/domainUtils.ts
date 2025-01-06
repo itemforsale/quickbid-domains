@@ -1,12 +1,13 @@
 import { Domain, BidHistoryItem, DomainDB } from "@/types/domain";
 import { supabase } from "@/integrations/supabase/client";
 import { toISOString } from "@/types/dates";
+import { Json } from "@/integrations/supabase/types";
 
 const transformDomainToDb = (domain: Domain): Partial<DomainDB> => ({
   name: domain.name,
   current_bid: domain.currentBid,
   end_time: domain.endTime,
-  bid_history: domain.bidHistory,
+  bid_history: domain.bidHistory as unknown as Json,
   status: domain.status,
   current_bidder: domain.currentBidder,
   bid_timestamp: domain.bidTimestamp,
@@ -24,7 +25,7 @@ const transformDbToDomain = (dbDomain: DomainDB): Domain => ({
   name: dbDomain.name,
   currentBid: dbDomain.current_bid,
   endTime: dbDomain.end_time,
-  bidHistory: dbDomain.bid_history || [],
+  bidHistory: (dbDomain.bid_history as unknown as BidHistoryItem[]) || [],
   status: dbDomain.status,
   currentBidder: dbDomain.current_bidder,
   bidTimestamp: dbDomain.bid_timestamp,
