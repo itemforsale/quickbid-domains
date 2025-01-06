@@ -1,10 +1,6 @@
 import { Domain, BidHistoryItem } from "@/types/domain";
 import { supabase } from "@/integrations/supabase/client";
-import { Json } from "@/integrations/supabase/types";
-
-export const formatDate = (date: string | Date): Date => {
-  return date instanceof Date ? date : new Date(date);
-};
+import { toISOString } from "@/types/dates";
 
 export const handleDomainBid = async (domains: Domain[], domainId: number, amount: number, username: string): Promise<Domain[]> => {
   const { data: domain, error: fetchError } = await supabase
@@ -18,7 +14,7 @@ export const handleDomainBid = async (domains: Domain[], domainId: number, amoun
   const newBidHistory: BidHistoryItem = {
     bidder: username,
     amount,
-    timestamp: new Date().toISOString()
+    timestamp: toISOString(new Date())
   };
 
   const updatedBidHistory = [...(domain.bid_history || []), newBidHistory];
@@ -29,7 +25,7 @@ export const handleDomainBid = async (domains: Domain[], domainId: number, amoun
       current_bid: amount,
       current_bidder: username,
       bid_history: updatedBidHistory,
-      bid_timestamp: new Date().toISOString()
+      bid_timestamp: toISOString(new Date())
     })
     .eq('id', domainId)
     .select()
@@ -42,7 +38,7 @@ export const handleDomainBid = async (domains: Domain[], domainId: number, amoun
     currentBid: amount,
     currentBidder: username,
     bidHistory: updatedBidHistory,
-    bidTimestamp: new Date().toISOString()
+    bidTimestamp: toISOString(new Date())
   } : d);
 };
 
@@ -61,7 +57,7 @@ export const handleDomainBuyNow = async (domains: Domain[], domainId: number, us
       status: 'sold',
       current_bidder: username,
       final_price: domain.buy_now_price,
-      purchase_date: new Date().toISOString()
+      purchase_date: toISOString(new Date())
     })
     .eq('id', domainId)
     .select()
@@ -74,7 +70,7 @@ export const handleDomainBuyNow = async (domains: Domain[], domainId: number, us
     status: 'sold',
     currentBidder: username,
     finalPrice: domain.buy_now_price,
-    purchaseDate: new Date().toISOString()
+    purchaseDate: toISOString(new Date())
   } : d);
 };
 
@@ -89,7 +85,7 @@ export const createNewDomain = async (
     .insert({
       name,
       current_bid: startingPrice,
-      end_time: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+      end_time: toISOString(new Date(Date.now() + 24 * 60 * 60 * 1000)),
       bid_history: [],
       status: 'pending',
       buy_now_price: buyNowPrice,
@@ -105,7 +101,7 @@ export const createNewDomain = async (
     id: newDomain.id,
     name: newDomain.name,
     currentBid: newDomain.current_bid,
-    endTime: new Date(newDomain.end_time),
+    endTime: newDomain.end_time,
     bidHistory: newDomain.bid_history || [],
     status: newDomain.status,
     buyNowPrice: newDomain.buy_now_price,
@@ -120,7 +116,7 @@ export const categorizeDomains = (domains: Domain[], now: Date, username?: strin
   return {
     pendingDomains: domains.filter(d => d.status === 'pending'),
     activeDomains: domains.filter(d => d.status === 'active'),
-    endedDomains: domains.filter(d => formatDate(d.endTime) < now && d.status !== 'sold'),
+    endedDomains: domains.filter(d => new Date(d.endTime) < now && d.status !== 'sold'),
     soldDomains: domains.filter(d => d.status === 'sold'),
     userWonDomains: domains.filter(d => d.currentBidder === username)
   };

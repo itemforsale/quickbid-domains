@@ -1,16 +1,14 @@
 export type ISODateString = string;
 
 export const toISOString = (date: Date | string): ISODateString => {
-  if (typeof date === 'string') return date;
-  return date.toISOString();
+  if (date instanceof Date) {
+    return date.toISOString();
+  }
+  return new Date(date).toISOString();
 };
 
-export const parseDate = (date: ISODateString | Date): Date => {
+export const parseDate = (date: ISODateString | Date | undefined): Date => {
+  if (!date) return new Date();
   if (date instanceof Date) return date;
   return new Date(date);
-};
-
-export const formatDate = (date: ISODateString | Date): string => {
-  const dateObj = date instanceof Date ? date : new Date(date);
-  return dateObj.toLocaleDateString();
 };

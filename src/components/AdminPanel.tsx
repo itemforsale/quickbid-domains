@@ -4,6 +4,7 @@ import { FeaturedDomainsSection } from "./admin/FeaturedDomainsSection";
 import { SiteSettingsSection } from "./admin/SiteSettingsSection";
 import { UserManagementSection } from "./admin/UserManagementSection";
 import { DomainListingsSection } from "./admin/DomainListingsSection";
+import { useUser } from "@/contexts/UserContext";
 
 interface AdminPanelProps {
   pendingDomains: Domain[];
@@ -22,6 +23,8 @@ export const AdminPanel = ({
   onFeatureDomain,
   activeDomains 
 }: AdminPanelProps) => {
+  const { users, updateUser } = useUser();
+
   return (
     <div className="space-y-8">
       <AdvertisementSettings />
@@ -30,7 +33,10 @@ export const AdminPanel = ({
       
       <SiteSettingsSection />
       
-      <UserManagementSection />
+      <UserManagementSection 
+        users={users} 
+        onUpdateUser={updateUser}
+      />
 
       <DomainListingsSection
         pendingDomains={pendingDomains}

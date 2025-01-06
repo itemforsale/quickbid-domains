@@ -1,6 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { Domain } from "@/types/domain";
-import { SupabaseDomain, mapSupabaseToDomain } from "@/types/supabase";
+import { toISOString } from "@/types/dates";
 
 export const setupWebSocket = (onUpdate: (domains: Domain[]) => void) => {
   const channel = supabase
@@ -34,7 +34,23 @@ export const getDomains = async (): Promise<Domain[]> => {
       return [];
     }
 
-    return (data as SupabaseDomain[]).map(mapSupabaseToDomain);
+    return data.map(d => ({
+      id: d.id,
+      name: d.name,
+      currentBid: d.current_bid,
+      endTime: d.end_time,
+      bidHistory: d.bid_history || [],
+      status: d.status,
+      currentBidder: d.current_bidder,
+      bidTimestamp: d.bid_timestamp,
+      buyNowPrice: d.buy_now_price,
+      finalPrice: d.final_price,
+      purchaseDate: d.purchase_date,
+      featured: d.featured,
+      createdAt: d.created_at,
+      listedBy: d.listed_by,
+      isFixedPrice: d.is_fixed_price
+    }));
   } catch (error) {
     console.error('Error loading domains:', error);
     return [];

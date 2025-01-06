@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { EditUserDialog } from "./EditUserDialog";
 import { UserCard } from "./UserCard";
 import { User } from "@/types/domain";
+import { toast } from "sonner";
 
 interface UserManagementSectionProps {
   users: User[];
@@ -21,6 +22,21 @@ export const UserManagementSection = ({ users, onUpdateUser }: UserManagementSec
 
   const handleUserChange = (user: User | null) => {
     setEditingUser(user);
+  };
+
+  const handleDeleteUser = async (userId: string) => {
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .delete()
+        .eq('id', userId);
+
+      if (error) throw error;
+      toast.success("User deleted successfully");
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      toast.error("Failed to delete user");
+    }
   };
 
   const handleSaveEdit = async (e: React.FormEvent) => {
@@ -45,6 +61,7 @@ export const UserManagementSection = ({ users, onUpdateUser }: UserManagementSec
             key={user.id}
             user={user}
             onEdit={() => handleEditUser(user)}
+            onDelete={() => handleDeleteUser(user.id)}
           />
         ))}
       </div>
