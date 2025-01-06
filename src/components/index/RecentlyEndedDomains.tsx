@@ -8,6 +8,22 @@ interface RecentlyEndedDomainsProps {
 export const RecentlyEndedDomains = ({ domains }: RecentlyEndedDomainsProps) => {
   if (domains.length === 0) return null;
 
+  const formatDate = (date: Date | string | undefined) => {
+    if (!date) return "N/A";
+    try {
+      // Handle the complex object structure from localStorage
+      if (typeof date === 'object' && 'value' in date && typeof date.value === 'object' && 'iso' in date.value) {
+        return new Date(date.value.iso).toLocaleDateString();
+      }
+      // Handle regular Date objects or ISO strings
+      const dateObj = typeof date === 'string' ? new Date(date) : date;
+      return dateObj.toLocaleDateString();
+    } catch (error) {
+      console.error('Error formatting date:', error);
+      return "Invalid Date";
+    }
+  };
+
   return (
     <div>
       <h2 className="text-2xl font-semibold mb-6 text-foreground">Recently Ended</h2>
@@ -25,7 +41,7 @@ export const RecentlyEndedDomains = ({ domains }: RecentlyEndedDomainsProps) => 
                   : "Not sold"}
               </p>
               <p className="text-xs text-muted-foreground">
-                Ended: {domain.endTime.toLocaleDateString()}
+                Ended: {formatDate(domain.endTime)}
               </p>
             </div>
           </Card>
