@@ -21,10 +21,7 @@ export const LoginForm = ({ onSuccess }: LoginFormProps) => {
       toast.error("Please fill in all fields");
       return;
     }
-    login({
-      username: formData.username,
-      password: formData.password,
-    });
+    login(formData);
     onSuccess?.();
   };
 

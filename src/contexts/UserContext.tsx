@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { StorageManager } from "@/utils/storage/StorageManager";
+import { toast } from "sonner";
 
 interface User {
   username: string;
@@ -7,13 +8,30 @@ interface User {
   email: string;
   xUsername?: string;
   isAdmin?: boolean;
+  password?: string;
+}
+
+interface LoginData {
+  username: string;
+  password: string;
+}
+
+interface RegisterData {
+  name: string;
+  email: string;
+  username: string;
+  password: string;
+  xUsername?: string;
 }
 
 interface UserContextType {
   user: User | null;
   users: User[];
-  login: (username: string, password: string) => boolean;
+  login: (data: LoginData) => void;
   logout: () => void;
+  register: (data: RegisterData) => void;
+  deleteUser: (username: string) => void;
+  updateUser: (user: User) => void;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -32,25 +50,65 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     return () => window.removeEventListener('users_updated', handleUsersUpdate);
   }, []);
 
-  const login = (username: string, password: string) => {
+  const login = (data: LoginData) => {
     const foundUser = users.find(
-      (u) => u.username.toLowerCase() === username.toLowerCase()
+      (u) => u.username.toLowerCase() === data.username.toLowerCase() && u.password === data.password
     );
 
-    if (foundUser && foundUser.password === password) {
+    if (foundUser) {
       const { password: _, ...userWithoutPassword } = foundUser;
       setUser(userWithoutPassword);
-      return true;
+      toast.success("Successfully logged in!");
+    } else {
+      toast.error("Invalid credentials");
     }
-    return false;
+  };
+
+  const register = (data: RegisterData) => {
+    const newUser: User = {
+      username: data.username,
+      name: data.name,
+      email: data.email,
+      password: data.password,
+      xUsername: data.xUsername,
+      isAdmin: false
+    };
+
+    const updatedUsers = [...users, newUser];
+    storageManager.saveUsers(updatedUsers);
+    setUsers(updatedUsers);
+    toast.success("Registration successful!");
+  };
+
+  const deleteUser = (username: string) => {
+    const updatedUsers = users.filter(u => u.username !== username);
+    storageManager.saveUsers(updatedUsers);
+    setUsers(updatedUsers);
+  };
+
+  const updateUser = (updatedUser: User) => {
+    const updatedUsers = users.map(u => 
+      u.username === updatedUser.username ? updatedUser : u
+    );
+    storageManager.saveUsers(updatedUsers);
+    setUsers(updatedUsers);
   };
 
   const logout = () => {
     setUser(null);
+    toast.success("Successfully logged out!");
   };
 
   return (
-    <UserContext.Provider value={{ user, users, login, logout }}>
+    <UserContext.Provider value={{ 
+      user, 
+      users, 
+      login, 
+      logout,
+      register,
+      deleteUser,
+      updateUser
+    }}>
       {children}
     </UserContext.Provider>
   );
