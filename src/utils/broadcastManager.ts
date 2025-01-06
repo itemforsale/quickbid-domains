@@ -1,6 +1,8 @@
 class BroadcastManager {
   private static instance: BroadcastManager;
   private channel: BroadcastChannel;
+  private lastBroadcastTime: number = 0;
+  private readonly BROADCAST_THROTTLE = 1000; // 1 second throttle
 
   private constructor() {
     this.channel = new BroadcastChannel('domain_updates');
@@ -26,7 +28,14 @@ class BroadcastManager {
   }
 
   public broadcast(type: string, data: any) {
-    this.channel.postMessage({ type, data });
+    const now = Date.now();
+    if (now - this.lastBroadcastTime >= this.BROADCAST_THROTTLE) {
+      console.log(`Broadcasting ${type}:`, data);
+      this.channel.postMessage({ type, data });
+      this.lastBroadcastTime = now;
+    } else {
+      console.log('Broadcast throttled');
+    }
   }
 
   public cleanup() {

@@ -10,10 +10,17 @@ class WebSocketManager {
   private broadcastChannel: BroadcastChannel;
   private pingInterval: NodeJS.Timeout | null = null;
   private lastMessageTime: number = Date.now();
+  private isConnecting: boolean = false;
 
   constructor() {
     this.broadcastChannel = new BroadcastChannel('dnsUpdates');
     this.setupBroadcastChannel();
+    
+    // Add window focus event listener
+    window.addEventListener('focus', () => {
+      console.log('Window focused - checking connection');
+      this.checkConnection();
+    });
   }
 
   private setupBroadcastChannel() {
@@ -25,7 +32,16 @@ class WebSocketManager {
     };
   }
 
+  private checkConnection() {
+    if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
+      console.log('Connection check failed - attempting reconnect');
+      this.reconnectAttempts = 0; // Reset attempts on manual check
+      this.initializeWebSocket();
+    }
+  }
+
   connect(onMessage: (data: any) => void) {
+    console.log('Connecting to WebSocket...');
     this.onMessageCallback = onMessage;
     this.initializeWebSocket();
     
@@ -43,12 +59,20 @@ class WebSocketManager {
   }
 
   private initializeWebSocket() {
+    if (this.isConnecting) {
+      console.log('Already attempting to connect - skipping');
+      return;
+    }
+
+    this.isConnecting = true;
+
     try {
       console.log('Initializing DNS WebSocket connection...');
       this.ws = new WebSocket(WS_URL);
       
       this.ws.onopen = () => {
         console.log('DNS WebSocket connection established');
+        this.isConnecting = false;
         this.reconnectAttempts = 0;
         this.setupPingInterval();
         this.requestInitialData();
@@ -62,16 +86,14 @@ class WebSocketManager {
           
           if (this.onMessageCallback) {
             this.onMessageCallback(data);
-            // Store the latest DNS data in localStorage
             if (data.domains) {
               localStorage.setItem(DNS_STORAGE_KEY, JSON.stringify(data.domains));
+              this.broadcastChannel.postMessage({
+                type: 'dns_update',
+                ...data,
+                timestamp: Date.now()
+              });
             }
-            // Broadcast the DNS update to other tabs
-            this.broadcastChannel.postMessage({
-              type: 'dns_update',
-              ...data,
-              timestamp: Date.now()
-            });
           }
         } catch (error) {
           console.error('DNS WebSocket message parsing error:', error);
@@ -80,16 +102,19 @@ class WebSocketManager {
 
       this.ws.onerror = (error) => {
         console.error('DNS WebSocket error:', error);
+        this.isConnecting = false;
         this.handleError(error);
       };
 
       this.ws.onclose = () => {
         console.log('DNS WebSocket connection closed');
+        this.isConnecting = false;
         this.clearPingInterval();
         this.handleError(new Event('connection_closed'));
       };
     } catch (error) {
       console.error('Error initializing DNS WebSocket:', error);
+      this.isConnecting = false;
       this.handleError(new Event('initialization_error'));
     }
   }
@@ -118,14 +143,14 @@ class WebSocketManager {
   private handleError(error: Event) {
     console.error('DNS WebSocket error:', error);
     if (this.reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
-      console.log(`Attempting to reconnect DNS (${this.reconnectAttempts + 1}/${MAX_RECONNECT_ATTEMPTS})...`);
+      const delay = RECONNECT_DELAY * Math.pow(2, this.reconnectAttempts);
+      console.log(`Attempting to reconnect DNS (${this.reconnectAttempts + 1}/${MAX_RECONNECT_ATTEMPTS}) in ${delay}ms...`);
       setTimeout(() => {
         this.reconnectAttempts++;
         this.initializeWebSocket();
-      }, RECONNECT_DELAY);
+      }, delay);
     } else {
       console.error('Max DNS reconnection attempts reached');
-      // Load data from localStorage as fallback
       const storedData = localStorage.getItem(DNS_STORAGE_KEY);
       if (storedData && this.onMessageCallback) {
         try {
@@ -155,10 +180,7 @@ class WebSocketManager {
       this.ws.send(JSON.stringify(message));
     } else {
       console.warn('DNS WebSocket is not open, message not sent:', message);
-      // Try to reconnect if the connection is closed
-      if (!this.ws || this.ws.readyState === WebSocket.CLOSED) {
-        this.initializeWebSocket();
-      }
+      this.checkConnection();
     }
   }
 

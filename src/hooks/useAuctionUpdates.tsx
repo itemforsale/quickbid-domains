@@ -8,6 +8,8 @@ export const useAuctionUpdates = () => {
   const queryClient = useQueryClient();
 
   useEffect(() => {
+    console.log('Setting up auction updates...');
+    
     const handleDomainUpdate = (event: CustomEvent) => {
       if (event.detail.type === 'domains_updated') {
         console.log('Received domain update:', event.detail.data);
@@ -27,8 +29,19 @@ export const useAuctionUpdates = () => {
       toast.success("New auction listings available!");
     });
 
+    // Add visibility change listener
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        console.log('Tab became visible - refreshing data');
+        queryClient.invalidateQueries({ queryKey: ['domains'] });
+      }
+    };
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
     return () => {
       window.removeEventListener('domain_update', handleDomainUpdate as EventListener);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
       wsCleanup();
     };
   }, [queryClient]);
