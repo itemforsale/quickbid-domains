@@ -53,7 +53,7 @@ export const createNewDomain = (
     currentBid: startingPrice,
     endTime,
     bidHistory: [],
-    status: 'active',
+    status: 'pending', // Changed from 'active' to 'pending' for new domains
     buyNowPrice: buyNowPrice || undefined,
     createdAt: now,
     listedBy
@@ -92,7 +92,12 @@ export const categorizeDomains = (
         });
       }
     } else {
-      const endTime = new Date(domain.endTime);
+      const endTime = domain.endTime instanceof Date 
+        ? domain.endTime 
+        : new Date(typeof domain.endTime === 'string' 
+          ? domain.endTime 
+          : domain.endTime?.value?.iso || domain.endTime);
+      
       if (endTime > currentTime) {
         activeDomains.push(domain);
       } else {

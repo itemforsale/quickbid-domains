@@ -44,9 +44,9 @@ export const DomainListingsSection = ({
   };
 
   return (
-    <>
+    <div className="space-y-8">
       <div className="space-y-4">
-        <h2 className="text-2xl font-semibold mb-4">Pending Domains</h2>
+        <h2 className="text-2xl font-semibold">Pending Domains</h2>
         {pendingDomains.length === 0 ? (
           <p className="text-gray-500">No pending domains to review</p>
         ) : (
@@ -65,7 +65,7 @@ export const DomainListingsSection = ({
       </div>
 
       <div className="space-y-4">
-        <h2 className="text-2xl font-semibold mb-4">Active Listings</h2>
+        <h2 className="text-2xl font-semibold">Active Listings</h2>
         {activeDomains.length === 0 ? (
           <p className="text-gray-500">No active listings</p>
         ) : (
@@ -81,6 +81,6 @@ export const DomainListingsSection = ({
           </div>
         )}
       </div>
-    </>
+    </div>
   );
 };
